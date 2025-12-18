@@ -1,0 +1,168 @@
+{
+  "npcs": {
+    "maria_paris": {
+      "name": "Maria",
+      "name_zh": "瑪麗亞",
+      "location": "paris_france",
+      "role": "baker",
+      "age_group": "adult",
+      "personality": "Warm, passionate about baking, slightly dramatic",
+      "speaking_style": "Enthusiastic with occasional French words like 'magnifique' and 'mon ami'",
+      "typical_problems": ["bakery equipment broken", "special cake delivery needed", "ingredient shortage"],
+      "greeting_style": "Bonjour! Welcome to Paris!",
+      "cultural_background": "French baker who learned from her grandmother"
+    },
+    "kenji_tokyo": {
+      "name": "Kenji",
+      "name_zh": "健二",
+      "location": "tokyo_japan",
+      "role": "festival_organizer",
+      "age_group": "adult",
+      "personality": "Polite, organized, respectful of traditions",
+      "speaking_style": "Formal and respectful, uses 'please' and 'thank you' frequently",
+      "typical_problems": ["festival decorations needed", "traditional items missing", "event coordination"],
+      "greeting_style": "Konnichiwa! Thank you for coming!",
+      "cultural_background": "Festival organizer preserving Japanese traditions"
+    },
+    "emma_newyork": {
+      "name": "Emma",
+      "name_zh": "艾瑪",
+      "location": "new_york_usa",
+      "role": "theater_director",
+      "age_group": "adult",
+      "personality": "Energetic, creative, deadline-focused",
+      "speaking_style": "Fast-paced, uses theater expressions, encouraging",
+      "typical_problems": ["show props missing", "costume emergencies", "stage equipment issues"],
+      "greeting_style": "Hey there! The show must go on!",
+      "cultural_background": "Broadway theater director passionate about performances"
+    },
+    "oliver_sydney": {
+      "name": "Oliver",
+      "name_zh": "奧利佛",
+      "location": "sydney_australia",
+      "role": "lifeguard",
+      "age_group": "young_adult",
+      "personality": "Laid-back, responsible, nature-loving",
+      "speaking_style": "Casual Australian slang, friendly, uses 'mate' and 'no worries'",
+      "typical_problems": ["beach rescues", "surfing competitions", "marine animal help"],
+      "greeting_style": "G'day mate! Welcome to the beach!",
+      "cultural_background": "Australian lifeguard who grew up by the ocean"
+    },
+    "amira_cairo": {
+      "name": "Amira",
+      "name_zh": "阿米拉",
+      "location": "cairo_egypt",
+      "role": "archaeologist",
+      "age_group": "adult",
+      "personality": "Curious, knowledgeable, adventurous",
+      "speaking_style": "Educational but exciting, loves sharing history",
+      "typical_problems": ["artifact discovery", "excavation help", "museum exhibits"],
+      "greeting_style": "Ahlan wa sahlan! Welcome to ancient Egypt!",
+      "cultural_background": "Egyptian archaeologist uncovering ancient mysteries"
+    },
+    "lucas_rio": {
+      "name": "Lucas",
+      "name_zh": "盧卡斯",
+      "location": "rio_brazil",
+      "role": "carnival_dancer",
+      "age_group": "young_adult",
+      "personality": "Joyful, rhythmic, community-oriented",
+      "speaking_style": "Musical, enthusiastic, uses Portuguese greetings",
+      "typical_problems": ["carnival costume issues", "parade preparations", "music equipment"],
+      "greeting_style": "Olá! Ready to dance?",
+      "cultural_background": "Brazilian samba dancer preparing for carnival"
+    },
+    "mei_beijing": {
+      "name": "Mei",
+      "name_zh": "小美",
+      "location": "beijing_china",
+      "role": "lantern_maker",
+      "age_group": "child",
+      "personality": "Creative, curious, hardworking",
+      "speaking_style": "Polite, slightly shy, eager to learn",
+      "typical_problems": ["lantern materials needed", "festival preparations", "craft help"],
+      "greeting_style": "Ni hao! Welcome to Beijing!",
+      "cultural_background": "Young girl learning traditional lantern making from her grandfather"
+    },
+    "william_london": {
+      "name": "William",
+      "name_zh": "威廉",
+      "location": "london_uk",
+      "role": "museum_curator",
+      "age_group": "adult",
+      "personality": "Proper, knowledgeable, dry humor",
+      "speaking_style": "Formal British English, polite, informative",
+      "typical_problems": ["exhibit deliveries", "artifact care", "special events"],
+      "greeting_style": "Good day! Welcome to the museum!",
+      "cultural_background": "British museum curator preserving history"
+    },
+    "priya_mumbai": {
+      "name": "Priya",
+      "name_zh": "普莉雅",
+      "location": "mumbai_india",
+      "role": "film_director",
+      "age_group": "adult",
+      "personality": "Creative, passionate, organized chaos",
+      "speaking_style": "Energetic mix of English and Hindi expressions",
+      "typical_problems": ["film equipment issues", "set decorations", "costume emergencies"],
+      "greeting_style": "Namaste! Lights, camera, action!",
+      "cultural_background": "Bollywood director creating magical movies"
+    },
+    "erik_arctic": {
+      "name": "Erik",
+      "name_zh": "艾瑞克",
+      "location": "arctic_region",
+      "role": "researcher",
+      "age_group": "adult",
+      "personality": "Calm, scientific, nature-protective",
+      "speaking_style": "Clear, informative, concerned about environment",
+      "typical_problems": ["research equipment delivery", "animal rescue", "weather emergencies"],
+      "greeting_style": "Welcome to the Arctic! Bundle up!",
+      "cultural_background": "Climate researcher studying polar ecosystems"
+    },
+    "luna_amazon": {
+      "name": "Luna",
+      "name_zh": "露娜",
+      "location": "amazon_rainforest",
+      "role": "wildlife_guide",
+      "age_group": "young_adult",
+      "personality": "Nature-connected, gentle, knowledgeable about animals",
+      "speaking_style": "Soft-spoken, uses animal sounds, respectful of nature",
+      "typical_problems": ["animal rescues", "habitat protection", "river navigation"],
+      "greeting_style": "Welcome to the rainforest! Listen to the jungle!",
+      "cultural_background": "Indigenous guide protecting the Amazon"
+    },
+    "tommy_world_airport": {
+      "name": "Tommy",
+      "name_zh": "湯米",
+      "location": "world_airport",
+      "role": "young_helper",
+      "age_group": "child",
+      "personality": "Excited, curious, loves Super Wings",
+      "speaking_style": "Enthusiastic, asks lots of questions, supportive",
+      "typical_problems": ["needs package delivered", "wants to help with missions", "learning about planes"],
+      "greeting_style": "Wow! Super Wings! This is so cool!",
+      "cultural_background": "A child who visits World Airport and loves the Super Wings"
+    }
+  },
+  "npc_templates": {
+    "child_requester": {
+      "age_group": "child",
+      "personality_traits": ["curious", "excited", "hopeful"],
+      "speaking_patterns": ["simple sentences", "enthusiastic", "grateful"],
+      "common_needs": ["birthday surprise", "lost pet", "special delivery", "help with project"]
+    },
+    "adult_helper": {
+      "age_group": "adult",
+      "personality_traits": ["responsible", "caring", "problem-solver"],
+      "speaking_patterns": ["clear explanations", "thankful", "supportive"],
+      "common_needs": ["community event", "emergency help", "professional assistance"]
+    },
+    "elderly_wisdom": {
+      "age_group": "elderly",
+      "personality_traits": ["wise", "patient", "traditional"],
+      "speaking_patterns": ["storytelling", "gentle advice", "cultural references"],
+      "common_needs": ["tradition preservation", "family gathering", "memory items"]
+    }
+  }
+}

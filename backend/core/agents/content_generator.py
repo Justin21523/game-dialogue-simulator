@@ -1,0 +1,537 @@
+"""
+AI-powered content generator for Super Wings game.
+Uses LLM to generate missions, locations, events, and more.
+"""
+
+import json
+import logging
+import random
+from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+
+from ..llm import get_llm, GenerationConfig
+from ..rag import get_knowledge_base
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class GeneratedMission:
+    """A generated mission."""
+    id: str
+    title: str
+    type: str
+    location: str
+    description: str
+    npc_name: str
+    problem: str  # The child's problem that needs solving
+    solution: str  # How Super Wings helps
+    objectives: List[Dict[str, Any]]
+    rewards: Dict[str, int]
+    difficulty: str
+    fuel_cost: int
+    duration: int
+
+
+@dataclass
+class GeneratedLocation:
+    """A generated location."""
+    id: str
+    name: str
+    country: str
+    region: str
+    description: str
+    cultural_notes: str
+    landmarks: List[str]
+    common_problems: List[str]
+
+
+@dataclass
+class GeneratedEvent:
+    """A generated game event."""
+    id: str
+    name: str
+    type: str  # seasonal, random, story
+    description: str
+    trigger_conditions: Dict[str, Any]
+    rewards: Dict[str, Any]
+    duration_hours: int
+
+
+class ContentGeneratorAgent:
+    """
+    AI agent that generates game content using LLM and RAG.
+    """
+
+    MISSION_TYPES = [
+        "delivery", "rescue", "construction", "performance",
+        "security", "tracking", "underwater", "towing",
+        "weather_emergency", "festival", "animal_rescue", "medical_delivery"
+    ]
+
+    REGIONS = [
+        "Asia", "Europe", "North America", "South America",
+        "Africa", "Oceania", "Polar"
+    ]
+
+    CHARACTER_SPECIALISTS = {
+        "jett": ["delivery", "festival", "medical_delivery"],
+        "jerome": ["performance"],
+        "donnie": ["construction"],
+        "chase": ["rescue", "weather_emergency"],
+        "paul": ["security"],
+        "bello": ["tracking", "animal_rescue"],
+        "flip": ["underwater"],
+        "todd": ["towing"],
+    }
+
+    def __init__(self, llm=None):
+        self.llm = llm
+        self.knowledge_base = get_knowledge_base()
+
+    async def _get_llm(self):
+        """Get or initialize the LLM."""
+        if self.llm is None:
+            self.llm = get_llm()
+        return self.llm
+
+    async def generate_mission(
+        self,
+        mission_type: Optional[str] = None,
+        location: Optional[str] = None,
+        difficulty: str = "medium",
+        character_id: Optional[str] = None,
+    ) -> GeneratedMission:
+        """
+        Generate a new mission using AI.
+
+        Args:
+            mission_type: Type of mission (random if not specified)
+            location: Location for mission (random if not specified)
+            difficulty: easy/medium/hard
+            character_id: Specific character to tailor mission for
+
+        Returns:
+            GeneratedMission object
+        """
+        llm = await self._get_llm()
+
+        # Select type and location if not specified
+        if mission_type is None:
+            if character_id and character_id in self.CHARACTER_SPECIALISTS:
+                mission_type = random.choice(self.CHARACTER_SPECIALISTS[character_id])
+            else:
+                mission_type = random.choice(self.MISSION_TYPES)
+
+        # Retrieve relevant context from knowledge base
+        try:
+            mission_results = self.knowledge_base.search_missions(mission_type, top_k=2)
+            location_results = []
+            if location:
+                location_results = self.knowledge_base.search_locations(location, top_k=1)
+
+            context_parts = []
+            for r in mission_results:
+                context_parts.append(r.document.content)
+            for r in location_results:
+                context_parts.append(r.document.content)
+            context = "\n".join(context_parts)
+        except Exception as e:
+            logger.warning(f"Context retrieval failed: {e}")
+            context = ""
+
+        # Build a comprehensive prompt for mission generation
+        location_str = location or "a city in " + random.choice(self.REGIONS)
+
+        # Add context section if RAG retrieval was successful
+        context_section = ""
+        if context:
+            context_section = f"\n\nReference examples from the series:\n{context}\n"
+
+        prompt = f"""You are a creative writer for Super Wings, an animated series where robot planes help children around the world.
+
+Generate a {mission_type} mission. The mission takes place in {location_str}.{context_section}
+
+IMPORTANT: Output ONLY a valid JSON object with these exact fields:
+{{
+  "title": "A catchy mission title (3-6 words)",
+  "location": "City name, Country",
+  "npc_name": "A child's name appropriate for the location",
+  "description": "One sentence describing the mission",
+  "problem": "What problem does the child face?",
+  "solution": "How do the Super Wings help solve it?"
+}}
+
+Example for a delivery mission in Paris:
+{{
+  "title": "Eiffel Tower Surprise",
+  "location": "Paris, France",
+  "npc_name": "Sophie",
+  "description": "Deliver a birthday gift to the top of the Eiffel Tower.",
+  "problem": "Sophie wants to surprise her grandmother with a birthday cake but cannot reach the observation deck in time.",
+  "solution": "Jett flies the cake to the top while Donnie builds a special cake platform."
+}}
+
+Now generate a unique {mission_type} mission. Output ONLY the JSON, no explanation:"""
+
+        config = GenerationConfig(
+            max_new_tokens=512,
+            temperature=0.7,
+        )
+
+        try:
+            response = await llm.generate(prompt, config)
+            # Extract content from LLMResponse
+            response_text = response.content if hasattr(response, 'content') else str(response)
+            data = self._parse_json_response(response_text)
+
+            # Calculate rewards based on difficulty
+            difficulty_multiplier = {"easy": 1.0, "medium": 1.5, "hard": 2.0}.get(difficulty, 1.0)
+            base_money = int(100 * difficulty_multiplier)
+            base_exp = int(50 * difficulty_multiplier)
+
+            # Log successful generation
+            logger.info(f"Generated mission: {data.get('title', 'Unknown')}")
+
+            return GeneratedMission(
+                id=f"m_{random.randint(10000, 99999)}",
+                title=data.get("title", f"{mission_type.title()} Mission"),
+                type=mission_type,
+                location=data.get("location", location or "Unknown"),
+                description=data.get("description", "Help someone in need!"),
+                npc_name=data.get("npc_name", "Friend"),
+                problem=data.get("problem", "A child needs help with a problem."),
+                solution=data.get("solution", "The Super Wings team works together to help!"),
+                objectives=[
+                    {"type": "main", "description": data.get("description", "Complete the mission")},
+                    {"type": "bonus", "description": "Collect bonus items along the way"}
+                ],
+                rewards={"money": base_money, "exp": base_exp},
+                difficulty=difficulty,
+                fuel_cost=int(10 * difficulty_multiplier),
+                duration=int(60 * difficulty_multiplier),
+            )
+
+        except Exception as e:
+            logger.error(f"Mission generation failed: {e}")
+            # Return a fallback mission
+            return self._fallback_mission(mission_type, location, difficulty)
+
+    async def generate_location(
+        self,
+        region: Optional[str] = None,
+        theme: Optional[str] = None,
+    ) -> GeneratedLocation:
+        """
+        Generate a new location using AI.
+
+        Args:
+            region: Geographic region
+            theme: Optional theme (urban, nature, historical, etc.)
+
+        Returns:
+            GeneratedLocation object
+        """
+        llm = await self._get_llm()
+        region = region or random.choice(self.REGIONS)
+
+        theme_str = theme or "any interesting theme (urban, nature, historical, coastal, etc.)"
+
+        prompt = f"""You are a creative writer for Super Wings, an animated series about robot planes helping children worldwide.
+
+Generate a new location in {region} with theme: {theme_str}
+
+IMPORTANT: Output ONLY a valid JSON object with these exact fields:
+{{
+  "name": "City or place name",
+  "country": "Country name",
+  "description": "A brief description of the location (1-2 sentences)",
+  "cultural_notes": "One fun fact about this place that children would enjoy",
+  "landmarks": ["Famous landmark 1", "Famous landmark 2"],
+  "common_problems": ["Type of problem 1", "Type of problem 2"]
+}}
+
+Example for Europe:
+{{
+  "name": "Venice",
+  "country": "Italy",
+  "description": "A magical city built on water with canals instead of streets.",
+  "cultural_notes": "People travel by boat instead of car, and the city has over 400 bridges!",
+  "landmarks": ["St. Mark's Square", "Rialto Bridge"],
+  "common_problems": ["delivery by boat", "lost tourists", "flooding"]
+}}
+
+Now generate a unique location in {region}. Output ONLY the JSON:"""
+
+        config = GenerationConfig(
+            max_new_tokens=400,
+            temperature=0.8,
+        )
+
+        try:
+            response = await llm.generate(prompt, config)
+            response_text = response.content if hasattr(response, 'content') else str(response)
+            data = self._parse_json_response(response_text)
+
+            loc_id = data.get("name", "location").lower().replace(" ", "_")[:20]
+            logger.info(f"Generated location: {data.get('name', 'Unknown')}")
+
+            return GeneratedLocation(
+                id=f"{loc_id}_{random.randint(100, 999)}",
+                name=data.get("name", "New Location"),
+                country=data.get("country", "Unknown"),
+                region=region,
+                description=data.get("description", "A wonderful place to visit!"),
+                cultural_notes=data.get("cultural_notes", "A fascinating place with rich culture."),
+                landmarks=data.get("landmarks", ["Town Square", "Local Market"]),
+                common_problems=data.get("common_problems", ["deliveries", "celebrations"]),
+            )
+
+        except Exception as e:
+            logger.error(f"Location generation failed: {e}")
+            return self._fallback_location(region)
+
+    async def generate_event(
+        self,
+        event_type: str = "random",
+        season: Optional[str] = None,
+    ) -> GeneratedEvent:
+        """
+        Generate a game event using AI.
+
+        Args:
+            event_type: seasonal, random, or story
+            season: For seasonal events
+
+        Returns:
+            GeneratedEvent object
+        """
+        llm = await self._get_llm()
+
+        season_str = season or "any season"
+
+        prompt = f"""You are a creative writer for Super Wings, an animated series about robot planes helping children worldwide.
+
+Generate a {event_type} game event for {season_str}.
+
+IMPORTANT: Output ONLY a valid JSON object with these exact fields:
+{{
+  "name": "Event name (2-4 words)",
+  "description": "What happens during this event (1-2 sentences)",
+  "trigger": "What starts this event",
+  "duration_hours": 24
+}}
+
+Example for a seasonal event:
+{{
+  "name": "Winter Wonderland Festival",
+  "description": "Snow falls around the world and children need help with winter activities!",
+  "trigger": "December starts",
+  "duration_hours": 72
+}}
+
+Now generate a unique {event_type} event. Output ONLY the JSON:"""
+
+        config = GenerationConfig(
+            max_new_tokens=300,
+            temperature=0.8,
+        )
+
+        try:
+            response = await llm.generate(prompt, config)
+            response_text = response.content if hasattr(response, 'content') else str(response)
+            data = self._parse_json_response(response_text)
+
+            logger.info(f"Generated event: {data.get('name', 'Unknown')}")
+
+            return GeneratedEvent(
+                id=f"event_{random.randint(1000, 9999)}",
+                name=data.get("name", "Special Event"),
+                type=event_type,
+                description=data.get("description", "A special event with bonus rewards!"),
+                trigger_conditions={"trigger": data.get("trigger", "random")},
+                rewards={"money_multiplier": 1.5, "exp_bonus": 50},
+                duration_hours=data.get("duration_hours", 24),
+            )
+
+        except Exception as e:
+            logger.error(f"Event generation failed: {e}")
+            return self._fallback_event(event_type)
+
+    async def generate_batch_missions(
+        self,
+        count: int = 5,
+        variety: bool = True,
+    ) -> List[GeneratedMission]:
+        """Generate multiple missions at once."""
+        missions = []
+        used_types = set()
+
+        for _ in range(count):
+            mission_type = None
+            if variety:
+                available = [t for t in self.MISSION_TYPES if t not in used_types]
+                if available:
+                    mission_type = random.choice(available)
+                    used_types.add(mission_type)
+
+            try:
+                mission = await self.generate_mission(
+                    mission_type=mission_type,
+                    difficulty=random.choice(["easy", "medium", "hard"]),
+                )
+                missions.append(mission)
+            except Exception as e:
+                logger.error(f"Batch mission generation error: {e}")
+                continue
+
+        return missions
+
+    def _parse_json_response(self, response: str) -> dict:
+        """Parse JSON from LLM response."""
+        # Try to find JSON in the response
+        response = response.strip()
+
+        # Remove markdown code blocks if present
+        if response.startswith("```json"):
+            response = response[7:]
+        if response.startswith("```"):
+            response = response[3:]
+        if response.endswith("```"):
+            response = response[:-3]
+
+        try:
+            return json.loads(response.strip())
+        except json.JSONDecodeError as e:
+            logger.debug(f"Initial JSON parse failed: {e}")
+
+            # Try to find JSON object in response
+            start = response.find("{")
+            end = response.rfind("}") + 1
+            if start != -1 and end > start:
+                try:
+                    return json.loads(response[start:end])
+                except json.JSONDecodeError:
+                    pass
+
+            # Try to fix truncated JSON by finding the last complete field
+            if start != -1:
+                json_str = response[start:]
+                # Find the last complete string value
+                last_quote = json_str.rfind('"')
+                if last_quote > 0:
+                    # Check if this is the end of a value or a key
+                    before_quote = json_str[:last_quote].rstrip()
+                    if before_quote.endswith(':'):
+                        # It's a value start, find the matching quote
+                        pass
+                    else:
+                        # Try to close after the last complete value
+                        truncated = json_str[:last_quote+1]
+                        # Remove trailing incomplete parts
+                        truncated = truncated.rstrip(',').rstrip()
+                        if not truncated.endswith('}'):
+                            truncated += '}'
+                        try:
+                            return json.loads(truncated)
+                        except json.JSONDecodeError:
+                            pass
+
+            logger.warning(f"Could not parse JSON from response: {response[:200]}...")
+            return {}
+
+    def _fallback_mission(
+        self,
+        mission_type: str,
+        location: Optional[str],
+        difficulty: str,
+    ) -> GeneratedMission:
+        """Return a fallback mission when AI fails."""
+        templates = {
+            "delivery": ("Special Delivery", "Deliver an important package to someone who needs it.", "The package must arrive before sunset.", "Jett speeds through the sky to make the delivery on time."),
+            "rescue": ("Emergency Rescue", "Help someone who is stuck or in danger.", "A child is stranded and needs help.", "Chase uses his rescue tools to save the day."),
+            "construction": ("Building Project", "Help build something amazing.", "A structure needs to be built for a special event.", "Donnie brings his construction tools and expertise."),
+            "performance": ("Show Time", "Help with a special performance.", "The show is about to start but something is missing.", "Jerome dances and entertains while the team solves the problem."),
+            "security": ("Safety Patrol", "Keep everyone safe during an event.", "Suspicious activity has been reported.", "Paul investigates and ensures everyone's safety."),
+            "tracking": ("Wildlife Watch", "Track and help animals in the wild.", "An animal has gone missing from the sanctuary.", "Bello uses his tracking skills to find the lost animal."),
+            "underwater": ("Ocean Adventure", "Explore and help underwater.", "Something valuable is lost beneath the waves.", "Flip dives deep to recover the treasure."),
+            "towing": ("Tow Truck Rescue", "Help vehicles that are stuck or broken down.", "A vehicle is stranded and blocking traffic.", "Todd tows the vehicle to safety."),
+        }
+
+        template = templates.get(mission_type, ("Adventure Time", "Go on an exciting adventure.", "Someone needs help with an unusual problem.", "The Super Wings team works together to help!"))
+        locations = ["Paris, France", "Tokyo, Japan", "New York, USA", "Sydney, Australia", "Cairo, Egypt", "London, UK", "Rio de Janeiro, Brazil"]
+
+        difficulty_multiplier = {"easy": 1.0, "medium": 1.5, "hard": 2.0}.get(difficulty, 1.0)
+
+        return GeneratedMission(
+            id=f"m_fallback_{random.randint(1000, 9999)}",
+            title=template[0],
+            type=mission_type,
+            location=location or random.choice(locations),
+            description=template[1],
+            npc_name="Alex",
+            problem=template[2],
+            solution=template[3],
+            objectives=[{"type": "main", "description": template[1]}],
+            rewards={"money": int(100 * difficulty_multiplier), "exp": int(50 * difficulty_multiplier)},
+            difficulty=difficulty,
+            fuel_cost=int(10 * difficulty_multiplier),
+            duration=int(60 * difficulty_multiplier),
+        )
+
+    def _fallback_location(self, region: str) -> GeneratedLocation:
+        """Return a fallback location when AI fails."""
+        region_templates = {
+            "Asia": ("Tokyo", "Japan", "A bustling city where ancient temples meet modern skyscrapers.", "Tokyo has more than 100,000 restaurants!"),
+            "Europe": ("Paris", "France", "The city of lights with beautiful architecture and art.", "The Eiffel Tower was supposed to be temporary!"),
+            "North America": ("New York", "USA", "The city that never sleeps with towering buildings.", "Central Park is bigger than some small countries!"),
+            "South America": ("Rio de Janeiro", "Brazil", "A colorful city famous for its carnival and beaches.", "The Christ the Redeemer statue is one of the New 7 Wonders!"),
+            "Africa": ("Cairo", "Egypt", "An ancient city near the pyramids and the Nile River.", "The pyramids are over 4,500 years old!"),
+            "Oceania": ("Sydney", "Australia", "A harbor city with the famous Opera House.", "The Sydney Opera House has over 1 million roof tiles!"),
+            "Polar": ("Reykjavik", "Iceland", "A city where you can see the Northern Lights.", "Iceland has no mosquitoes!"),
+        }
+
+        template = region_templates.get(region, ("Adventure Town", "Worldwide", "A wonderful place to explore!", "Every place has a story to tell!"))
+
+        return GeneratedLocation(
+            id=f"loc_fallback_{random.randint(100, 999)}",
+            name=template[0],
+            country=template[1],
+            region=region,
+            description=template[2],
+            cultural_notes=template[3],
+            landmarks=["Town Square", "Local Park", "Community Center"],
+            common_problems=["deliveries", "celebrations", "helping neighbors"],
+        )
+
+    def _fallback_event(self, event_type: str) -> GeneratedEvent:
+        """Return a fallback event when AI fails."""
+        event_templates = {
+            "seasonal": ("Holiday Helpers", "Special missions during the holiday season with bonus rewards!", "Holiday season begins"),
+            "random": ("Super Wings Day", "A special day to celebrate helping others around the world!", "Random occurrence"),
+            "story": ("World Tour Challenge", "Complete missions across all continents for epic rewards!", "Player reaches level 10"),
+        }
+
+        template = event_templates.get(event_type, ("Special Event", "A special event with bonus rewards for all pilots!", "Random"))
+
+        return GeneratedEvent(
+            id=f"event_fallback_{random.randint(100, 999)}",
+            name=template[0],
+            type=event_type,
+            description=template[1],
+            trigger_conditions={"trigger": template[2]},
+            rewards={"money_multiplier": 1.5, "exp_bonus": 50},
+            duration_hours=24,
+        )
+
+
+# Singleton instance
+_content_generator: Optional[ContentGeneratorAgent] = None
+
+
+def get_content_generator() -> ContentGeneratorAgent:
+    """Get the singleton content generator agent."""
+    global _content_generator
+    if _content_generator is None:
+        _content_generator = ContentGeneratorAgent()
+    return _content_generator

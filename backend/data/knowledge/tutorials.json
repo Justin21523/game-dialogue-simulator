@@ -1,0 +1,300 @@
+{
+  "tutorials": {
+    "getting_started": {
+      "id": "getting_started",
+      "title": "Getting Started",
+      "title_zh": "遊戲入門",
+      "category": "basics",
+      "content": "Welcome to Super Wings Simulator! In this game, you play as a dispatcher at World Airport, sending Super Wings characters to help children around the world. The basic flow is: View Mission → Select Character → Dispatch → Complete Mission → Earn Rewards.",
+      "content_zh": "歡迎來到 Super Wings 模擬器！在這個遊戲中，你將扮演世界機場的調度員，派遣 Super Wings 角色去幫助世界各地的小朋友。",
+      "steps": [
+        "Check available missions on the mission board",
+        "Select the most suitable character based on mission type",
+        "Confirm dispatch and watch the character take off",
+        "Wait for mission completion and collect rewards"
+      ],
+      "tips": [
+        "Each character has their own specialty - choosing the right one increases success rate",
+        "Watch character energy levels - tired characters need rest"
+      ]
+    },
+    "character_selection": {
+      "id": "character_selection",
+      "title": "Character Selection Guide",
+      "title_zh": "角色選擇指南",
+      "category": "basics",
+      "content": "Choosing the right character is key to mission success! Each Super Wings character has unique specialties and abilities. For example: Jett excels at delivery, Flip at sports missions, Donnie at construction, and Todd at digging.",
+      "content_zh": "選擇正確的角色是任務成功的關鍵！每個 Super Wings 角色都有獨特的專長和能力。",
+      "steps": [
+        "Check the mission type (delivery, sports, construction, etc.)",
+        "Match character specialty to mission type",
+        "Verify character is available and has enough energy",
+        "Confirm dispatch"
+      ],
+      "tips": [
+        "Matching specialty gives 10% success rate bonus",
+        "When unsure, Jett is always a versatile choice"
+      ]
+    },
+    "mission_types": {
+      "id": "mission_types",
+      "title": "Mission Types Guide",
+      "title_zh": "任務類型說明",
+      "category": "basics",
+      "content": "There are multiple mission types in the game, each requiring different skills to complete. Understanding mission types helps you make better dispatch decisions.",
+      "content_zh": "遊戲中有多種任務類型，每種任務都需要不同的技能來完成。",
+      "mission_type_details": {
+        "delivery": {
+          "name": "Delivery Mission",
+          "name_zh": "配送任務",
+          "description": "Deliver packages or items to destinations on time",
+          "best_character": "Jett",
+          "skills_needed": "speed, reliability"
+        },
+        "sports": {
+          "name": "Sports Mission",
+          "name_zh": "運動任務",
+          "description": "Assist with sports competitions or athletic events",
+          "best_character": "Flip",
+          "skills_needed": "athletic ability, energy"
+        },
+        "construction": {
+          "name": "Construction Mission",
+          "name_zh": "建築任務",
+          "description": "Repair or build structures",
+          "best_character": "Donnie",
+          "skills_needed": "mechanical skills, tool usage"
+        },
+        "digging": {
+          "name": "Digging Mission",
+          "name_zh": "挖掘任務",
+          "description": "Excavation, archaeology, or underground work",
+          "best_character": "Todd",
+          "skills_needed": "digging ability, strength"
+        },
+        "police": {
+          "name": "Police Mission",
+          "name_zh": "警務任務",
+          "description": "Maintain safety or assist with order",
+          "best_character": "Paul",
+          "skills_needed": "judgment, discipline"
+        },
+        "animal_care": {
+          "name": "Animal Care Mission",
+          "name_zh": "動物照護",
+          "description": "Help animals or wildlife protection",
+          "best_character": "Bello",
+          "skills_needed": "animal affinity, patience"
+        }
+      }
+    },
+    "energy_system": {
+      "id": "energy_system",
+      "title": "Energy System",
+      "title_zh": "能量系統",
+      "category": "mechanics",
+      "content": "Each character has an energy value that depletes when completing missions. When energy falls below 30%, mission success rate decreases by 20%. Let characters rest to restore energy.",
+      "content_zh": "每個角色都有能量值，執行任務會消耗能量。能量低於 30% 時，任務成功率會降低 20%。",
+      "steps": [
+        "Check character energy before dispatch",
+        "Low energy characters should rest",
+        "Energy partially restores after mission completion",
+        "Use repair kits for quick energy restoration"
+      ],
+      "tips": [
+        "Don't let character energy drop to 0",
+        "Rotating different characters keeps the team active"
+      ]
+    },
+    "leveling_up": {
+      "id": "leveling_up",
+      "title": "Leveling System",
+      "title_zh": "升級系統",
+      "category": "mechanics",
+      "content": "Completing missions earns experience points. Accumulate enough experience to level up. After leveling, character speed and reliability improve, and max energy increases.",
+      "content_zh": "完成任務可以獲得經驗值，累積足夠經驗就能升級。升級後角色的速度和可靠性都會提升。",
+      "steps": [
+        "Complete missions to earn experience",
+        "Auto-level when experience threshold reached",
+        "Stats improve automatically on level up",
+        "Unlock new abilities and appearances"
+      ],
+      "tips": [
+        "Higher difficulty missions give more experience",
+        "Specialty-matched missions also give bonus experience"
+      ]
+    },
+    "resources_management": {
+      "id": "resources_management",
+      "title": "Resource Management",
+      "title_zh": "資源管理",
+      "category": "mechanics",
+      "content": "The game has multiple resources to manage: money for purchasing items, fuel for dispatching missions, repair kits to restore character energy, and boost packs to instantly complete missions.",
+      "content_zh": "遊戲中有多種資源需要管理：金錢、燃料、修理包和加速包。",
+      "resources": {
+        "money": {
+          "name": "Money",
+          "name_zh": "金錢",
+          "description": "Earned from missions, used for items and unlocking characters",
+          "tips": "Higher difficulty missions give better rewards"
+        },
+        "fuel": {
+          "name": "Fuel",
+          "name_zh": "燃料",
+          "description": "Required for dispatching, auto-regenerates every minute",
+          "tips": "Fuel replenishes automatically, don't worry too much"
+        },
+        "repair_kits": {
+          "name": "Repair Kits",
+          "name_zh": "修理包",
+          "description": "Quickly restore character energy",
+          "tips": "Especially useful for urgent missions"
+        },
+        "boost_packs": {
+          "name": "Boost Packs",
+          "name_zh": "加速包",
+          "description": "Instantly complete ongoing missions",
+          "tips": "Save for emergency or time-limited missions"
+        }
+      }
+    },
+    "transformation": {
+      "id": "transformation",
+      "title": "Transformation System",
+      "title_zh": "變身系統",
+      "category": "advanced",
+      "content": "Super Wings characters can transform from plane mode to robot mode! After transforming, they can use special abilities to solve problems. Each character's transformation has unique capabilities.",
+      "content_zh": "Super Wings 角色可以從飛機形態變身成機器人形態！變身後能夠使用特殊能力來解決問題。",
+      "steps": [
+        "Character arrives at mission destination",
+        "Encounters a problem to solve",
+        "Calls out transformation phrase",
+        "Uses robot form's special abilities"
+      ],
+      "tips": [
+        "Transformation is key to problem-solving",
+        "Each character has different transformation abilities"
+      ]
+    },
+    "events_handling": {
+      "id": "events_handling",
+      "title": "Random Event Handling",
+      "title_zh": "隨機事件處理",
+      "category": "advanced",
+      "content": "During missions, you may encounter random events like weather changes, encounters, or obstacles. Making the right choice can earn rewards or avoid losses.",
+      "content_zh": "任務途中可能會遇到隨機事件，如天氣變化、偶遇或障礙物。做出正確的選擇可以獲得獎勵。",
+      "event_types": {
+        "weather": "Weather events - may need to change route or wait",
+        "encounter": "Encounter events - can choose to interact or continue",
+        "obstacle": "Obstacle events - need to find a solution",
+        "bonus": "Bonus events - opportunity for extra benefits"
+      },
+      "tips": [
+        "Don't rush decisions, read options carefully",
+        "Some events require specific character abilities for best outcomes"
+      ]
+    }
+  },
+  "character_guides": {
+    "jett": {
+      "character_id": "jett",
+      "name": "Jett",
+      "name_zh": "杰特",
+      "guide_content": "Jett is the protagonist of Super Wings, a red high-speed jet. He's enthusiastic, helpful, and the best choice for delivery missions. Jett has top speed and high reliability, making him the recommended character for beginners.",
+      "guide_content_zh": "Jett 是 Super Wings 的主角，紅色的快速噴射機。他熱情、樂於助人，是配送任務的最佳人選。",
+      "strengths": ["Delivery expert", "Fastest speed", "Highly adaptable", "Enthusiastic and reliable"],
+      "best_for": ["delivery", "general"],
+      "tips": "Jett is versatile and can handle any mission, but excels at delivery tasks."
+    },
+    "flip": {
+      "character_id": "flip",
+      "name": "Flip",
+      "name_zh": "飛利浦",
+      "guide_content": "Flip is a red plane with white stripes, wearing a blue cap. He's full of energy and loves sports, making him the best choice for all sports-related missions.",
+      "guide_content_zh": "Flip 是紅色配白色條紋的運動型飛機，戴著藍色帽子。他充滿活力，熱愛運動。",
+      "strengths": ["Sports expert", "Full of energy", "Competitive spirit", "Agile and nimble"],
+      "best_for": ["sports"],
+      "tips": "For soccer matches, sports events - Flip is your go-to character!"
+    },
+    "donnie": {
+      "character_id": "donnie",
+      "name": "Donnie",
+      "name_zh": "多尼",
+      "guide_content": "Donnie is a yellow and blue mechanical expert who excels with all kinds of tools. Any mission requiring repair, construction, or mechanical work is his forte.",
+      "guide_content_zh": "Donnie 是黃藍配色的機械專家，擅長使用各種工具。",
+      "strengths": ["Construction expert", "Mechanical genius", "Tool master", "Problem solver"],
+      "best_for": ["construction"],
+      "tips": "Equipment broken? Donnie has everything in his toolbox!"
+    },
+    "todd": {
+      "character_id": "todd",
+      "name": "Todd",
+      "name_zh": "托德",
+      "guide_content": "Todd is a brown drill plane wearing a yellow safety helmet. He's a digging expert - any mission requiring excavation, drilling, or underground work is no problem for him.",
+      "guide_content_zh": "Todd 是褐色的鑽頭飛機，戴著黃色安全帽。他是挖掘專家。",
+      "strengths": ["Digging expert", "Strong power", "Fearless", "Persistent"],
+      "best_for": ["digging"],
+      "tips": "Archaeological expeditions, tunnel digging - Todd is your best choice."
+    },
+    "paul": {
+      "character_id": "paul",
+      "name": "Paul",
+      "name_zh": "保羅",
+      "guide_content": "Paul is a blue and white police plane equipped with sirens and lights. He's disciplined and an expert at handling safety and order-related missions.",
+      "guide_content_zh": "Paul 是藍白配色的警察飛機，配有警笛和警燈。他紀律嚴明。",
+      "strengths": ["Police expert", "Disciplined", "Good judgment", "Maintains order"],
+      "best_for": ["police"],
+      "tips": "When safety needs to be maintained or emergencies handled, Paul is the most reliable choice."
+    },
+    "bello": {
+      "character_id": "bello",
+      "name": "Bello",
+      "name_zh": "貝羅",
+      "guide_content": "Bello is a black and white zebra-striped plane and an animal expert. He has special affinity with animals, and any animal-related mission is his specialty.",
+      "guide_content_zh": "Bello 是黑白斑馬條紋的飛機，是動物專家。",
+      "strengths": ["Animal care expert", "Animal affinity", "Gentle and patient", "Nature lover"],
+      "best_for": ["animal_care"],
+      "tips": "For animal rescue or wildlife protection missions, Bello can communicate with animals!"
+    },
+    "jerome": {
+      "character_id": "jerome",
+      "name": "Jerome",
+      "name_zh": "杰羅姆",
+      "guide_content": "Jerome is a blue fighter jet, experienced and wise. He's the team's senior member, excelling at complex missions requiring experience and judgment.",
+      "guide_content_zh": "Jerome 是藍色的戰鬥機型飛機，經驗豐富且充滿智慧。",
+      "strengths": ["Experienced", "Wise veteran", "Leadership", "Complex mission expert"],
+      "best_for": ["complex", "leadership"],
+      "tips": "For complex or judgment-requiring missions, consider sending Jerome."
+    },
+    "chase": {
+      "character_id": "chase",
+      "name": "Chase",
+      "name_zh": "乔司",
+      "guide_content": "Chase is a dark blue plane with red lightning stripes, a special agent. He has unique shape-shifting abilities, able to transform into various vehicles, perfect for missions requiring diverse capabilities.",
+      "guide_content_zh": "Chase 是深藍色帶紅色閃電條紋的特工飛機。他有獨特的變形能力。",
+      "strengths": ["Multi-transformation ability", "Highly adaptable", "Agent skills", "Multi-functional"],
+      "best_for": ["special", "multi-vehicle"],
+      "tips": "When different vehicles like cars or boats are needed, Chase can transform to handle it!"
+    }
+  },
+  "tips_collection": {
+    "beginner_tips": [
+      "Beginners should start with simple delivery missions",
+      "Jett is the easiest character to master",
+      "Check mission difficulty star ratings",
+      "Don't forget to let tired characters rest"
+    ],
+    "intermediate_tips": [
+      "Learn to match characters to mission types",
+      "Keep resources stocked for emergency missions",
+      "Complete daily challenges for extra rewards",
+      "Collect different characters for various missions"
+    ],
+    "advanced_tips": [
+      "Research optimal character-mission pairings",
+      "Use boost packs wisely for time-limited missions",
+      "Balance usage of all characters for even leveling",
+      "Challenge high-difficulty missions for rare rewards"
+    ]
+  }
+}

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CSS 顏色測試</title>
+    <link rel="stylesheet" href="css/main.css?v=20251217">
+    <style>
+        body {
+            padding: 20px;
+        }
+        .test-box {
+            padding: 20px;
+            margin: 10px 0;
+            background: white;
+            border: 2px solid #ddd;
+        }
+        .old-color {
+            color: #666 !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>字體顏色測試頁面</h1>
+
+    <div class="test-box">
+        <h2>測試 1: 標題顏色</h2>
+        <p>這是普通段落文字，應該是深色 (#1a1a1a)</p>
+        <span>這是 span 文字，應該是深色 (#1a1a1a)</span>
+    </div>
+
+    <div class="test-box">
+        <h2>測試 2: 舊的淺色（應該被覆蓋）</h2>
+        <p class="old-color">這行文字有 color: #666 但應該被覆蓋成深色</p>
+    </div>
+
+    <div class="test-box">
+        <h2>測試 3: CSS 變數值</h2>
+        <p id="css-var-test">檢查中...</p>
+    </div>
+
+    <div class="test-box">
+        <h2>測試 4: 按鈕文字（應該是白色）</h2>
+        <button class="btn">按鈕文字（白色）</button>
+    </div>
+
+    <script>
+        // 顯示 CSS 變數值
+        const styles = getComputedStyle(document.documentElement);
+        const textMain = styles.getPropertyValue('--text-main').trim();
+        const textSecondary = styles.getPropertyValue('--text-secondary').trim();
+        const textMuted = styles.getPropertyValue('--text-muted').trim();
+
+        document.getElementById('css-var-test').innerHTML = `
+            --text-main: ${textMain}<br>
+            --text-secondary: ${textSecondary}<br>
+            --text-muted: ${textMuted}
+        `;
+
+        // 檢查段落實際顏色
+        const p = document.querySelector('p');
+        const computedColor = getComputedStyle(p).color;
+        console.log('段落實際顏色:', computedColor);
+        console.log('預期顏色: rgb(26, 26, 26) 或 #1a1a1a');
+    </script>
+</body>
+</html>

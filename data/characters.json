@@ -1,0 +1,383 @@
+{
+  "characters": {
+    "jett": {
+      "id": "jett",
+      "name": "Jett",
+      "name_zh": "杰特/樂迪",
+      "role": "Main protagonist, delivery specialist",
+      "role_zh": "主角、送貨專家",
+      "colors": {
+        "primary": "red",
+        "secondary": "white",
+        "accent": "yellow signal lights (4)",
+        "eyes": "blue",
+        "hex": {
+          "red": "#E31B23",
+          "white": "#F5F5F5",
+          "signal_lights": "#FFD600",
+          "eyes": "#4A90E2"
+        }
+      },
+      "features": {
+        "vehicle": "small compact jet plane, red body with white accents, four yellow signal lights (two on cheeks, two on wing edges), stylized wing symbol on sides",
+        "robot": "compact proportions, friendly expression, wings fold into backpack shape",
+        "unique": "Four signal lights are the distinguishing feature, small sporty jet silhouette",
+        "aircraft_type": "jet"
+      },
+      "personality": "enthusiastic, helpful, optimistic, energetic, problem-solver, brave",
+      "abilities": "fast delivery, quick thinking, leadership, calling other Super Wings for help",
+      "stats": {
+        "speed": 9,
+        "reliability": 95,
+        "specialization": "delivery"
+      },
+      "lora": {
+        "path": "/mnt/data/training/lora/super-wings/jett_identity/jett_epoch15.safetensors",
+        "weight": 0.9,
+        "trigger_word": "jett"
+      },
+      "training_data": {
+        "images": 200,
+        "captions": "3d animated character, red jet plane, white accents, glossy enamel finish, toy-like CGI"
+      }
+    },
+    "jerome": {
+      "id": "jerome",
+      "name": "Jerome",
+      "name_zh": "杰羅姆",
+      "role": "Stunt flyer, performer, dance expert",
+      "role_zh": "特技飛行員、表演者、舞蹈專家",
+      "colors": {
+        "primary": "blue",
+        "secondary": "yellow decorations",
+        "accent": "lightning bolt decals",
+        "eyes": "green",
+        "hex": {
+          "blue": "#1F4FA3",
+          "yellow": "#F2C300",
+          "eyes": "#2FBF6B"
+        }
+      },
+      "features": {
+        "vehicle": "sleek blue war jet plane, yellow lightning bolt decorations on ailerons, pointed nose, green eyes, confident show plane posture",
+        "robot": "slimmer agile silhouette, wings fold into clean back fin, performance-oriented poses",
+        "unique": "Yellow lightning bolt decals on wings, stunt/show plane aesthetic",
+        "aircraft_type": "fighter jet"
+      },
+      "personality": "experienced, wise, calm, mentor-like, stylish, confident, loves dancing",
+      "abilities": "stunt flying, aerial performance, dancing, showing off style",
+      "stats": {
+        "speed": 8,
+        "reliability": 90,
+        "specialization": "performance"
+      },
+      "lora": {
+        "path": "/mnt/data/training/lora/super-wings/jerome_identity/jerome_epoch15.safetensors",
+        "weight": 0.9,
+        "trigger_word": "jerome"
+      },
+      "training_data": {
+        "images": 241,
+        "captions": "3d animated character, blue jet plane, yellow lightning decorations, sleek war jet design"
+      }
+    },
+    "donnie": {
+      "id": "donnie",
+      "name": "Donnie",
+      "name_zh": "多尼",
+      "role": "Engineer, inventor, builder",
+      "role_zh": "工程師、發明家、建造專家",
+      "colors": {
+        "primary": "yellow",
+        "secondary": "blue",
+        "accent": "blue accents on edges",
+        "eyes": "amber",
+        "hex": {
+          "yellow": "#F2C300",
+          "blue": "#1E5AA8",
+          "white_trim": "#F5F5F5",
+          "eyes": "#D97706"
+        }
+      },
+      "features": {
+        "vehicle": "Canadair-style airplane, big yellow hull with small wings, blue propellers and engine areas, bulky rounded body, work plane aesthetic",
+        "robot": "stockier build than Jett, sturdy mechanic proportions, wider shoulders/torso, propellers visible on back/shoulders",
+        "unique": "Bulky Canadair body shape, propeller plane, tool/construction theme",
+        "aircraft_type": "propeller cargo plane"
+      },
+      "personality": "builder, mechanical expert, practical, skilled, clumsy (stumbles often), inventive",
+      "abilities": "building, repairing, inventing tools, construction work",
+      "stats": {
+        "speed": 6,
+        "reliability": 85,
+        "specialization": "construction"
+      },
+      "lora": {
+        "path": "/mnt/data/training/lora/super-wings/donnie_identity/donnie_epoch15.safetensors",
+        "weight": 0.9,
+        "trigger_word": "donnie"
+      },
+      "training_data": {
+        "images": 200,
+        "captions": "3d animated character, yellow and blue airplane, Canadair style, construction equipment"
+      }
+    },
+    "chase": {
+      "id": "chase",
+      "name": "Chase",
+      "name_zh": "查斯",
+      "role": "Spy plane, transformation specialist",
+      "role_zh": "間諜飛機、變形專家",
+      "colors": {
+        "primary": "dark blue",
+        "secondary": "red stripes",
+        "accent": "three red lightning stripes",
+        "eyes": "blue",
+        "hex": {
+          "dark_blue": "#1E3A8A",
+          "red": "#DC2626",
+          "eyes": "#3B82F6"
+        }
+      },
+      "features": {
+        "vehicle": "dark blue spy airplane, three red thunder-shaped stripes on body, sleek spy plane design, angular features",
+        "robot": "versatile transformation abilities, can transform into various vehicles beyond robot/plane modes",
+        "unique": "Three distinctive red lightning stripes, spy theme, multiple transformation modes",
+        "aircraft_type": "spy jet"
+      },
+      "personality": "mysterious, clever, adaptable, resourceful, cool-headed",
+      "abilities": "spy missions, versatile transformation (can become any vehicle), stealth, detective work",
+      "stats": {
+        "speed": 8,
+        "reliability": 88,
+        "specialization": "spy"
+      },
+      "lora": {
+        "path": "/mnt/data/training/lora/super-wings/chase_identity/chase_epoch15.safetensors",
+        "weight": 0.9,
+        "trigger_word": "chase"
+      },
+      "training_data": {
+        "images": 200,
+        "captions": "3d animated character, dark blue spy jet, three red lightning stripes"
+      }
+    },
+    "flip": {
+      "id": "flip",
+      "name": "Flip",
+      "name_zh": "翻轉",
+      "role": "Sports specialist, acrobatic expert",
+      "role_zh": "運動專家、特技專家",
+      "colors": {
+        "primary": "red",
+        "secondary": "white stripes",
+        "accent": "blue cap with yellow trim",
+        "eyes": "blue",
+        "hex": {
+          "red": "#E53935",
+          "white": "#F5F5F5",
+          "cap_blue": "#1E5AA8",
+          "cap_yellow": "#F2C300",
+          "eyes": "#4A90E2"
+        }
+      },
+      "features": {
+        "vehicle": "red sporty plane with white stripes, blue and yellow sports cap with symbol similar to Jett's, compact athletic design",
+        "robot": "athletic proportions, leaner build than Donnie/Todd, wearing blue and yellow cap, energetic sports poses",
+        "unique": "BLUE CAP WITH YELLOW TRIM - this is the key distinguishing feature from Jett (both are red), sports theme",
+        "aircraft_type": "sports plane"
+      },
+      "personality": "energetic, competitive, sports-loving, enthusiastic, admires Jett, challenge-oriented",
+      "abilities": "sports challenges, acrobatic flying, athletic moves, turning situations into sports competitions",
+      "stats": {
+        "speed": 8,
+        "reliability": 90,
+        "specialization": "sports"
+      },
+      "lora": {
+        "path": "/mnt/data/training/lora/super-wings/flip_identity/flip_epoch15.safetensors",
+        "weight": 0.9,
+        "trigger_word": "flip"
+      },
+      "training_data": {
+        "images": 200,
+        "captions": "3d animated character, bright red transforming robot with distinctive blue cap, red body white stripes"
+      },
+      "notes": "⚠️ IMPORTANT: Flip is RED with white stripes and BLUE CAP, NOT green! The cap is the key feature that distinguishes him from Jett."
+    },
+    "todd": {
+      "id": "todd",
+      "name": "Todd",
+      "name_zh": "托德",
+      "role": "Digging specialist, construction expert",
+      "role_zh": "挖掘專家、建造專家",
+      "colors": {
+        "primary": "brown",
+        "secondary": "yellow",
+        "accent": "yellow hard hat and drill",
+        "eyes": "green (smaller than others)",
+        "hex": {
+          "brown": "#92400E",
+          "yellow": "#F59E0B",
+          "eyes": "#16A34A"
+        }
+      },
+      "features": {
+        "vehicle": "brown construction plane, yellow drill on nose, yellow hard hat on top, tank-like treads, sturdy build",
+        "robot": "stocky proportions, hard hat always visible, drill nose prominent, construction worker aesthetic",
+        "unique": "Drill nose and yellow hard hat, smaller green eyes (mole-like), tank treads, underground specialist",
+        "aircraft_type": "construction drill plane"
+      },
+      "personality": "hard-working, determined, loves digging, straightforward, dependable",
+      "abilities": "digging, tunneling, underground work, pulling heavy objects, construction",
+      "stats": {
+        "speed": 5,
+        "reliability": 92,
+        "specialization": "digging"
+      },
+      "lora": {
+        "path": "/mnt/data/training/lora/super-wings/todd_identity/todd_epoch15.safetensors",
+        "weight": 0.9,
+        "trigger_word": "todd"
+      },
+      "training_data": {
+        "images": 200,
+        "captions": "3d animated character, brown plane, yellow drill nose, yellow hard hat, construction theme"
+      }
+    },
+    "paul": {
+      "id": "paul",
+      "name": "Paul",
+      "name_zh": "保羅",
+      "role": "Police plane, law enforcement, security",
+      "role_zh": "警察飛機、執法、安全",
+      "colors": {
+        "primary": "blue",
+        "secondary": "white",
+        "accent": "police markings, yellow sheriff stars, siren",
+        "eyes": "blue",
+        "hex": {
+          "blue": "#1D4ED8",
+          "white": "#F5F5F5",
+          "star_yellow": "#FBBF24",
+          "eyes": "#3B82F6"
+        }
+      },
+      "features": {
+        "vehicle": "blue and white police plane, two lights on fore, siren on head, yellow sheriff stars on forearms, police vehicle colors and markings",
+        "robot": "authoritative posture, police uniform aesthetic, sheriff stars visible on arms, professional demeanor",
+        "unique": "Police markings, siren on head, sheriff stars, law enforcement theme",
+        "aircraft_type": "police jet"
+      },
+      "personality": "originally strict but fun-loving, loosened up over seasons, dancing expert (replaced Jerome), responsible, dutiful",
+      "abilities": "traffic control, detective work, law enforcement, security patrols, night guard duty",
+      "stats": {
+        "speed": 7,
+        "reliability": 93,
+        "specialization": "police"
+      },
+      "lora": {
+        "path": "/mnt/data/training/lora/super-wings/paul_identity/paul_epoch15.safetensors",
+        "weight": 0.9,
+        "trigger_word": "paul"
+      },
+      "training_data": {
+        "images": 200,
+        "captions": "3d animated character, blue and white police plane, police markings, siren"
+      }
+    },
+    "bello": {
+      "id": "bello",
+      "name": "Bello",
+      "name_zh": "貝洛",
+      "role": "Animal specialist, safari guide",
+      "role_zh": "動物專家、野生動物嚮導",
+      "colors": {
+        "primary": "black and white stripes",
+        "secondary": "zebra/animal pattern",
+        "accent": "propeller",
+        "eyes": "blue",
+        "hex": {
+          "black": "#18181B",
+          "white": "#F5F5F5",
+          "eyes": "#3B82F6"
+        }
+      },
+      "features": {
+        "vehicle": "black and white striped safari plane (zebra pattern), propeller design, animal-themed decorations",
+        "robot": "friendly appearance, animal pattern visible in robot mode, safari guide aesthetic",
+        "unique": "Distinctive zebra-like black and white stripes, animal communication ability, safari theme",
+        "aircraft_type": "propeller safari plane"
+      },
+      "personality": "friendly, gentle, animal-loving, helpful, communicative, empathetic",
+      "abilities": "talking with animals in their language, animal care, safari guidance, wildlife expertise",
+      "stats": {
+        "speed": 6,
+        "reliability": 88,
+        "specialization": "animal_care"
+      },
+      "lora": {
+        "path": "/mnt/data/training/lora/super-wings/bello_identity/bello_epoch15.safetensors",
+        "weight": 0.9,
+        "trigger_word": "bello"
+      },
+      "training_data": {
+        "images": 200,
+        "captions": "3d animated character, black and white striped plane, zebra pattern, animal theme"
+      }
+    }
+  },
+  "world_info": {
+    "hub": "World Airport",
+    "hub_zh": "世界機場",
+    "mission_types": [
+      {"id": "delivery", "name": "Delivery", "name_zh": "送貨", "specialist": "jett"},
+      {"id": "rescue", "name": "Rescue", "name_zh": "救援", "specialist": null},
+      {"id": "sports", "name": "Sports", "name_zh": "運動", "specialist": "flip"},
+      {"id": "construction", "name": "Construction", "name_zh": "建造", "specialist": "donnie"},
+      {"id": "digging", "name": "Digging", "name_zh": "挖掘", "specialist": "todd"},
+      {"id": "police", "name": "Police", "name_zh": "警察", "specialist": "paul"},
+      {"id": "animal_care", "name": "Animal Care", "name_zh": "動物照顧", "specialist": "bello"}
+    ],
+    "visual_style": {
+      "rendering": "toy-like CGI hard-surface",
+      "materials": "glossy enamel paint, semi-gloss plastic",
+      "lighting": "high-key daylight, soft shadows, bright reflections",
+      "finish": "clean anti-aliased edges, smooth shading",
+      "face_style": "large expressive eyes integrated into windshield/front face",
+      "proportions": "rounded, safe, friendly; child-friendly toy aesthetic"
+    },
+    "transformation": {
+      "modes": ["vehicle_mode", "robot_mode"],
+      "mechanism": "fuselage becomes torso, landing gear expands into legs, side panels deploy arms, wings fold into backpack"
+    }
+  },
+  "technical_info": {
+    "lora_base_model": "sd_xl_base_1.0.safetensors",
+    "lora_training": {
+      "epochs": 15,
+      "network_dim": 64,
+      "network_alpha": 32,
+      "resolution": "1024x1024"
+    },
+    "recommended_generation": {
+      "sampler": "DPM++ 2M Karras",
+      "steps": "30-40",
+      "cfg_scale": "7.5-9.0",
+      "lora_weight": "0.8-1.0"
+    },
+    "negative_prompt_base": "human, person, people, boy, girl, man, woman, child, humanoid, human face, multiple characters, extra eyes, wrong colors, blurry, low quality, 2d, anime style, photographic, cropped, watermark"
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "created": "2025-12-16",
+    "total_characters": 8,
+    "source": "Super Wings animated series (Seasons 1-2)",
+    "references": [
+      "https://en.wikipedia.org/wiki/Super_Wings",
+      "https://super-wings.fandom.com/wiki/Category:Characters"
+    ],
+    "training_data_location": "/mnt/data/datasets/general/super-wings/lora_data/characters/",
+    "lora_models_location": "/mnt/data/training/lora/super-wings/"
+  }
+}

@@ -1,0 +1,245 @@
+:root {
+    /* Brand Colors - these stay constant */
+    --color-primary: #E31D2B;   /* Jett Red */
+    --color-secondary: #0077BE; /* Jerome/Paul Blue */
+    --color-accent: #FFD700;    /* Donnie Yellow */
+    --color-success: #4CAF50;
+    --color-warning: #FF9800;
+    --color-danger: #F44336;
+
+    /* Light Theme (Default) */
+    --bg-main: #E0F7FA;
+    --bg-secondary: #B2EBF2;
+    --bg-panel: rgba(255, 255, 255, 0.95);
+    --bg-card: #FFFFFF;
+    --bg-overlay: rgba(0, 0, 0, 0.5);
+    --bg-dark: #1a1a2e;
+
+    --text-main: #1a1a1a;      /* 深色改善對比 */
+    --text-secondary: #3a3a3a; /* 深色改善對比 */
+    --text-muted: #5a5a5a;     /* 深色改善對比 */
+    --text-light: #ffffff;
+    --text-on-primary: #ffffff;
+
+    --border-color: rgba(0, 0, 0, 0.1);
+    --border-color-strong: rgba(0, 0, 0, 0.2);
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* Effects */
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 8px rgba(0,0,0,0.2);
+    --shadow-lg: 0 8px 16px rgba(0,0,0,0.3);
+    --shadow-glow: 0 0 20px rgba(227, 29, 43, 0.3);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-full: 9999px;
+
+    /* Typography */
+    --font-main: 'Segoe UI', system-ui, sans-serif;
+
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --bg-main: #121212;
+    --bg-secondary: #1E1E1E;
+    --bg-panel: rgba(30, 30, 30, 0.95);
+    --bg-card: #2D2D2D;
+    --bg-overlay: rgba(0, 0, 0, 0.7);
+    --bg-dark: #0A0A0A;
+
+    --text-main: #E0E0E0;
+    --text-secondary: #B0B0B0;
+    --text-muted: #808080;
+    --text-light: #ffffff;
+    --text-on-primary: #ffffff;
+
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-color-strong: rgba(255, 255, 255, 0.2);
+
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 8px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 16px rgba(0,0,0,0.5);
+    --shadow-glow: 0 0 20px rgba(227, 29, 43, 0.5);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none; /* Prevent text selection in game */
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: #000;
+    color: var(--text-main);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ========================================
+   全局文字顏色（使用 CSS 變數）
+   ======================================== */
+p, span, div, label, a, li, td, th,
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-main);
+}
+
+/* 按鈕保持白色文字 */
+button, .btn {
+    color: var(--text-light);
+}
+
+/* 特定類別的文字顏色 */
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.text-muted, small {
+    color: var(--text-muted);
+}
+
+/* 警告、錯誤等保持原色 */
+.text-warning, .warning {
+    color: var(--color-warning);
+}
+
+.text-danger, .error {
+    color: var(--color-danger);
+}
+
+.text-success, .success {
+    color: var(--color-success);
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 1920px;
+    max-height: 1080px;
+    background: var(--bg-main);
+    overflow: hidden; /* Main container hides overflow */
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    overflow-y: auto; /* Enable vertical scrolling for UI screens */
+    -webkit-overflow-scrolling: touch; /* Smooth scroll on mobile */
+    pointer-events: auto; /* Ensure events pass through */
+}
+
+/* Common Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+.full-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* ========================================
+   響應式設計 (Responsive Design)
+   ======================================== */
+
+/* 平板 (Tablet) */
+@media (max-width: 1024px) {
+    body {
+        font-size: 14px;
+    }
+
+    h1 { font-size: 2rem !important; }
+    h2 { font-size: 1.5rem !important; }
+    h3 { font-size: 1.25rem !important; }
+
+    .btn {
+        padding: 10px 16px !important;
+        font-size: 14px !important;
+    }
+}
+
+/* 手機 (Mobile) */
+@media (max-width: 768px) {
+    body {
+        font-size: 12px;
+    }
+
+    h1 { font-size: 1.75rem !important; }
+    h2 { font-size: 1.25rem !important; }
+    h3 { font-size: 1.1rem !important; }
+
+    .btn {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        min-height: 36px;
+    }
+
+    /* 確保文字不會消失 */
+    p, span, div {
+        font-size: 12px !important;
+        line-height: 1.4 !important;
+    }
+
+    /* 調整 padding 避免內容被截斷 */
+    .panel, .card {
+        padding: 12px !important;
+    }
+}
+
+/* 小手機 (Small Mobile) */
+@media (max-width: 480px) {
+    body {
+        font-size: 11px;
+    }
+
+    h1 { font-size: 1.5rem !important; }
+    h2 { font-size: 1.1rem !important; }
+    h3 { font-size: 1rem !important; }
+
+    .btn {
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+        min-height: 32px;
+    }
+
+    /* 強制顯示文字 */
+    p, span, div {
+        font-size: 11px !important;
+        line-height: 1.3 !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: normal !important;
+    }
+
+    .panel, .card {
+        padding: 8px !important;
+    }
+}

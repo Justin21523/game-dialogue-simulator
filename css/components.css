@@ -1,0 +1,620 @@
+/* Global UI Components - Light Theme */
+
+:root {
+    --color-primary: #E31D2B;   /* Jett Red */
+    --color-secondary: #0077BE; /* Jerome Blue */
+    --color-accent: #FFD700;    /* Donnie Yellow */
+    --bg-main: #E0F7FA;         /* Light Sky Blue */
+    --bg-panel: #FFFFFF;        /* Pure White */
+    --text-main: #333333;       /* Dark Grey */
+    --text-light: #666666;      /* Medium Grey */
+    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Modal System */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Dim background */
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-container {
+    background: var(--bg-card);
+    width: 100%;
+    max-width: 600px;
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalPop {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--color-primary);
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    line-height: 1;
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto; /* Internal scrolling for modal content */
+    flex: 1;
+}
+
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Toast Notifications */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast {
+    background: var(--bg-card);
+    padding: 12px 24px;
+    border-radius: 50px;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 300px;
+    font-weight: bold;
+    color: var(--text-main);
+    pointer-events: auto;
+    border: 1px solid var(--border-color);
+}
+
+.toast-error { border-left: 5px solid #ff5252; }
+.toast-success { border-left: 5px solid #4CAF50; }
+.toast-warning { border-left: 5px solid #FF9800; }
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.anim-slide-down { animation: slideDown 0.3s ease-out forwards; }
+
+/* Buttons (Light Theme) */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 50px;
+    font-family: var(--font-main);
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    color: white;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.btn:active { transform: translateY(1px); }
+
+.btn-primary { background: var(--color-primary); }
+.btn-secondary { 
+    background: white; 
+    color: #555; 
+    border: 2px solid #eee; 
+}
+.btn-secondary:hover { background: #f5f5f5; }
+
+.btn-warning { background: var(--color-accent); color: #333; }
+
+/* Cards (Light Theme) */
+.panel {
+    background: var(--bg-panel);
+    border-radius: 20px;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-soft);
+    color: var(--text-main);
+}
+/* ========== Stage 6: New UI Components ========== */
+
+/* Dynamic Mission Tracker */
+.dynamic-mission-tracker {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 350px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    font-family: 'Arial', sans-serif;
+}
+
+.dynamic-mission-tracker .tracker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px 16px 0 0;
+    color: white;
+}
+
+.dynamic-mission-tracker .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+}
+
+.dynamic-mission-tracker .ai-badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+}
+
+.dynamic-mission-tracker .tracker-body {
+    padding: 16px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.dynamic-mission-tracker .mission-info {
+    margin-bottom: 16px;
+}
+
+.dynamic-mission-tracker .mission-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin: 0 0 8px 0;
+}
+
+.dynamic-mission-tracker .mission-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dynamic-mission-tracker .progress-bar-container {
+    flex: 1;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dynamic-mission-tracker .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.3s ease;
+}
+
+.dynamic-mission-tracker .progress-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: bold;
+}
+
+.dynamic-mission-tracker .section-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #555;
+    margin: 16px 0 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dynamic-mission-tracker .alternatives-badge,
+.dynamic-mission-tracker .hint-urgency {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background: rgba(255, 165, 0, 0.2);
+}
+
+.dynamic-mission-tracker .main-tasks-list,
+.dynamic-mission-tracker .alternatives-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.dynamic-mission-tracker .task-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border-left: 3px solid #ddd;
+    transition: all 0.2s ease;
+}
+
+.dynamic-mission-tracker .task-item:hover {
+    background: #e9ecef;
+    transform: translateX(2px);
+}
+
+.dynamic-mission-tracker .task-item.completed {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.dynamic-mission-tracker .task-item.ai-generated {
+    border-left-color: #667eea;
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), transparent);
+}
+
+.dynamic-mission-tracker .ai-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: #667eea;
+    color: white;
+    border-radius: 8px;
+    margin-left: auto;
+}
+
+.dynamic-mission-tracker .optional-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: #ffa500;
+    color: white;
+    border-radius: 8px;
+}
+
+.dynamic-mission-tracker .task-checkbox {
+    font-size: 16px;
+}
+
+.dynamic-mission-tracker .task-text {
+    flex: 1;
+    font-size: 13px;
+    color: #333;
+}
+
+.dynamic-mission-tracker .alternative-item {
+    padding: 12px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.1));
+    border-radius: 12px;
+    border: 2px dashed #ffa500;
+}
+
+.dynamic-mission-tracker .alt-content strong {
+    color: #ff8c00;
+}
+
+.dynamic-mission-tracker .hint-item {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: #e8f4fd;
+    border-left: 3px solid #2196f3;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.dynamic-mission-tracker .hint-item.hint-high {
+    background: #fee;
+    border-left-color: #f44336;
+}
+
+.dynamic-mission-tracker .hint-item.hint-medium {
+    background: #fff3e0;
+    border-left-color: #ff9800;
+}
+
+.dynamic-mission-tracker .highlight-new {
+    animation: highlightPulse 2s ease;
+}
+
+@keyframes highlightPulse {
+    0%, 100% { transform: scale(1); box-shadow: none; }
+    50% { transform: scale(1.02); box-shadow: 0 0 20px rgba(102, 126, 234, 0.4); }
+}
+
+/* Character Switcher UI */
+.character-switcher-ui {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 20px;
+    padding: 12px 16px;
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+}
+
+.character-switcher-ui .switcher-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    color: white;
+    font-size: 12px;
+}
+
+.character-switcher-ui .switcher-title {
+    font-weight: bold;
+}
+
+.character-switcher-ui .partner-count {
+    color: #4caf50;
+}
+
+.character-switcher-ui .partners-list {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    overflow-x: auto;
+    max-width: 600px;
+    padding: 4px 0;
+}
+
+.character-switcher-ui .partner-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 70px;
+    padding: 8px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.character-switcher-ui .partner-item.clickable {
+    cursor: pointer;
+}
+
+.character-switcher-ui .partner-item.clickable:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.character-switcher-ui .partner-item.current {
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.character-switcher-ui .partner-portrait {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    border: 3px solid white;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.character-switcher-ui .partner-portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.character-switcher-ui .number-hint {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 5px;
+    border-radius: 8px;
+}
+
+.character-switcher-ui .partner-info {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: white;
+}
+
+.character-switcher-ui .current-indicator {
+    color: #4caf50;
+}
+
+.character-switcher-ui .key-hints {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.character-switcher-ui .hint-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: white;
+    font-size: 11px;
+}
+
+.character-switcher-ui kbd {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.character-switcher-ui .switch-animation {
+    animation: switchPulse 0.5s ease;
+}
+
+@keyframes switchPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* AI Status Indicator */
+.ai-status-indicator {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    min-width: 300px;
+    z-index: 2000;
+    transition: all 0.3s ease;
+}
+
+.ai-status-indicator.hidden {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+    pointer-events: none;
+}
+
+.ai-status-indicator .indicator-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+}
+
+.ai-status-indicator .status-icon {
+    font-size: 24px;
+    animation: aiPulse 2s infinite;
+}
+
+.ai-status-indicator.thinking .status-icon {
+    animation: aiThinking 1.5s infinite;
+}
+
+@keyframes aiThinking {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(-10deg) scale(1.1); }
+    75% { transform: rotate(10deg) scale(1.1); }
+}
+
+@keyframes aiPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.ai-status-indicator .status-content {
+    flex: 1;
+}
+
+.ai-status-indicator .status-text {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.ai-status-indicator .status-details {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.ai-status-indicator .indicator-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.ai-status-indicator .indicator-close:hover {
+    color: #333;
+}
+
+.ai-status-indicator .progress-bar {
+    height: 3px;
+    background: #e0e0e0;
+    border-radius: 0 0 16px 16px;
+    overflow: hidden;
+}
+
+.ai-status-indicator .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.ai-status-indicator .progress-fill.active {
+    animation: progressFlow 1.5s infinite;
+}
+
+@keyframes progressFlow {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+}
+
+.ai-status-indicator.success .status-icon {
+    color: #4caf50;
+}
+
+.ai-status-indicator.error .status-icon {
+    color: #f44336;
+}
+
+.ai-status-indicator.offline .status-icon {
+    color: #ff9800;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}

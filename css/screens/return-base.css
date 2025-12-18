@@ -1,0 +1,83 @@
+.return-screen {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, #FF7E5F, #FEB47B); /* Sunset colors */
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sky-bg {
+    /* Optional clouds */
+}
+
+.return-container {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.return-char {
+    max-width: 100%;
+    max-height: 100%;
+    position: absolute;
+    transition: all 0.5s;
+}
+
+.return-char.hidden {
+    opacity: 0;
+    transform: scale(0);
+}
+
+/* Animations */
+.anim-spin-out {
+    animation: spinOut 0.8s ease-in forwards;
+}
+
+@keyframes spinOut {
+    0% { transform: scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: scale(0.1) rotate(360deg); opacity: 0; }
+}
+
+.anim-spin-in {
+    animation: spinIn 0.8s ease-out forwards;
+}
+
+@keyframes spinIn {
+    0% { transform: scale(0.1) rotate(-360deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.anim-fly-away {
+    animation: flyAway 2s ease-in forwards;
+}
+
+@keyframes flyAway {
+    0% { transform: translate(0, 0) scale(1); }
+    20% { transform: translate(0, 10px) scale(1.1); } /* Anticipation */
+    100% { transform: translate(200px, -500px) scale(0.2); opacity: 0; }
+}
+
+.mission-complete-text {
+    position: absolute;
+    bottom: 20%;
+    font-size: 3rem;
+    color: white;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    font-weight: 900;
+    letter-spacing: 2px;
+}
+
+.anim-fade-in-up {
+    animation: fadeInUp 1s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
