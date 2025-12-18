@@ -108,9 +108,21 @@ export class DynamicMissionTracker {
         this.hintsContainer = this.trackerElement.querySelector('.hints-container');
         this.hintUrgency = this.trackerElement.querySelector('.hint-urgency');
         this.minimizeButton = this.trackerElement.querySelector('.tracker-minimize');
+        this.logSection = document.createElement('div');
+        this.logSection.className = 'dyn-log-section';
+        this.logSection.innerHTML = `
+            <h4 class="section-title">狀態流</h4>
+            <div class="dyn-log-rows"></div>
+            <button class="dyn-retry-btn">🔄 重試 AI</button>
+        `;
+        const body = this.trackerElement.querySelector('.tracker-body');
+        if (body) body.appendChild(this.logSection);
+        this.retryBtn = this.logSection.querySelector('.dyn-retry-btn');
+        this.logRows = this.logSection.querySelector('.dyn-log-rows');
 
         // 按鈕事件
         this.minimizeButton.addEventListener('click', () => this.toggleMinimize());
+        this.retryBtn.addEventListener('click', () => this.retryAI());
     }
 
     /**
@@ -141,6 +153,9 @@ export class DynamicMissionTracker {
         eventBus.on('MISSION_HINT', (data) => {
             this.addHint(data.hint, data.urgency || 'low');
         });
+
+        eventBus.on('MISSION_STATE_LOG', () => this.refreshLogs());
+        eventBus.on('AI_OFFLINE_MODE', () => this.showDegradedBadge());
 
         // 任務完成/失敗
         eventBus.on('MISSION_COMPLETED', () => this.clearMission());
@@ -301,6 +316,43 @@ export class DynamicMissionTracker {
             `;
             this.hintsContainer.appendChild(hintElement);
         });
+
+        this.refreshLogs();
+    }
+
+    refreshLogs() {
+        if (!this.logRows) return;
+        const logs = (missionManager.stateLog || []).slice(-5).reverse();
+        if (logs.length === 0) {
+            this.logRows.innerHTML = '<div class="log-empty">尚無紀錄</div>';
+            return;
+        }
+        this.logRows.innerHTML = logs.map((log) => {
+            const ts = new Date(log.timestamp || Date.now());
+            const hh = String(ts.getHours()).padStart(2, '0');
+            const mm = String(ts.getMinutes()).padStart(2, '0');
+            let detailText = '';
+            try {
+                detailText = typeof log.detail === 'string' ? log.detail : JSON.stringify(log.detail || {});
+            } catch (e) {
+                detailText = '[unserializable]';
+            }
+            return `<div class="log-row"><span class="log-time">${hh}:${mm}</span><span class="log-type">${log.type}</span><span class="log-detail">${detailText}</span></div>`;
+        }).join('');
+    }
+
+    retryAI() {
+        missionManager.pushStateLog('retry_ai', { missionId: this.mission?.id });
+        eventBus.emit('SHOW_TOAST', { message: '🔄 Resubmitted mission state to AI', type: 'info', duration: 2500 });
+        const activeQuest = missionManager.getActiveMainQuest?.call(missionManager) || missionManager.getActiveQuests?.call(missionManager)?.[0];
+        const activeObj = activeQuest?.objectives?.find((o) => o.status !== 'completed');
+        if (activeQuest && activeObj) {
+            missionManager.emitObjectiveUpdate(activeQuest, activeObj, 'manual_retry', { actorId: activeQuest.participants?.[0]?.characterId });
+        }
+    }
+
+    showDegradedBadge() {
+        this.trackerElement.classList.add('degraded');
     }
 
     /**

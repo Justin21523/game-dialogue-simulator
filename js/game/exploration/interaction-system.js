@@ -4,6 +4,7 @@
  */
 
 import { eventBus } from '../../core/event-bus.js';
+import { missionManager } from '../../managers/mission-manager.js';
 
 export class InteractionSystem {
     constructor(world, options = {}) {
@@ -211,14 +212,16 @@ export class InteractionSystem {
     }
 
     /**
-     * 與 NPC 互動 (AI-driven dialogue - Stage 3)
+     * 與 NPC 互動 (Updated for Checkpoint 2 - Quest System)
      */
     async interactWithNPC(npc) {
         this.isInteracting = true;
         this.interactionCooldown = this.cooldownTime;
 
-        // Get mission context for this NPC
-        const missionContext = this.getMissionContextForNPC(npc);
+        // ===== Checkpoint 2: Get quest context from QuestSystem =====
+        const questContext = await this.getMissionContextForNPC(npc);
+
+        console.log(`[InteractionSystem] Interacting with NPC ${npc.npcId} | Quest NPC: ${questContext.isQuestNPC} | Has Offered: ${questContext.hasOfferedQuest}`);
 
         // Generate AI dialogue with full context
         let aiDialogue = null;
@@ -229,11 +232,12 @@ export class InteractionSystem {
                 npc_id: npc.npcId,
                 npc_type: npc.type || 'resident',
                 player_id: this.player.characterId,
-                mission_context: missionContext,
+                quest_context: questContext,  // 使用 quest_context 而非 mission_context
                 previous_interactions: npc.interactionHistory || [],
                 world_state: this.world.getState?.() || {},
-                is_mission_npc: npc.isMissionNPC || false,
-                mission_registered: npc.missionRegistered || false
+                is_quest_npc: questContext.isQuestNPC,
+                has_offered_quest: questContext.hasOfferedQuest,
+                active_quest_id: questContext.activeQuestId
             });
         } catch (e) {
             console.warn('[InteractionSystem] AI dialogue generation failed, using fallback', e);
@@ -242,18 +246,21 @@ export class InteractionSystem {
         // Fallback to old dialogue if AI fails
         const dialogue = aiDialogue || npc.startInteraction();
 
+        // ===== Checkpoint 2: Emit START_DIALOGUE with quest context =====
         eventBus.emit('START_DIALOGUE', {
             npc: npc,
             player: this.player,
             dialogue: dialogue,
-            missionContext: missionContext,
-            canRegisterMission: npc.isMissionNPC && !npc.missionRegistered
+            questContext: questContext,  // 傳遞完整的任務上下文
+            canOfferQuest: questContext.isQuestNPC && !questContext.hasOfferedQuest && !questContext.activeQuestId,
+            actorId: this.player?.characterId
         });
 
         // Track interaction
         eventBus.emit('NPC_INTERACTION', {
             npc: npc,
             player: this.player,
+            actorId: this.player?.characterId,
             timestamp: Date.now()
         });
 
@@ -261,28 +268,21 @@ export class InteractionSystem {
     }
 
     /**
-     * Get mission context for NPC (Stage 3)
+     * Get quest context for NPC (Updated for Checkpoint 2)
      * @param {Object} npc - The NPC being interacted with
-     * @returns {Object|null} Mission context
+     * @returns {Object} Quest context
      */
-    getMissionContextForNPC(npc) {
-        const activeMission = this.world.activeMission;
-        if (!activeMission) return null;
-
-        const isMissionNPC = activeMission.npcs?.some(n => n.id === npc.npcId);
-        const currentTask = activeMission.getCurrentTask?.();
-        const isTargetNPC = currentTask?.targetNPC === npc.npcId;
+    async getMissionContextForNPC(npc) {
+        const questContext = missionManager.buildContextForNPC(npc);
 
         return {
-            has_mission: true,
-            is_mission_npc: isMissionNPC,
-            is_target: isTargetNPC,
-            mission_progress: activeMission.completionRate || 0,
-            can_register: npc.isMissionNPC && !npc.missionRegistered,
-            current_task: currentTask ? {
-                type: currentTask.type,
-                title: currentTask.title
-            } : null
+            ...questContext,
+            playerLevel: this.player?.level || 1,
+            worldDestination: this.world.destination || 'Unknown',
+            availableCharacters: this.partnerSystem
+                ? Array.from(this.partnerSystem.getActivePartners().keys())
+                : [this.player?.characterId || 'jett'],
+            currentPlayer: this.player?.characterId || 'jett'
         };
     }
 
@@ -296,10 +296,14 @@ export class InteractionSystem {
         const result = item.pickup(this.player);
 
         if (result.success) {
+            if (this.world?.collectedItems) {
+                this.world.collectedItems.add(item.itemId || item.id);
+            }
             // 添加到玩家物品欄
             eventBus.emit('ITEM_COLLECTED', {
                 player: this.player,
-                item: result.item
+                item: result.item,
+                actorId: this.interactingPlayer?.characterId || this.player?.characterId
             });
 
             // 播放音效
@@ -330,8 +334,27 @@ export class InteractionSystem {
         eventBus.emit('ENTER_BUILDING', {
             building: building,
             player: this.player,
-            playerPosition: { x: this.player.x, y: this.player.y }
+            playerPosition: { x: this.player.x, y: this.player.y },
+            actorId: this.interactingPlayer?.characterId || this.player?.characterId
         });
+
+        // Testing-village delivery hub: auto deliver if parcel collected
+        if (building.buildingId === 'delivery_hub' && this.world?.collectedItems?.has('mission_item')) {
+            eventBus.emit('DELIVER_ITEM', {
+                buildingId: 'delivery_hub',
+                itemId: 'mission_item',
+                actorId: this.interactingPlayer?.characterId || this.player?.characterId
+            });
+        }
+
+        // Portal building triggers mode switch event
+        if (building.buildingId === 'vehicle_portal') {
+            eventBus.emit('PORTAL_ENTERED', {
+                targetMode: 'vehicle',
+                buildingId: 'vehicle_portal',
+                actorId: this.interactingPlayer?.characterId || this.player?.characterId
+            });
+        }
 
         return true;
     }

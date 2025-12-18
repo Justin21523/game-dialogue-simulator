@@ -337,18 +337,39 @@ class ImageSelectorService {
     }
 
     /**
-     * Get local transform frames (fallback)
+     * Get local transform frames (使用新生成的高品質插幀動畫)
      */
-    getLocalTransformFrames(characterId, frameCount = 241, reverse = false) {
-        const basePath = `assets/images/characters/${characterId}/transform_frames`;
-        const frames = [];
-        const totalFrames = 241;
-        const step = frameCount ? Math.max(1, Math.floor(totalFrames / frameCount)) : 1;
-        const actualCount = frameCount || totalFrames;
+    getLocalTransformFrames(characterId, frameCount = null, reverse = false) {
+        // 使用新生成的高品質插幀動畫
+        const basePath = `assets/images/characters/${characterId}/animations/transform_animation`;
 
-        for (let i = 0; i < actualCount; i++) {
-            const frameIndex = Math.min(i * step, totalFrames - 1);
-            frames.push(`${basePath}/frame_${String(frameIndex).padStart(4, '0')}.png`);
+        // 各角色的實際幀數 (根據生成的動畫)
+        const characterFrameCounts = {
+            'jett': 465,
+            'jerome': 753,
+            'donnie': 417,
+            'chase': 369,
+            'flip': 385,
+            'todd': 321,
+            'paul': 513,
+            'bello': 289
+        };
+
+        const totalFrames = characterFrameCounts[characterId] || 465;
+        const frames = [];
+
+        if (frameCount && frameCount < totalFrames) {
+            // 如果指定了幀數且小於總數,均勻抽樣
+            const step = Math.floor(totalFrames / frameCount);
+            for (let i = 0; i < frameCount; i++) {
+                const frameIndex = Math.min(i * step, totalFrames - 1);
+                frames.push(`${basePath}/frame_${String(frameIndex).padStart(5, '0')}.png`);
+            }
+        } else {
+            // 使用所有幀
+            for (let i = 0; i < totalFrames; i++) {
+                frames.push(`${basePath}/frame_${String(i).padStart(5, '0')}.png`);
+            }
         }
 
         if (reverse) {

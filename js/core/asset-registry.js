@@ -32,6 +32,10 @@ export class AssetRegistry {
             missingAssets: new Set()
         };
 
+        // API 設定
+        this.apiBase = 'http://localhost:8001/api/v1';
+        this.manifestLoaded = false;
+
         // 初始化資產
         this._initializeAssets();
     }
@@ -258,6 +262,168 @@ export class AssetRegistry {
             stats.missingAssets.forEach(asset => console.log(`  - ${asset}`));
         }
         console.log('================================');
+    }
+
+    /**
+     * 從後端 API 載入完整資產清單
+     * @returns {Promise<boolean>} - 成功返回 true
+     */
+    async loadManifestFromAPI() {
+        if (this.manifestLoaded) {
+            console.log('[AssetRegistry] Manifest already loaded, skipping');
+            return true;
+        }
+
+        console.log('[AssetRegistry] 🔍 Loading asset manifest from API...');
+
+        try {
+            const response = await fetch(`${this.apiBase}/assets/manifest`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error(`API returned ${response.status}`);
+            }
+
+            const manifest = await response.json();
+
+            // 註冊背景資產
+            this._registerManifestCategory(manifest.backgrounds, 'backgrounds',
+                (dest, keys) => {
+                    keys.forEach(key => {
+                        // 構建路徑：根據 key 推斷路徑
+                        const path = this._inferBackgroundPath(key, dest);
+                        this._registerBackground(key, path);
+                    });
+                }
+            );
+
+            // 註冊建築資產
+            this._registerManifestCategory(manifest.buildings, 'buildings',
+                (type, keys) => {
+                    keys.forEach(key => {
+                        const path = this._inferBuildingPath(key, type);
+                        this._registerBuilding(key, path);
+                    });
+                }
+            );
+
+            // 註冊 NPC 資產
+            this._registerManifestCategory(manifest.npcs, 'npcs',
+                (archetype, keys) => {
+                    keys.forEach(key => {
+                        const path = this._inferNPCPath(key, archetype);
+                        this._registerNPC(key, path);
+                    });
+                }
+            );
+
+            // 註冊物品資產
+            this._registerManifestCategory(manifest.items, 'items',
+                (itemType, keys) => {
+                    keys.forEach(key => {
+                        const path = this._inferItemPath(key, itemType);
+                        this._registerItem(key, path);
+                    });
+                }
+            );
+
+            // 註冊 3D 模型
+            this._registerManifestCategory(manifest.models_3d, 'models3d',
+                (category, keys) => {
+                    keys.forEach(key => {
+                        const path = this._inferModelPath(key, category);
+                        this._registerModel3D(key, path);
+                    });
+                }
+            );
+
+            this.manifestLoaded = true;
+
+            console.log('[AssetRegistry] ✅ Manifest loaded:', {
+                backgrounds: manifest.stats.total_backgrounds,
+                buildings: manifest.stats.total_buildings,
+                npcs: manifest.stats.total_npcs,
+                items: manifest.stats.total_items,
+                models_3d: manifest.stats.total_3d_models
+            });
+
+            return true;
+
+        } catch (error) {
+            console.warn('[AssetRegistry] ⚠️ Failed to load manifest from API:', error.message);
+            console.log('[AssetRegistry] Using hardcoded assets only');
+            return false;
+        }
+    }
+
+    /**
+     * 註冊 manifest 分類的輔助方法
+     */
+    _registerManifestCategory(categoryData, categoryName, registerFn) {
+        if (!categoryData) return;
+
+        Object.entries(categoryData).forEach(([subcategory, keys]) => {
+            if (Array.isArray(keys) && keys.length > 0) {
+                registerFn(subcategory, keys);
+            }
+        });
+    }
+
+    /**
+     * 根據 assetKey 推斷背景路徑
+     */
+    _inferBackgroundPath(key, destination) {
+        // 特殊處理天空和雲朵
+        if (destination === 'sky') {
+            return `assets/images/backgrounds/sky/${key}.png`;
+        }
+        if (destination === 'clouds') {
+            return `assets/images/backgrounds/clouds/${key}.png`;
+        }
+
+        // 目的地背景
+        // key 格式：destination_layer_variant (例如 paris_buildings_v1)
+        return `assets/images/backgrounds/destinations/${destination}/${key}.png`;
+    }
+
+    /**
+     * 根據 assetKey 推斷建築路徑
+     */
+    _inferBuildingPath(key, buildingType) {
+        // key 格式：type_name (例如 cafe_paris_v1) 或 interior_type_name
+        if (buildingType === 'interior') {
+            // interior_cafe_modern
+            const parts = key.split('_');
+            const interiorType = parts[1] || 'generic';
+            return `assets/images/interiors/${interiorType}/${key}.png`;
+        }
+        return `assets/images/objects/${buildingType}/${key}.png`;
+    }
+
+    /**
+     * 根據 assetKey 推斷 NPC 路徑
+     */
+    _inferNPCPath(key, archetype) {
+        // key 格式：npc_archetype_variant (例如 npc_citizen_paris_01)
+        return `assets/images/npcs/${archetype}/${key}.png`;
+    }
+
+    /**
+     * 根據 assetKey 推斷物品路徑
+     */
+    _inferItemPath(key, itemType) {
+        // key 格式：item_type_variant (例如 item_collectible_coin_gold)
+        return `assets/images/items/${itemType}/${key}.png`;
+    }
+
+    /**
+     * 根據 assetKey 推斷 3D 模型路徑
+     */
+    _inferModelPath(key, category) {
+        // key 格式：model_category_name (例如 model_characters_jett)
+        return `assets/models/${category}/${key}.glb`;
     }
 }
 

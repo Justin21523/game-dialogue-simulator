@@ -20,6 +20,7 @@ from backend.core.agents import (
 )
 from backend.core.agents.background_generator import SkyType, WorldLocation
 from backend.core.agents.ui_asset_generator import MissionIcon
+from backend.core.asset_manifest import get_asset_manifest
 
 router = APIRouter()
 
@@ -313,3 +314,186 @@ async def package_generation_websocket(websocket: WebSocket, session_id: str):
         await websocket.send_json({
             "error": str(e),
         })
+
+
+# ===== Asset Manifest Endpoints =====
+
+@router.get("/manifest")
+async def get_manifest(
+    force_scan: bool = Query(False, description="強制重新掃描資產（忽略快取）"),
+):
+    """
+    取得完整資產清單（供前端使用）
+
+    這個端點返回所有可用資產的清單，包括：
+    - 背景圖片（按目的地分類）
+    - 建築物（按類型分類）
+    - NPC（按原型分類）
+    - 物品（按類型分類）
+    - 3D 模型
+
+    Returns:
+        包含所有資產清單和統計資訊的字典
+    """
+    manifest = get_asset_manifest(force_scan=force_scan)
+
+    return {
+        "backgrounds": dict(manifest.backgrounds),
+        "buildings": dict(manifest.buildings),
+        "npcs": dict(manifest.npcs),
+        "items": dict(manifest.items),
+        "models_3d": dict(manifest.models_3d),
+        "stats": {
+            "total_backgrounds": manifest.stats['total_backgrounds'],
+            "total_buildings": manifest.stats['total_buildings'],
+            "total_npcs": manifest.stats['total_npcs'],
+            "total_items": manifest.stats['total_items'],
+            "total_3d_models": manifest.stats['total_3d_models'],
+            "destinations": len([k for k in manifest.backgrounds.keys() if k not in ['sky', 'clouds']]),
+            "building_types": len(manifest.buildings.keys()),
+            "npc_archetypes": len(manifest.npcs.keys()),
+            "item_types": len(manifest.items.keys()),
+            "scan_time": manifest.stats.get('scan_time', 0),
+        }
+    }
+
+
+@router.get("/manifest/backgrounds")
+async def get_available_backgrounds(
+    destination: Optional[str] = Query(None, description="目的地（例如 'paris'）"),
+):
+    """
+    取得可用的背景資產 keys
+
+    Args:
+        destination: 特定目的地。如果不指定，返回所有背景。
+
+    Returns:
+        背景 keys 列表
+    """
+    manifest = get_asset_manifest()
+
+    if destination:
+        backgrounds = manifest.get_available_backgrounds(destination)
+        return {
+            "destination": destination,
+            "backgrounds": backgrounds,
+            "count": len(backgrounds)
+        }
+    else:
+        # 返回所有目的地
+        all_dest = {
+            dest: manifest.get_available_backgrounds(dest)
+            for dest in manifest.backgrounds.keys()
+            if dest not in ['sky', 'clouds']
+        }
+        return {
+            "destinations": all_dest,
+            "total_destinations": len(all_dest),
+            "total_backgrounds": sum(len(v) for v in all_dest.values())
+        }
+
+
+@router.get("/manifest/buildings")
+async def get_available_buildings(
+    building_type: Optional[str] = Query(None, description="建築類型（例如 'cafe'）"),
+):
+    """
+    取得可用的建築資產 keys
+
+    Args:
+        building_type: 特定建築類型。如果不指定，返回所有建築。
+
+    Returns:
+        建築 keys 列表
+    """
+    manifest = get_asset_manifest()
+
+    if building_type:
+        buildings = manifest.get_available_buildings(building_type)
+        return {
+            "building_type": building_type,
+            "buildings": buildings,
+            "count": len(buildings)
+        }
+    else:
+        return {
+            "building_types": dict(manifest.buildings),
+            "total_types": len(manifest.buildings),
+            "total_buildings": sum(len(v) for v in manifest.buildings.values())
+        }
+
+
+@router.get("/manifest/npcs")
+async def get_available_npcs(
+    archetype: Optional[str] = Query(None, description="NPC 原型（例如 'citizen'）"),
+):
+    """
+    取得可用的 NPC 資產 keys
+
+    Args:
+        archetype: 特定 NPC 原型。如果不指定，返回所有 NPC。
+
+    Returns:
+        NPC keys 列表
+    """
+    manifest = get_asset_manifest()
+
+    if archetype:
+        npcs = manifest.get_available_npcs(archetype)
+        return {
+            "archetype": archetype,
+            "npcs": npcs,
+            "count": len(npcs)
+        }
+    else:
+        return {
+            "archetypes": dict(manifest.npcs),
+            "total_archetypes": len(manifest.npcs),
+            "total_npcs": sum(len(v) for v in manifest.npcs.values())
+        }
+
+
+@router.get("/manifest/items")
+async def get_available_items(
+    item_type: Optional[str] = Query(None, description="物品類型（例如 'collectible'）"),
+):
+    """
+    取得可用的物品資產 keys
+
+    Args:
+        item_type: 特定物品類型。如果不指定，返回所有物品。
+
+    Returns:
+        物品 keys 列表
+    """
+    manifest = get_asset_manifest()
+
+    if item_type:
+        items = manifest.get_available_items(item_type)
+        return {
+            "item_type": item_type,
+            "items": items,
+            "count": len(items)
+        }
+    else:
+        return {
+            "item_types": dict(manifest.items),
+            "total_types": len(manifest.items),
+            "total_items": sum(len(v) for v in manifest.items.values())
+        }
+
+
+@router.post("/manifest/invalidate")
+async def invalidate_manifest_cache():
+    """
+    清除資產清單快取，強制下次重新掃描
+
+    這個端點用於開發階段，當添加新資產後需要重新掃描時使用。
+    """
+    from backend.core.asset_manifest import invalidate_cache
+    invalidate_cache()
+    return {
+        "message": "快取已清除，下次調用會重新掃描資產",
+        "status": "success"
+    }

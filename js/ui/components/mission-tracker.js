@@ -18,6 +18,7 @@ export class MissionTracker {
 
         // 當前任務
         this.mission = null;
+        this.quest = null;  // Checkpoint 4: Quest support
 
         // 狀態
         this.isCollapsed = false;
@@ -49,6 +50,7 @@ export class MissionTracker {
                 <div class="header-left">
                     <span class="tracker-icon">📋</span>
                     <span class="tracker-title">任務目標</span>
+                    <span class="tracker-trace hidden"></span>
                 </div>
                 <div class="header-right">
                     <div class="timer-display hidden">
@@ -84,6 +86,7 @@ export class MissionTracker {
         this.bodyElement = this.trackerElement.querySelector('.tracker-body');
         this.titleElement = this.trackerElement.querySelector('.mission-title');
         this.descriptionElement = this.trackerElement.querySelector('.mission-description');
+        this.traceElement = this.trackerElement.querySelector('.tracker-trace');
         this.progressBar = this.trackerElement.querySelector('.progress-bar-fill');
         this.progressText = this.trackerElement.querySelector('.progress-text');
         this.taskList = this.trackerElement.querySelector('.task-list');
@@ -92,14 +95,29 @@ export class MissionTracker {
         this.tasksCompletedText = this.trackerElement.querySelector('.tasks-completed');
         this.toggleButton = this.trackerElement.querySelector('.tracker-toggle');
         this.showAllButton = this.trackerElement.querySelector('.show-all-btn');
+        this.traceElement = this.trackerElement.querySelector('.tracker-trace');
+        this.logContainer = document.createElement('div');
+        this.logContainer.className = 'tracker-log';
+        this.logContainer.style.marginTop = '8px';
+        this.logContainer.style.fontSize = '12px';
+        this.logContainer.style.maxHeight = '120px';
+        this.logContainer.style.overflowY = 'auto';
+        this.logContainer.innerHTML = '<div class="tracker-log-title">狀態流</div><div class="tracker-log-rows"></div>';
+        this.trackerElement.appendChild(this.logContainer);
+        this.retryBtn = document.createElement('button');
+        this.retryBtn.className = 'tracker-retry-btn';
+        this.retryBtn.textContent = '🔄 重試 AI';
+        this.retryBtn.style.marginTop = '6px';
+        this.trackerElement.appendChild(this.retryBtn);
 
         // 設定按鈕事件
         this.toggleButton.addEventListener('click', () => this.toggle());
         this.showAllButton.addEventListener('click', () => this.showAllTasks());
+        this.retryBtn.addEventListener('click', () => this.retryAI());
     }
 
     /**
-     * 設定事件監聯
+     * 設定事件監聽
      */
     setupEventListeners() {
         eventBus.on('MISSION_STARTED', (data) => this.setMission(data.mission));
@@ -107,6 +125,17 @@ export class MissionTracker {
         eventBus.on('SUBTASK_COMPLETED', (data) => this.onSubTaskCompleted(data));
         eventBus.on('MISSION_COMPLETED', () => this.onMissionCompleted());
         eventBus.on('MISSION_FAILED', (data) => this.onMissionFailed(data));
+
+        // ===== Checkpoint 4: Quest 進度更新 =====
+        eventBus.on('QUEST_ACCEPTED', (data) => this.setQuest(data.quest));
+        eventBus.on('QUEST_PROGRESS_UPDATED', () => this.refreshQuest());
+        eventBus.on('QUEST_COMPLETED', () => this.onQuestCompleted());
+        eventBus.on('MISSION_STATE_LOG', () => this.refreshLogs());
+        eventBus.on('AI_OFFLINE_MODE', () => this.showDegradedBadge());
+
+        // ===== Checkpoint 5: 動態 Objective 添加 =====
+        eventBus.on('QUEST_OBJECTIVE_ADDED', (data) => this.onObjectiveAdded(data));
+        eventBus.on('QUEST_HINT_PROVIDED', (data) => this.onHintProvided(data));
     }
 
     /**
@@ -511,6 +540,7 @@ export class MissionTracker {
      */
     reset() {
         this.mission = null;
+        this.quest = null;  // Checkpoint 4
         this.stopTimer();
         this.stopUpdate();
 
@@ -526,6 +556,313 @@ export class MissionTracker {
         this.timerDisplay.classList.add('hidden');
     }
 
+    // ===== Checkpoint 4: Quest 支援方法 =====
+
+    /**
+     * 設定 Quest
+     * @param {Quest} quest - Quest 實例
+     */
+    setQuest(quest) {
+        this.quest = quest;
+        this.mission = null;  // 清除舊的 mission
+
+        // 更新基本資訊
+        this.titleElement.textContent = quest.title || '未命名任務';
+        this.descriptionElement.textContent = quest.description || '';
+        if (this.traceElement) {
+            const trace = quest.aiContext?.traceId || quest.aiContext?.ragSessionId;
+            if (trace) {
+                this.traceElement.textContent = `trace:${String(trace).slice(0, 8)}`;
+                this.traceElement.classList.remove('hidden');
+            } else {
+                this.traceElement.classList.add('hidden');
+            }
+        }
+
+        // 隱藏計時器（Quest 通常沒有時間限制）
+        this.timerDisplay.classList.add('hidden');
+
+        // 渲染 objectives
+        this.renderQuestObjectives();
+
+        // 更新狀態流
+        this.refreshLogs();
+
+        // 顯示追蹤器
+        this.trackerElement.classList.remove('hidden');
+
+        console.log('[MissionTracker] Quest set:', quest.questId);
+    }
+
+    /**
+     * 渲染 Quest objectives
+     */
+    renderQuestObjectives() {
+        if (!this.quest) return;
+
+        this.taskList.innerHTML = '';
+        const objectives = this.quest.objectives || [];
+
+        objectives.forEach((objective, index) => {
+            const objectiveElement = this.createObjectiveElement(objective, index);
+            this.taskList.appendChild(objectiveElement);
+        });
+
+        // 更新進度
+        this.updateQuestProgress();
+    }
+
+    /**
+     * 創建單一 Objective 元素
+     */
+    createObjectiveElement(objective, index) {
+        const element = document.createElement('div');
+        element.className = `task-item ${objective.status}`;
+        if (objective.optional) element.classList.add('optional');
+        if (objective.isDynamic) element.classList.add('dynamic');
+        element.dataset.objectiveId = objective.id;
+
+        const typeIcon = this.getObjectiveTypeIcon(objective.type);
+        const statusIcon = this.getStatusIcon(objective.status);
+
+        element.innerHTML = `
+            <div class="task-checkbox">
+                <span class="checkbox-icon">${statusIcon}</span>
+            </div>
+            <div class="task-content">
+                <div class="task-header">
+                    <span class="task-type-icon">${typeIcon}</span>
+                    <span class="task-title">${objective.title || 'Untitled Objective'}</span>
+                    ${objective.optional ? '<span class="optional-badge">Optional</span>' : ''}
+                    ${objective.aiGenerated ? '<span class="ai-badge">🤖</span>' : ''}
+                    ${objective.assignedCharacter ? `<span class="assigned-badge">Assigned: ${objective.assignedCharacter}</span>` : ''}
+                </div>
+                ${objective.description ? `<p class="task-description">${objective.description}</p>` : ''}
+                ${objective.completedBy ? `<p class="task-completed-by">Completed by: ${objective.completedBy}</p>` : ''}
+                ${objective.requiredCount > 1 ? `
+                    <div class="task-progress">
+                        <div class="task-progress-bar">
+                            <div class="task-progress-fill" style="width: ${objective.progress * 100}%"></div>
+                        </div>
+                        <span class="task-progress-text">${objective.currentCount}/${objective.requiredCount}</span>
+                    </div>
+                ` : ''}
+                ${objective.hint ? `<p class="task-hint">💡 ${objective.hint}</p>` : ''}
+            </div>
+        `;
+
+        return element;
+    }
+
+    /**
+     * 獲取 Objective 類型圖標
+     */
+    getObjectiveTypeIcon(type) {
+        const icons = {
+            'talk': '💬',
+            'collect': '📦',
+            'deliver': '📮',
+            'explore': '🗺️',
+            'investigate': '🔍',
+            'assist': '🤝',
+            'custom': '⚡'
+        };
+        return icons[type] || '📌';
+    }
+
+    /**
+     * 更新 Quest 進度
+     */
+    updateQuestProgress() {
+        if (!this.quest) return;
+
+        const requiredObjectives = this.quest.objectives.filter(obj => !obj.optional);
+        const completedRequired = requiredObjectives.filter(obj => obj.status === 'completed');
+
+        const progress = requiredObjectives.length > 0
+            ? completedRequired.length / requiredObjectives.length
+            : 0;
+
+        // 更新進度條
+        this.progressBar.style.width = `${progress * 100}%`;
+        this.progressText.textContent = `${Math.round(progress * 100)}%`;
+
+        // 更新完成計數
+        this.tasksCompletedText.textContent = `${completedRequired.length}/${requiredObjectives.length} 完成`;
+    }
+
+    /**
+     * 刷新 Quest 顯示
+     */
+    refreshQuest() {
+        if (!this.quest) return;
+
+        // 重新渲染所有 objectives
+        this.renderQuestObjectives();
+
+        this.refreshLogs();
+
+        console.log('[MissionTracker] Quest refreshed');
+    }
+
+    refreshLogs() {
+        if (!this.logContainer || !this.quest) return;
+        const rowsContainer = this.logContainer.querySelector('.tracker-log-rows');
+        if (!rowsContainer) return;
+
+        const logs = (missionManager.stateLog || [])
+            .filter((l) => l.detail?.questId ? l.detail.questId === this.quest.questId : true)
+            .slice(-5)
+            .reverse();
+
+        if (logs.length === 0) {
+            rowsContainer.innerHTML = '<div class="log-empty">尚無紀錄</div>';
+            return;
+        }
+
+        rowsContainer.innerHTML = logs.map((log) => {
+            const ts = new Date(log.timestamp || Date.now());
+            const hh = String(ts.getHours()).padStart(2, '0');
+            const mm = String(ts.getMinutes()).padStart(2, '0');
+            const label = log.type;
+            let detailText = '';
+            try {
+                detailText = typeof log.detail === 'string' ? log.detail : JSON.stringify(log.detail || {});
+            } catch (e) {
+                detailText = '[unserializable]';
+            }
+            return `<div class="log-row"><span class="log-time">${hh}:${mm}</span><span class="log-type">${label}</span><span class="log-detail">${detailText}</span></div>`;
+        }).join('');
+    }
+
+    retryAI() {
+        if (!this.quest) return;
+        missionManager.pushStateLog('retry_ai', { questId: this.quest.questId });
+        const activeObj = this.quest.objectives.find((o) => o.status !== 'completed');
+        if (activeObj) {
+            missionManager.emitObjectiveUpdate(this.quest, activeObj, 'manual_retry', { actorId: this.quest.participants?.[0]?.characterId });
+            eventBus.emit('SHOW_TOAST', { message: '🔄 已向 AI 重新提交任務狀態', type: 'info', duration: 2500 });
+        }
+    }
+
+    showDegradedBadge() {
+        if (!this.traceElement) return;
+        this.traceElement.textContent = (this.traceElement.textContent || '') + ' / degraded';
+        this.traceElement.classList.remove('hidden');
+    }
+
+    /**
+     * Quest 完成處理
+     */
+    onQuestCompleted() {
+        if (!this.quest) return;
+
+        console.log('[MissionTracker] Quest completed!');
+
+        // 添加完成樣式
+        this.trackerElement.classList.add('mission-complete');
+
+        // 更新進度為 100%
+        this.progressBar.style.width = '100%';
+        this.progressText.textContent = '100%';
+
+        // 3 秒後自動隱藏
+        setTimeout(() => {
+            this.trackerElement.classList.add('hidden');
+            this.reset();
+        }, 3000);
+    }
+
+    /**
+     * Checkpoint 5: 處理動態添加的 Objective
+     * @param {Object} data - { questId, objective }
+     */
+    onObjectiveAdded(data) {
+        if (!this.quest || this.quest.questId !== data.questId) return;
+
+        console.log('[MissionTracker] 🆕 Dynamic objective added:', data.objective.title);
+
+        // 重新渲染 objectives 列表
+        this.renderQuestObjectives();
+
+        // 顯示通知動畫（可選）
+        const notification = document.createElement('div');
+        notification.className = 'objective-added-notification';
+        notification.innerHTML = `
+            <span class="notification-icon">✨</span>
+            <span class="notification-text">新目標：${data.objective.title}</span>
+        `;
+        notification.style.cssText = `
+            position: absolute;
+            top: -40px;
+            left: 0;
+            right: 0;
+            background: rgba(52, 152, 219, 0.95);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+            animation: slideDown 0.3s ease-out, fadeOut 0.3s ease-out 2.7s;
+            z-index: 1000;
+        `;
+
+        this.trackerElement.style.position = 'relative';
+        this.trackerElement.appendChild(notification);
+
+        // 3 秒後移除通知
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    }
+
+    /**
+     * Checkpoint 5: 處理 AI 提供的提示
+     * @param {Object} data - { questId, hint, npcId }
+     */
+    onHintProvided(data) {
+        if (!this.quest || this.quest.questId !== data.questId) return;
+
+        console.log('[MissionTracker] 💡 Hint provided:', data.hint);
+
+        // 顯示提示通知
+        const notification = document.createElement('div');
+        notification.className = 'hint-notification';
+        notification.innerHTML = `
+            <div class="hint-header">
+                <span class="hint-icon">💡</span>
+                <span class="hint-title">提示</span>
+            </div>
+            <p class="hint-text">${data.hint}</p>
+        `;
+        notification.style.cssText = `
+            position: absolute;
+            top: -80px;
+            left: 0;
+            right: 0;
+            background: rgba(241, 196, 15, 0.95);
+            color: #333;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            animation: slideDown 0.3s ease-out, fadeOut 0.3s ease-out 4.7s;
+            z-index: 1000;
+        `;
+
+        this.trackerElement.style.position = 'relative';
+        this.trackerElement.appendChild(notification);
+
+        // 5 秒後移除通知
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 5000);
+    }
+
     /**
      * 銷毀
      */
@@ -538,5 +875,6 @@ export class MissionTracker {
         }
 
         this.mission = null;
+        this.quest = null;
     }
 }
