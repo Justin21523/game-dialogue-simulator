@@ -1537,6 +1537,24 @@ export class ExplorationScreen {
                 this.togglePartnerMenu();
             }
 
+            // ===== 🔍 D 鍵：Debug 狀態輸出 =====
+            if (key === 'd') {
+                console.log('=== 🔍 DEBUG STATE ===');
+                console.log('isInDialogue:', this.isInDialogue);
+                console.log('currentDialogue:', this.currentDialogue);
+                console.log('isLoadingDialogue:', this.isLoadingDialogue);
+                console.log('nearbyNPC:', this.nearbyNPC);
+                console.log('nearbyItem:', this.nearbyItem);
+                console.log('nearbyBuilding:', this.nearbyBuilding);
+                console.log('keys[g]:', this.keys['g']);
+                const dialogueUI = document.getElementById('dialogue-container');
+                console.log('dialogue-container display:', dialogueUI?.style.display);
+                const interactPrompt = document.getElementById('interaction-prompt');
+                console.log('interaction-prompt display:', interactPrompt?.style.display);
+                console.log('NPC count:', this.npcs?.length || 0);
+                console.log('===================');
+            }
+
             // ===== 🆕 Q 鍵：選擇上一個角色 =====
             if (key === 'q') {
                 if (!this.isInDialogue) {
@@ -1557,9 +1575,25 @@ export class ExplorationScreen {
                     'nearbyNPC:', this.nearbyNPC?.name, 'nearbyItem:', this.nearbyItem?.name,
                     'nearbyBuilding:', this.nearbyBuilding?.name);
 
+                // 🔧 緊急修復：如果 isInDialogue 卡住（對話 UI 沒有顯示），強制重置
                 if (this.isInDialogue) {
-                    // 對話中不處理
-                    console.log('[ExplorationScreen] G key blocked - already in dialogue');
+                    const dialogueUI = document.getElementById('dialogue-container');
+                    const isDialogueUIVisible = dialogueUI && dialogueUI.style.display !== 'none';
+
+                    if (!isDialogueUIVisible) {
+                        console.warn('[ExplorationScreen] ⚠️ isInDialogue 卡住！強制重置...');
+                        this.isInDialogue = false;
+                        this.currentDialogue = null;
+                        this.currentAIDialogue = null;
+                        this.isLoadingDialogue = false;
+                        this.keys['g'] = false;
+                        // 重新檢查一次附近的互動對象
+                        console.log('[ExplorationScreen] ✅ 對話狀態已重置，繼續處理 G 鍵...');
+                    } else {
+                        // 對話 UI 正常顯示中，不處理 G 鍵
+                        console.log('[ExplorationScreen] G key blocked - already in dialogue (UI visible)');
+                        return;
+                    }
                 } else if (this.currentScene === 'indoor' && this.interiorManager) {
                     // 室內場景 - 處理退出建築物
                     const handled = this.interiorManager.handleInteraction();
