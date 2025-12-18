@@ -12,6 +12,7 @@ import { getNPCService } from '../../services/npc-service.js';
 import { ThreeRenderer } from '../../game/exploration/three-renderer.js';
 import { assetRegistry } from '../../core/asset-registry.js';
 import { worldGenerator } from '../../game/exploration/world-generator.js';
+import { questSystem } from '../../systems/quest-system.js';  // Checkpoint 2
 
 export class ExplorationScreen {
     constructor(containerId, missionData) {
@@ -325,6 +326,9 @@ export class ExplorationScreen {
         // ===== Phase 5: 初始化夥伴系統 =====
         this.initPartnerSystem();
 
+        // ===== Checkpoint 2: 初始化任務系統 =====
+        this.initQuestSystem();
+
         // ===== Phase 5.4: 監聽夥伴召喚返回事件 =====
         this.setupSummonFlowListener();
 
@@ -388,6 +392,9 @@ export class ExplorationScreen {
             });
 
             // ===== 1. 載入 NPCs =====
+            // 動態導入 NPC 行為控制器
+            const { NPCBehaviorController } = await import('../../game/ai/npc-behavior.js');
+
             worldSpec.npcs.forEach((npcSpec, index) => {
                 const gameNPC = {
                     id: npcSpec.id,
@@ -422,13 +429,69 @@ export class ExplorationScreen {
 
                     // AI 資訊
                     archetype: npcSpec.archetype,
-                    aiGenerated: false  // procedural 生成
+                    aiGenerated: false,  // procedural 生成
+
+                    // ===== Phase 3: 行為資訊 =====
+                    behavior: npcSpec.behavior || 'idle',
+                    patrolPath: npcSpec.patrol_path || [],
+                    wanderRadius: npcSpec.wander_radius || 200
                 };
 
+                // ===== Phase 3: 初始化行為控制器 =====
+                gameNPC.behaviorController = new NPCBehaviorController(gameNPC, {
+                    initialState: gameNPC.behavior,
+                    wanderRadius: gameNPC.wanderRadius,
+                    patrolPath: gameNPC.patrolPath,
+                    wanderSpeed: 50,
+                    patrolSpeed: 60,
+                    playerDetectionRange: 150,
+                    approachThreshold: 100,
+                    worldMinX: 100,
+                    worldMaxX: 1900,
+                    debug: false  // 設為 true 可以看到狀態切換日誌
+                });
+
                 this.npcs.push(gameNPC);
+
+                // ===== Phase 4: 在 ThreeRenderer 中創建 3D 模型 =====
+                if (this.threeRenderer) {
+                    this.threeRenderer.addNPCModel(gameNPC.id, gameNPC);
+                }
             });
 
-            console.log(`[ExplorationScreen] ✅ Loaded ${this.npcs.length} NPCs from WorldSpec`);
+            console.log(`[ExplorationScreen] ✅ Loaded ${this.npcs.length} NPCs from WorldSpec (with behavior controllers)`);
+
+            // ===== Phase 4: 強制檢查並初始化 ThreeRenderer =====
+            console.log('[ExplorationScreen] 🔍 檢查 ThreeRenderer 狀態...');
+            if (!this.threeRenderer) {
+                console.warn('[ExplorationScreen] ⚠️ ThreeRenderer 未初始化，嘗試手動初始化...');
+                try {
+                    this.threeRenderer = new ThreeRenderer(this.canvas, {
+                        enableLighting: true,
+                        enableShadows: false,
+                        debug: true
+                    });
+                    console.log('[ExplorationScreen] ✅ ThreeRenderer 手動初始化成功');
+                } catch (error) {
+                    console.error('[ExplorationScreen] ❌ 手動初始化也失敗:', error);
+                }
+            }
+
+            // 為所有已載入的 NPC 創建 3D 模型
+            if (this.threeRenderer) {
+                let modelCount = 0;
+                this.npcs.forEach(npc => {
+                    this.threeRenderer.addNPCModel(npc.id, npc);
+                    modelCount++;
+                });
+                console.log(`[ExplorationScreen] ✅ 已為 ${modelCount} 個 NPC 創建 3D 模型`);
+
+                // 取得統計資訊
+                const stats = this.threeRenderer.getStats();
+                console.log('[ExplorationScreen] ThreeRenderer 統計:', stats);
+            } else {
+                console.error('[ExplorationScreen] ❌ ThreeRenderer 仍然為 null，無法創建 3D 模型');
+            }
 
             // ===== 2. 載入建築物（暫存，稍後會用 BuildingManager）=====
             this.buildings = worldSpec.buildings || [];
@@ -771,8 +834,26 @@ export class ExplorationScreen {
         // 創建室內場景管理器
         this.interiorManager = new InteriorManager(this);
 
-        // 生成預設建築物
-        this.buildingManager.generateDefaultBuildings(this.groundY);
+        // ===== Phase 2: 使用 WorldSpec 的建築物（如果有）=====
+        if (this.buildings && this.buildings.length > 0) {
+            console.log(`[ExplorationScreen] Loading ${this.buildings.length} buildings from WorldSpec`);
+
+            // 將 WorldSpec 的建築物添加到 BuildingManager
+            this.buildings.forEach(buildingData => {
+                // 確保建築物有正確的 Y 座標
+                if (!buildingData.y || buildingData.y === 0) {
+                    buildingData.y = this.groundY - (buildingData.height || 200);
+                }
+
+                this.buildingManager.addBuilding(buildingData);
+            });
+
+            console.log(`[ExplorationScreen] ✅ Loaded ${this.buildings.length} buildings from WorldSpec`);
+        } else {
+            // 沒有 WorldSpec 建築物，生成預設建築物
+            console.log('[ExplorationScreen] No WorldSpec buildings, generating defaults');
+            this.buildingManager.generateDefaultBuildings(this.groundY);
+        }
 
         console.log(`[ExplorationScreen] Building system initialized with ${this.buildingManager.getBuildingCount()} buildings`);
         console.log('[ExplorationScreen] Interior system initialized');
@@ -797,6 +878,41 @@ export class ExplorationScreen {
 
         // Setup partner menu events
         this.setupPartnerMenuEvents();
+    }
+
+    /**
+     * ===== Checkpoint 2: Initialize Quest System =====
+     */
+    initQuestSystem() {
+        console.log('[ExplorationScreen] 🎯 Initializing Quest System...');
+
+        // Initialize QuestSystem (it's a singleton, just call initialize)
+        questSystem.initialize({
+            debug: true,
+            autoSave: true,
+            autoSaveInterval: 30000  // Auto-save every 30 seconds
+        });
+
+        console.log('[ExplorationScreen] ✅ Quest System initialized');
+
+        // Listen for quest events
+        eventBus.on('QUEST_ACCEPTED', (data) => {
+            console.log('[ExplorationScreen] 📋 Quest accepted:', data.questId);
+            // TODO Checkpoint 4: Update quest tracker UI
+        });
+
+        eventBus.on('QUEST_DECLINED', (data) => {
+            console.log('[ExplorationScreen] ❌ Quest declined:', data.questId);
+        });
+
+        eventBus.on('QUEST_COMPLETED', (data) => {
+            console.log('[ExplorationScreen] ✅ Quest completed:', data.questId);
+            // TODO Checkpoint 7: Show completion rewards
+        });
+
+        eventBus.on('QUEST_ABANDONED', (data) => {
+            console.log('[ExplorationScreen] 🚫 Quest abandoned:', data.questId);
+        });
     }
 
     /**
@@ -904,10 +1020,42 @@ export class ExplorationScreen {
                 y: p.y
             })),
             // ===== 🆕 保存 NPCs 和 Items =====
-            npcs: JSON.parse(JSON.stringify(this.npcs)),
-            items: JSON.parse(JSON.stringify(this.items)),
-            nearbyNPC: this.nearbyNPC ? { ...this.nearbyNPC } : null,
-            nearbyItem: this.nearbyItem ? { ...this.nearbyItem } : null,
+            // 只保存序列化安全的屬性，避免循環引用（behaviorController）
+            npcs: this.npcs.map(npc => ({
+                id: npc.id,
+                name: npc.name,
+                x: npc.x,
+                y: npc.y,
+                vx: npc.vx,
+                vy: npc.vy,
+                facingRight: npc.facingRight,
+                behavior: npc.behavior,
+                wanderRadius: npc.wanderRadius,
+                patrolPath: npc.patrolPath,
+                sprite: npc.sprite,
+                dialogue: npc.dialogue,
+                questId: npc.questId,
+                aiControlled: npc.aiControlled
+            })),
+            items: this.items.map(item => ({
+                id: item.id,
+                name: item.name,
+                x: item.x,
+                y: item.y,
+                type: item.type,
+                questId: item.questId,
+                sprite: item.sprite
+            })),
+            nearbyNPC: this.nearbyNPC ? {
+                id: this.nearbyNPC.id,
+                name: this.nearbyNPC.name,
+                dialogue: this.nearbyNPC.dialogue
+            } : null,
+            nearbyItem: this.nearbyItem ? {
+                id: this.nearbyItem.id,
+                name: this.nearbyItem.name,
+                type: this.nearbyItem.type
+            } : null,
             isInDialogue: this.isInDialogue,
             currentDialogue: this.currentDialogue ? { ...this.currentDialogue } : null,
             // ===== 任務狀態 =====
@@ -1933,6 +2081,20 @@ export class ExplorationScreen {
         this.backgroundOffset = -this.camera.x * 0.3;
         this.cloudOffset = -this.camera.x * 0.5;
 
+        // ===== Phase 3: 更新 NPC 行為（AI 移動）=====
+        this.npcs.forEach(npc => {
+            if (npc.behaviorController) {
+                // 更新行為控制器（會改變 npc.vx, npc.facingRight 等）
+                npc.behaviorController.update(dt, controlled);
+            }
+
+            // 物理更新：根據速度移動 NPC
+            npc.x += npc.vx * dt;
+
+            // 邊界限制（防止走出地圖）
+            npc.x = Math.max(100, Math.min(1900, npc.x));
+        });
+
         // ===== Phase 2: 檢查附近的 NPC =====
         if (!this.isInDialogue) {
             this.checkNearbyNPC();
@@ -1969,19 +2131,8 @@ export class ExplorationScreen {
                 this.threeRenderer.addOrUpdateCharacter(id, char, null);
             });
 
-            // 同步 NPCs（藍色 3D 膠囊）
-            this.npcs.forEach((npc, index) => {
-                const npcId = npc.id || `npc_${index}`;
-                const npcObject = {
-                    x: npc.x,
-                    y: npc.y,
-                    width: npc.width || 80,
-                    height: npc.height || 100,
-                    type: 'npc',
-                    facingRight: npc.facingRight !== undefined ? npc.facingRight : true
-                };
-                this.threeRenderer.addOrUpdateCharacter(npcId, npcObject, null);
-            });
+            // ===== Phase 4: 批量更新 NPC 3D 位置 =====
+            this.threeRenderer.updateAllNPCs(this.npcs);
         }
 
         // 更新调试信息

@@ -161,7 +161,7 @@ class ImageSelectorAgent:
             char_id = char_dir.name
             self._image_catalog[char_id] = {
                 "all": [],
-                "transform_frames": [],
+                "transform_animation": [],
                 "transform_sequence": [],
             }
 
@@ -171,12 +171,17 @@ class ImageSelectorAgent:
                 for img_file in all_folder.glob("*.png"):
                     self._image_catalog[char_id]["all"].append(img_file.name)
 
-            # Scan transform folders
-            for folder_name in ["transform_frames", "transform_sequence"]:
-                folder = char_dir / folder_name
-                if folder.exists():
-                    for img_file in folder.glob("*.png"):
-                        self._image_catalog[char_id][folder_name].append(img_file.name)
+            # Scan animations/transform_animation folder
+            transform_anim_folder = char_dir / "animations" / "transform_animation"
+            if transform_anim_folder.exists():
+                for img_file in transform_anim_folder.glob("*.png"):
+                    self._image_catalog[char_id]["transform_animation"].append(img_file.name)
+
+            # Scan transform_sequence folder (backup)
+            transform_seq_folder = char_dir / "transform_sequence"
+            if transform_seq_folder.exists():
+                for img_file in transform_seq_folder.glob("*.png"):
+                    self._image_catalog[char_id]["transform_sequence"].append(img_file.name)
 
         logger.info(f"Image catalog built: {len(self._image_catalog)} characters")
 
