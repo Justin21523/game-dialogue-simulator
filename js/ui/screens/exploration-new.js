@@ -394,17 +394,27 @@ export class ExplorationScreen {
                     name: npcSpec.name,
                     type: npcSpec.type,
                     x: npcSpec.x,
-                    y: npcSpec.y,
+                    y: this.groundY - 130,  // 🔧 修正 Y 座標（站在地面上）
                     width: 80,
                     height: 130,
                     dialogue: npcSpec.dialogue || ['Hello!'],
                     currentDialogueIndex: 0,
                     facingRight: true,
 
+                    // 物理屬性
+                    vx: 0,
+                    vy: 0,
+                    moveSpeed: 100,
+                    animState: 'idle',
+
+                    // 視覺屬性
+                    color: this.generateNPCColor(npcSpec.type),  // 根據類型生成顏色
+                    image: null,  // 暫時為 null，稍後可載入圖片
+
                     // Quest 相關
                     quest: npcSpec.has_quest ? this.createQuestFromNPC(npcSpec, index) : null,
                     questGiven: false,
-                    hasQuest: npcSpec.has_quest,
+                    hasQuest: npcSpec.has_quest || false,
 
                     // 外觀
                     appearance: npcSpec.appearance,
@@ -545,6 +555,21 @@ export class ExplorationScreen {
         };
 
         return farewells[npc.personality] || `Goodbye!`;
+    }
+
+    /**
+     * 根據 NPC 類型生成顏色
+     */
+    generateNPCColor(type) {
+        const colorMap = {
+            'resident': '#4a90e2',    // 藍色
+            'shopkeeper': '#f5a623',  // 橙色
+            'traveler': '#7ed321',    // 綠色
+            'elder': '#9013fe',       // 紫色
+            'child': '#ff6b9d',       // 粉紅色
+            'default': '#d0d0d0'      // 灰色
+        };
+        return colorMap[type] || colorMap['default'];
     }
 
     /**
