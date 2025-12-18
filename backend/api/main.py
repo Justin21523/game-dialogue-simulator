@@ -218,6 +218,13 @@ app.include_router(
     tags=["NPC Generation"]
 )
 
+# ===== Phase 2：世界生成系統 =====
+app.include_router(
+    world.router,
+    prefix=f"{settings.api.api_prefix}",
+    tags=["World Generation"]
+)
+
 
 @app.get("/")
 async def root():

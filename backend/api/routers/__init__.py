@@ -23,6 +23,7 @@ from . import images
 from . import content
 from . import rag
 from . import npc
+from . import world
 
 __all__ = [
     "health",
@@ -46,4 +47,5 @@ __all__ = [
     "content",
     "rag",
     "npc",
+    "world",
 ]
