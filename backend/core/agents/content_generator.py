@@ -387,6 +387,289 @@ Now generate a unique {event_type} event. Output ONLY the JSON:"""
 
         return missions
 
+    async def generate_world_spec(
+        self,
+        destination: str,
+        mission_type: Optional[str] = None,
+        difficulty: str = "normal",
+    ) -> Dict[str, Any]:
+        """
+        Generate a complete world specification using AI.
+
+        Args:
+            destination: Destination city/location (e.g., "paris", "tokyo")
+            mission_type: Type of mission (affects NPC generation)
+            difficulty: Mission difficulty level
+
+        Returns:
+            Dict containing complete WorldSpec data
+        """
+        llm = await self._get_llm()
+
+        # 1. RAG: Retrieve location context
+        try:
+            location_results = self.knowledge_base.search_locations(destination, top_k=2)
+            location_context = "\n".join([r.document.content for r in location_results])
+        except Exception as e:
+            logger.warning(f"Location context retrieval failed: {e}")
+            location_context = ""
+
+        # 2. Generate world atmosphere and theme using LLM
+        atmosphere_prompt = f"""You are creating an immersive world for Super Wings in {destination.title()}.
+
+{f"Location context from the series: {location_context}" if location_context else ""}
+
+Generate atmospheric details for this location. Output ONLY a valid JSON object:
+{{
+  "theme": "{destination}_[time]",
+  "time_of_day": "morning/afternoon/evening/night",
+  "weather": "clear/cloudy/rainy/snowy",
+  "mood": "festive/busy/calm/mysterious",
+  "cultural_elements": ["element1", "element2", "element3"]
+}}
+
+Example for Paris:
+{{
+  "theme": "paris_afternoon",
+  "time_of_day": "afternoon",
+  "weather": "clear",
+  "mood": "romantic",
+  "cultural_elements": ["cafe culture", "street artists", "fashion boutiques"]
+}}
+
+Generate for {destination.title()}. Output ONLY JSON:"""
+
+        try:
+            config = GenerationConfig(max_new_tokens=256, temperature=0.8)
+            atmosphere_response = await llm.generate(atmosphere_prompt, config)
+            atmosphere_data = self._parse_json_response(
+                atmosphere_response.content if hasattr(atmosphere_response, 'content') else str(atmosphere_response)
+            )
+
+            theme = atmosphere_data.get("theme", f"{destination}_afternoon")
+            time_of_day = atmosphere_data.get("time_of_day", "afternoon")
+            weather = atmosphere_data.get("weather", "clear")
+            cultural_elements = atmosphere_data.get("cultural_elements", [])
+
+            logger.info(f"Generated atmosphere for {destination}: {theme}, {time_of_day}, {weather}")
+
+        except Exception as e:
+            logger.error(f"Atmosphere generation failed: {e}, using defaults")
+            theme = f"{destination}_afternoon"
+            time_of_day = "afternoon"
+            weather = "clear"
+            cultural_elements = []
+
+        # 3. Generate NPCs using LLM
+        npc_count = random.randint(10, 12)
+        npcs_data = await self._generate_npcs_batch(
+            destination, npc_count, cultural_elements, mission_type
+        )
+
+        # 4. Return complete WorldSpec (procedural generation for buildings/items)
+        # Buildings and items use procedural generation for now
+        from backend.api.routers.world import generate_npc_position, BUILDING_TYPES
+
+        # Generate NPC positions with proper spacing
+        npc_positions = []
+        npcs = []
+        for i, npc_data in enumerate(npcs_data):
+            x, y = generate_npc_position(npc_positions, min_distance=150)
+            npc_positions.append((x, y))
+
+            npcs.append({
+                "id": f"npc_{destination}_{i+1:03d}",
+                "name": npc_data["name"],
+                "type": npc_data["type"],
+                "archetype": npc_data.get("archetype", "resident"),
+                "x": x,
+                "y": y,
+                "dialogue": npc_data["dialogue"],
+                "personality": npc_data.get("personality", "friendly"),
+                "has_quest": npc_data.get("has_quest", False),
+            })
+
+        # Generate buildings (procedural)
+        building_count = random.randint(3, 5)
+        buildings = []
+        building_positions = []
+
+        for i in range(building_count):
+            x = random.uniform(300, 1700)
+            y = 400
+
+            while any(abs(x - bx) < 300 for bx, _ in building_positions):
+                x = random.uniform(300, 1700)
+
+            building_positions.append((x, y))
+            building_type = random.choice(BUILDING_TYPES)
+
+            buildings.append({
+                "id": f"building_{building_type}_{i+1:03d}",
+                "name": f"{building_type.title()} #{i+1}",
+                "type": building_type,
+                "x": x,
+                "y": y,
+                "width": random.uniform(120, 180),
+                "height": random.uniform(150, 250),
+                "can_enter": building_type in ["shop", "cafe", "restaurant"]
+            })
+
+        # Generate items (procedural)
+        item_count = random.randint(5, 8)
+        items = []
+
+        for i in range(item_count):
+            item_type = random.choice(["coin", "coin", "coin", "package", "collectible"])
+            items.append({
+                "id": f"item_{item_type}_{i+1:03d}",
+                "name": item_type.title(),
+                "type": item_type,
+                "x": random.uniform(200, 1800),
+                "y": 500,
+                "value": random.randint(5, 20) if item_type == "coin" else random.randint(50, 100)
+            })
+
+        # Select background
+        backgrounds = {
+            "paris": ["paris_sunset_clear", "paris_afternoon_clear", "paris_evening_cloudy"],
+            "tokyo": ["tokyo_night_clear", "tokyo_afternoon_clear"],
+            "london": ["london_afternoon_cloudy", "london_evening_rainy"],
+        }
+        background_key = random.choice(backgrounds.get(destination, [f"{destination}_afternoon_clear"]))
+
+        return {
+            "destination": destination,
+            "theme": theme,
+            "background_key": background_key,
+            "time_of_day": time_of_day,
+            "weather": weather,
+            "npcs": npcs,
+            "buildings": buildings,
+            "items": items,
+            "pois": [],
+        }
+
+    async def _generate_npcs_batch(
+        self,
+        destination: str,
+        count: int,
+        cultural_elements: List[str],
+        mission_type: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Generate multiple NPCs using LLM."""
+        llm = await self._get_llm()
+
+        cultural_note = ""
+        if cultural_elements:
+            cultural_note = f"\nCultural elements to consider: {', '.join(cultural_elements)}"
+
+        prompt = f"""You are creating NPCs for Super Wings in {destination.title()}.{cultural_note}
+
+Generate {count} diverse NPCs with appropriate names for {destination}. Include residents, shopkeepers, travelers, children, and elderly.
+
+Output ONLY a valid JSON array:
+[
+  {{
+    "name": "Culturally appropriate name",
+    "type": "resident/shopkeeper/traveler/child/elder",
+    "archetype": "{destination}_[role]",
+    "personality": "friendly/curious/busy/relaxed/shy",
+    "dialogue": ["greeting", "helpful comment", "farewell"],
+    "has_quest": true/false
+  }}
+]
+
+Example for Paris (3 NPCs):
+[
+  {{
+    "name": "Sophie",
+    "type": "shopkeeper",
+    "archetype": "paris_baker",
+    "personality": "friendly",
+    "dialogue": ["Bonjour! Welcome to my bakery!", "Would you like to try our croissants?", "Au revoir, have a wonderful day!"],
+    "has_quest": true
+  }},
+  {{
+    "name": "Pierre",
+    "type": "resident",
+    "archetype": "paris_artist",
+    "personality": "creative",
+    "dialogue": ["Ah, bonjour mon ami!", "I'm painting the Eiffel Tower today.", "Art is life, non?"],
+    "has_quest": false
+  }},
+  {{
+    "name": "Marie",
+    "type": "child",
+    "archetype": "paris_student",
+    "personality": "curious",
+    "dialogue": ["Hello! Are you a robot plane?", "Can you fly me to school?", "Wow, so cool!"],
+    "has_quest": true
+  }}
+]
+
+Generate {count} diverse NPCs for {destination.title()}. Output ONLY the JSON array:"""
+
+        try:
+            config = GenerationConfig(max_new_tokens=2048, temperature=0.9)  # Increased for batch NPC generation
+            response = await llm.generate(prompt, config)
+            response_text = response.content if hasattr(response, 'content') else str(response)
+
+            # Parse JSON array
+            try:
+                npcs_data = self._parse_json_response(response_text)
+            except Exception as parse_error:
+                logger.warning(f"Could not parse JSON from response: {response_text[:200]}")
+                logger.error(f"Parse error: {parse_error}")
+                raise
+
+            # Ensure it's a list
+            if isinstance(npcs_data, dict):
+                npcs_data = [npcs_data]
+            elif not isinstance(npcs_data, list):
+                logger.error(f"NPC response is not a list or dict: {type(npcs_data)}")
+                raise ValueError("Invalid NPC data format")
+
+            logger.info(f"Generated {len(npcs_data)} NPCs for {destination}")
+
+            # Fill with fallback if not enough NPCs
+            if len(npcs_data) < count:
+                logger.warning(f"Only got {len(npcs_data)} NPCs, filling rest with fallback")
+                fallback_npcs = self._fallback_npcs(destination, count - len(npcs_data))
+                npcs_data.extend(fallback_npcs)
+
+            return npcs_data[:count]  # Limit to requested count
+
+        except Exception as e:
+            logger.error(f"NPC generation failed: {e}, using fallback")
+            return self._fallback_npcs(destination, count)
+
+    def _fallback_npcs(self, destination: str, count: int) -> List[Dict[str, Any]]:
+        """Fallback NPC generation if LLM fails."""
+        npc_names = ["Alex", "Sophie", "Charlie", "Emma", "Oliver", "Mia", "Lucas", "Lily"]
+        types = ["resident", "shopkeeper", "traveler", "child"]
+        personalities = ["friendly", "curious", "busy", "relaxed"]
+
+        npcs = []
+        for i in range(count):
+            name = random.choice(npc_names)
+            npc_type = random.choice(types)
+
+            npcs.append({
+                "name": f"{name} {i+1}" if i > 0 else name,
+                "type": npc_type,
+                "archetype": f"{destination}_{npc_type}",
+                "personality": random.choice(personalities),
+                "dialogue": [
+                    f"Hello! Welcome to {destination.title()}!",
+                    "How can I help you?",
+                    "Have a great day!"
+                ],
+                "has_quest": random.random() < 0.2
+            })
+
+        return npcs
+
     def _parse_json_response(self, response: str) -> dict:
         """Parse JSON from LLM response."""
         # Try to find JSON in the response
