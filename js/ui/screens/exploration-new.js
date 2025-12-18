@@ -1509,8 +1509,9 @@ export class ExplorationScreen {
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
 
-            // 防止重复触发
-            if (this.keys[key]) return;
+            // 防止重复触发（但對於 G 鍵這類單次動作，允許重複觸發以防卡住）
+            // G 鍵是互動鍵，應該每次按下都觸發，不應該被卡住
+            if (this.keys[key] && key !== 'g') return;
 
             this.keys[key] = true;
 
@@ -1552,8 +1553,13 @@ export class ExplorationScreen {
 
             // ===== 🆕 G 鍵：互動鍵（優先順序：拾取物品 > 與 NPC 對話 > 進入/離開建築物）=====
             if (key === 'g') {
+                console.log('[ExplorationScreen] G key pressed - isInDialogue:', this.isInDialogue,
+                    'nearbyNPC:', this.nearbyNPC?.name, 'nearbyItem:', this.nearbyItem?.name,
+                    'nearbyBuilding:', this.nearbyBuilding?.name);
+
                 if (this.isInDialogue) {
                     // 對話中不處理
+                    console.log('[ExplorationScreen] G key blocked - already in dialogue');
                 } else if (this.currentScene === 'indoor' && this.interiorManager) {
                     // 室內場景 - 處理退出建築物
                     const handled = this.interiorManager.handleInteraction();
@@ -1564,13 +1570,33 @@ export class ExplorationScreen {
                     }
                 } else if (this.nearbyItem) {
                     // 優先拾取物品
-                    this.pickupItem(this.nearbyItem);
+                    console.log('[ExplorationScreen] Picking up item:', this.nearbyItem.name);
+                    try {
+                        this.pickupItem(this.nearbyItem);
+                    } catch (error) {
+                        console.error('[ExplorationScreen] Error picking up item:', error);
+                    }
                 } else if (this.nearbyNPC) {
                     // 與 NPC 對話
-                    this.startDialogue(this.nearbyNPC);
+                    console.log('[ExplorationScreen] Starting dialogue with:', this.nearbyNPC.name);
+                    try {
+                        this.startDialogue(this.nearbyNPC).catch(err => {
+                            console.error('[ExplorationScreen] Dialogue error:', err);
+                            // 確保重置對話狀態
+                            this.isInDialogue = false;
+                            this.currentDialogue = null;
+                        });
+                    } catch (error) {
+                        console.error('[ExplorationScreen] Error starting dialogue:', error);
+                        this.isInDialogue = false;
+                        this.currentDialogue = null;
+                    }
                 } else if (this.nearbyBuilding && this.currentScene === 'outdoor') {
                     // 進入建築物
+                    console.log('[ExplorationScreen] Entering building:', this.nearbyBuilding.name);
                     this.enterBuilding(this.nearbyBuilding);
+                } else {
+                    console.log('[ExplorationScreen] G key pressed but no valid interaction target');
                 }
             }
 
@@ -1598,6 +1624,14 @@ export class ExplorationScreen {
         // 键盘松开
         window.addEventListener('keyup', (e) => {
             this.keys[e.key.toLowerCase()] = false;
+        });
+
+        // 窗口失焦時重置所有按鍵（防止按鍵卡住）
+        window.addEventListener('blur', () => {
+            console.log('[ExplorationScreen] Window lost focus, resetting all keys');
+            Object.keys(this.keys).forEach(key => {
+                this.keys[key] = false;
+            });
         });
 
         console.log('[ExplorationScreen] Input handlers attached');
@@ -2283,6 +2317,9 @@ export class ExplorationScreen {
         // Clear nearby item
         this.nearbyItem = null;
 
+        // 🔧 強制重置 G 鍵狀態（防止卡住）
+        this.keys['g'] = false;
+
         console.log('[ExplorationScreen] Collected items:', this.collectedItems);
     }
 
@@ -2356,6 +2393,9 @@ export class ExplorationScreen {
         this.isInDialogue = true;
         this.currentDialogue = npc;
         npc.currentDialogueIndex = 0;
+
+        // 🔧 強制重置 G 鍵狀態（防止卡住）
+        this.keys['g'] = false;
 
         // ===== Phase 3: Check quest objectives when talking to NPC =====
         this.checkQuestObjectives(npc);
@@ -2559,6 +2599,9 @@ export class ExplorationScreen {
         // ===== Phase 6 (階段 3): 清除 AI 對話狀態 =====
         this.currentAIDialogue = null;
         this.isLoadingDialogue = false;
+
+        // 🔧 強制重置 G 鍵狀態（防止卡住）
+        this.keys['g'] = false;
 
         // Hide dialogue UI
         document.getElementById('dialogue-container').style.display = 'none';
