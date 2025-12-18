@@ -209,9 +209,9 @@ async def get_transformation_sequence(
 
         if use_interpolated:
             # Get all interpolated frames
-            frames_folder = f"assets/images/characters/{character_id}/transform_frames"
+            frames_folder = f"assets/images/characters/{character_id}/animations/transform_animation"
             catalog = selector._image_catalog.get(character_id, {})
-            frames = catalog.get("transform_frames", [])
+            frames = catalog.get("transform_animation", [])
 
             if frames:
                 frames = sorted(frames)

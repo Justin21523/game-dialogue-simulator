@@ -27,12 +27,10 @@ export class TransformationScreen {
         this.character = null;
         this.colors = null;
 
-        // 幀動畫配置
+        // 幀動畫配置 (動態根據角色實際幀數計算)
         this.frameConfig = {
             fps: 30,                    // 30 幀每秒
-            totalFrames: 241,           // 總幀數
             frameInterval: 1000 / 30,   // ~33.33ms 每幀
-            totalDuration: 241 / 30 * 1000, // ~8033ms
         };
 
         // 預載的幀圖片
@@ -41,7 +39,9 @@ export class TransformationScreen {
         this.animationId = null;
         this.lastFrameTime = 0;
         this.frameKeyHandler = null;
-        this.manualMode = true;
+        this.frameClickHandler = null;
+        this.manualMode = true;  // 手動播放模式
+        this.keyPressed = {};  // 追蹤按鍵狀態，防止重複觸發
         this.transformSoundPlayed = false;
         this.planDurationMs = this.frameConfig.totalDuration;
 
@@ -114,9 +114,9 @@ export class TransformationScreen {
                 </div>
 
                 <div class="tf-controls">
-                    <span class="pill">Space / → Next Frame</span>
-                    <span class="pill">← Previous Frame</span>
-                    <span class="pill">Enter Finish</span>
+                    <span class="pill">按住 Space 播放 (30fps)</span>
+                    <span class="pill">← 上一幀</span>
+                    <span class="pill">Enter 完成</span>
                 </div>
             </div>
         `;
@@ -191,16 +191,29 @@ export class TransformationScreen {
             await this.wait(300);
 
             // Phase 4: 手動逐幀播放（按 Space / → 下一幀，← 上一幀）
+            console.log('[Transformation] Phase 4: Starting frame animation...');
             await this.playFrameAnimation(progressBar);
+            console.log('[Transformation] Phase 4: Frame animation completed!');
 
             // Phase 5: 發光擴散 (動畫結束後)
+            console.log('[Transformation] Phase 5: Starting glow effect...');
+            console.log('[Transformation] glowEffect exists:', !!this.glowEffect);
+            console.log('[Transformation] color:', this.colors.glow || this.colors.background);
+
             if (this.glowEffect) {
-                await this.glowEffect.burst(this.colors.glow || this.colors.background);
+                try {
+                    await this.glowEffect.burst(this.colors.glow || this.colors.background);
+                    console.log('[Transformation] Glow burst completed successfully!');
+                } catch (e) {
+                    console.error('[Transformation] Glow effect error:', e);
+                }
             } else {
-                flash.classList.add('active');
+                console.log('[Transformation] Using fallback flash effect');
+                flash?.classList.add('active');
                 await this.wait(500);
-                flash.classList.remove('active');
+                flash?.classList.remove('active');
             }
+            console.log('[Transformation] Phase 5: Glow effect completed!');
         } else {
             // 備用：簡單動畫
             loadingDiv.classList.add('hidden');
@@ -211,6 +224,7 @@ export class TransformationScreen {
         }
 
         // Phase 6: 過渡結束
+        console.log('[Transformation] Phase 6: Starting transition out...');
         if (this.bgEffect) {
             this.bgEffect.accelerate(3, 800);
             await this.bgEffect.fadeOut(600);
@@ -220,28 +234,30 @@ export class TransformationScreen {
         await this.wait(400);
 
         // 清理
+        console.log('[Transformation] Cleaning up...');
         this.cleanup();
 
         // 完成
+        console.log('[Transformation] Calling onComplete callback...');
         if (this.onComplete) this.onComplete();
     }
 
     /**
-     * 預載所有 241 幀圖片
+     * 預載所有動畫幀 (各角色幀數不同: Jett=465, Jerome=753, Donnie=417, Chase=369, Flip=385, Todd=321, Paul=513, Bello=289)
      */
     async preloadAllFrames() {
         const progressDiv = document.getElementById('tf-loading-progress');
         const textDiv = document.getElementById('tf-loading-text');
 
+        // 不傳入 frameCount，讓系統返回該角色的所有幀
         const { frames, cache } = await aiAssetManager.getTransformFrames(this.character.id, {
-            frameCount: this.frameConfig.totalFrames,
             useInterpolated: true,
             reverse: false
         });
 
         this.frames = [];
         let loadedCount = 0;
-        const total = frames.length || this.frameConfig.totalFrames;
+        const total = frames.length;
 
         frames.forEach((path, index) => {
             const img = cache[path];
@@ -265,23 +281,29 @@ export class TransformationScreen {
             loadedCount = 1;
         }
 
-        console.log(`Loaded ${loadedCount}/${total} frames`);
+        console.log(`[Transformation] ========================================`);
+        console.log(`[Transformation] Character: ${this.character.id}`);
+        console.log(`[Transformation] Frames requested: ${total}`);
+        console.log(`[Transformation] Frames loaded: ${loadedCount}/${total}`);
+        console.log(`[Transformation] Success rate: ${(loadedCount/total*100).toFixed(1)}%`);
+
+        // 更新 frameConfig 使用實際幀數
+        this.frameConfig.totalFrames = this.frames.length;
+        this.frameConfig.totalDuration = this.frames.length / this.frameConfig.fps * 1000;
+
+        console.log(`[Transformation] Duration: ${(this.frameConfig.totalDuration / 1000).toFixed(2)}s @ ${this.frameConfig.fps}fps`);
+        console.log(`[Transformation] First frame: ${frames[0]}`);
+        console.log(`[Transformation] Last frame: ${frames[frames.length - 1]}`);
+        console.log(`[Transformation] ========================================`);
+
         return this.frames.length > 0;
     }
 
     async loadAnimationPlan() {
-        try {
-            const plan = await aiService.planAnimation('transformation_sequence', {
-                characterId: this.character?.id || 'jett',  // ← 添加必填參數
-                durationMs: this.frameConfig.totalDuration,
-                context: { character: this.character?.id }
-            });
-            if (plan?.duration_ms) {
-                this.planDurationMs = plan.duration_ms;
-                this.frameConfig.frameInterval = plan.duration_ms / this.frameConfig.totalFrames;
-            }
-        } catch (e) {
-            // use defaults
+        // AI 動畫規劃已被移除 - 直接使用實際幀數計算的時長
+        // 各角色的動畫時長由其幀數決定 (不固定)
+        if (this.frameConfig.totalFrames) {
+            this.planDurationMs = this.frameConfig.totalDuration;
         }
     }
 
@@ -298,7 +320,7 @@ export class TransformationScreen {
     }
 
     /**
-     * 手動逐幀播放（Space/→ 下一幀，← 上一幀，Enter 完成）
+     * 手動播放幀動畫（按住 Space 以 30fps 播放，← 上一幀，Enter 完成）
      */
     async playFrameAnimation(progressBar) {
         if (!this.frames.length) {
@@ -311,8 +333,13 @@ export class TransformationScreen {
 
         this.currentFrameIndex = 0;
         const total = this.frames.length;
+        let playTimer = null;
+        let isPlaying = false;
 
         const updateFrame = () => {
+            if (this.currentFrameIndex >= total) {
+                this.currentFrameIndex = total - 1;
+            }
             frameImage.src = this.frames[this.currentFrameIndex].src;
             const progress = (this.currentFrameIndex / (total - 1)) * 100;
             if (progressBar) progressBar.style.width = `${progress}%`;
@@ -320,51 +347,107 @@ export class TransformationScreen {
 
         updateFrame();
 
-        const handler = (e) => {
-            if (e.code === 'Space' || e.code === 'ArrowRight') {
-                e.preventDefault();
+        console.log(`[Transformation] Manual mode: ${total} frames, hold Space to play @ ${this.frameConfig.fps}fps`);
+
+        // 播放邏輯（按住 Space 時以 30fps 播放）
+        const startPlaying = () => {
+            if (isPlaying) return;
+            isPlaying = true;
+
+            const playNextFrame = () => {
+                if (!isPlaying) return;
+
                 if (this.currentFrameIndex < total - 1) {
                     this.currentFrameIndex++;
                     updateFrame();
+                    playTimer = setTimeout(playNextFrame, this.frameConfig.frameInterval);
                 } else {
-                    // 完成
-                    this.finishManualSequence();
+                    // 播放到最後一幀，自動完成
+                    isPlaying = false;
+                    console.log('[Transformation] Reached last frame, auto-finishing...');
+                    // 短暫延遲後自動完成
+                    setTimeout(() => {
+                        this.finishManualSequence();
+                    }, 300);
                 }
+            };
+
+            playNextFrame();
+        };
+
+        const stopPlaying = () => {
+            isPlaying = false;
+            if (playTimer) {
+                clearTimeout(playTimer);
+                playTimer = null;
+            }
+        };
+
+        // 鍵盤事件
+        const keyDownHandler = (e) => {
+            if (e.code === 'Space' && !e.repeat) {
+                e.preventDefault();
+                startPlaying();
             } else if (e.code === 'ArrowLeft') {
                 e.preventDefault();
+                stopPlaying();
                 if (this.currentFrameIndex > 0) {
                     this.currentFrameIndex--;
                     updateFrame();
                 }
             } else if (e.code === 'Enter') {
+                e.preventDefault();
+                stopPlaying();
+                console.log('[Transformation] User pressed Enter, finishing...');
                 this.finishManualSequence();
             }
         };
 
-        this.frameKeyHandler = handler;
-        window.addEventListener('keydown', handler);
+        const keyUpHandler = (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                stopPlaying();
+            }
+        };
 
-        // 點擊圖片也可下一幀
-        const frameContainer = document.getElementById('tf-frame-container');
-        if (frameContainer) {
-            frameContainer.addEventListener('click', () => handler(new KeyboardEvent('keydown', { code: 'Space' })));
-        }
+        window.addEventListener('keydown', keyDownHandler);
+        window.addEventListener('keyup', keyUpHandler);
 
-        // 等待 finishManualSequence 觸發
+        this.frameKeyHandler = () => {
+            window.removeEventListener('keydown', keyDownHandler);
+            window.removeEventListener('keyup', keyUpHandler);
+            stopPlaying();
+        };
+
+        // 等待完成
         await new Promise(resolve => { this.manualResolve = resolve; });
+
+        console.log(`[Transformation] Playback finished. Viewed ${this.currentFrameIndex + 1}/${total} frames`);
     }
 
     async finishManualSequence() {
+        // 防止重複調用
+        if (!this.manualResolve) {
+            console.log('[Transformation] finishManualSequence already called, skipping');
+            return;
+        }
+
+        console.log('[Transformation] finishManualSequence called');
+
+        // 清理鍵盤監聽器
         if (this.frameKeyHandler) {
-            window.removeEventListener('keydown', this.frameKeyHandler);
+            this.frameKeyHandler();
             this.frameKeyHandler = null;
         }
+
+        // 顯示最終幀的英雄姿態
         const frameImage = document.getElementById('tf-frame-image');
         if (frameImage) frameImage.classList.add('heroic-pose');
-        if (this.manualResolve) {
-            this.manualResolve();
-            this.manualResolve = null;
-        }
+
+        // 完成 Promise
+        console.log('[Transformation] Resolving manualResolve');
+        this.manualResolve();
+        this.manualResolve = null;
     }
 
     /**
@@ -442,14 +525,25 @@ export class TransformationScreen {
      * 清理資源
      */
     cleanup() {
+        console.log('[Transformation] Cleaning up...');
+
         // 停止幀動畫
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
             this.animationId = null;
         }
+
+        // 清理鍵盤監聽器
         if (this.frameKeyHandler) {
             window.removeEventListener('keydown', this.frameKeyHandler);
             this.frameKeyHandler = null;
+        }
+
+        // 清理點擊監聽器
+        const frameContainer = document.getElementById('tf-frame-container');
+        if (this.frameClickHandler && frameContainer) {
+            frameContainer.removeEventListener('click', this.frameClickHandler);
+            this.frameClickHandler = null;
         }
 
         // 清空幀緩存
