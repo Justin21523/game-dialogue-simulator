@@ -1,0 +1,443 @@
+{
+  "game_mechanics": {
+    "dispatch_system": {
+      "id": "dispatch_system",
+      "name": "Dispatch System",
+      "name_zh": "派遣系統",
+      "description": "The core game mechanic for sending characters on missions",
+      "description_zh": "派遣角色執行任務的核心遊戲機制",
+      "rules": {
+        "specialty_bonus": {
+          "description": "Characters matching mission type get +10% success rate",
+          "bonus_percentage": 10
+        },
+        "energy_penalty": {
+          "description": "Low energy (<30%) reduces success rate by 20%",
+          "threshold": 30,
+          "penalty_percentage": 20
+        },
+        "level_bonus": {
+          "description": "Higher level characters have improved base stats",
+          "bonus_per_level": 2
+        }
+      }
+    },
+    "mission_matching": {
+      "id": "mission_matching",
+      "name": "Mission Matching",
+      "name_zh": "任務配對",
+      "description": "Rules for optimal character-mission pairing",
+      "description_zh": "角色與任務最佳配對規則",
+      "matching_table": {
+        "delivery": {
+          "primary": "jett",
+          "secondary": ["jerome", "chase"],
+          "match_bonus": 10
+        },
+        "sports": {
+          "primary": "flip",
+          "secondary": ["jett"],
+          "match_bonus": 10
+        },
+        "construction": {
+          "primary": "donnie",
+          "secondary": ["todd"],
+          "match_bonus": 10
+        },
+        "digging": {
+          "primary": "todd",
+          "secondary": ["donnie"],
+          "match_bonus": 10
+        },
+        "police": {
+          "primary": "paul",
+          "secondary": ["jerome"],
+          "match_bonus": 10
+        },
+        "animal_care": {
+          "primary": "bello",
+          "secondary": [],
+          "match_bonus": 10
+        }
+      }
+    },
+    "experience_system": {
+      "id": "experience_system",
+      "name": "Experience System",
+      "name_zh": "經驗值系統",
+      "description": "How characters earn and use experience points",
+      "description_zh": "角色如何獲得和使用經驗值",
+      "base_rewards": {
+        "easy_mission": 50,
+        "normal_mission": 100,
+        "hard_mission": 200,
+        "expert_mission": 350
+      },
+      "bonus_multipliers": {
+        "specialty_match": 1.2,
+        "fast_completion": 1.1,
+        "perfect_execution": 1.3,
+        "first_visit_location": 1.5
+      },
+      "level_thresholds": [
+        {"level": 1, "required_exp": 0},
+        {"level": 2, "required_exp": 100},
+        {"level": 3, "required_exp": 250},
+        {"level": 4, "required_exp": 500},
+        {"level": 5, "required_exp": 800},
+        {"level": 6, "required_exp": 1200},
+        {"level": 7, "required_exp": 1700},
+        {"level": 8, "required_exp": 2300},
+        {"level": 9, "required_exp": 3000},
+        {"level": 10, "required_exp": 4000}
+      ]
+    },
+    "energy_system": {
+      "id": "energy_system",
+      "name": "Energy System",
+      "name_zh": "能量系統",
+      "description": "Character energy management mechanics",
+      "description_zh": "角色能量管理機制",
+      "max_energy": 100,
+      "mission_costs": {
+        "easy": 15,
+        "normal": 25,
+        "hard": 40,
+        "expert": 60
+      },
+      "recovery": {
+        "passive_per_minute": 1,
+        "rest_per_minute": 3,
+        "repair_kit_restore": 50
+      },
+      "thresholds": {
+        "low_energy": 30,
+        "critical_energy": 10
+      },
+      "penalties": {
+        "low_energy_success_penalty": 20,
+        "critical_energy_block": true
+      }
+    },
+    "resource_system": {
+      "id": "resource_system",
+      "name": "Resource System",
+      "name_zh": "資源系統",
+      "description": "Game resources and their management",
+      "description_zh": "遊戲資源及其管理",
+      "resources": {
+        "money": {
+          "name": "Coins",
+          "name_zh": "金幣",
+          "max_storage": 99999,
+          "uses": ["unlock_characters", "buy_items", "upgrade_airport"]
+        },
+        "fuel": {
+          "name": "Fuel",
+          "name_zh": "燃料",
+          "max_storage": 100,
+          "regen_per_minute": 1,
+          "cost_per_dispatch": 10
+        },
+        "repair_kits": {
+          "name": "Repair Kits",
+          "name_zh": "修理包",
+          "max_storage": 99,
+          "effect": "Restore 50 energy instantly",
+          "shop_price": 100
+        },
+        "boost_packs": {
+          "name": "Boost Packs",
+          "name_zh": "加速包",
+          "max_storage": 99,
+          "effect": "Instantly complete ongoing mission",
+          "shop_price": 200
+        }
+      },
+      "mission_rewards": {
+        "easy": {"money_min": 50, "money_max": 100},
+        "normal": {"money_min": 100, "money_max": 200},
+        "hard": {"money_min": 200, "money_max": 400},
+        "expert": {"money_min": 400, "money_max": 800}
+      }
+    },
+    "success_calculation": {
+      "id": "success_calculation",
+      "name": "Success Rate Calculation",
+      "name_zh": "成功率計算",
+      "description": "How mission success rate is determined",
+      "description_zh": "任務成功率如何計算",
+      "base_success_rates": {
+        "easy": 95,
+        "normal": 85,
+        "hard": 70,
+        "expert": 55
+      },
+      "modifiers": [
+        {
+          "name": "specialty_match",
+          "description": "Character specialty matches mission type",
+          "modifier": "+10%"
+        },
+        {
+          "name": "secondary_specialty",
+          "description": "Character is secondary choice for mission",
+          "modifier": "+5%"
+        },
+        {
+          "name": "level_bonus",
+          "description": "Per character level above 1",
+          "modifier": "+2% per level"
+        },
+        {
+          "name": "low_energy",
+          "description": "Energy below 30%",
+          "modifier": "-20%"
+        },
+        {
+          "name": "perfect_energy",
+          "description": "Energy at 100%",
+          "modifier": "+5%"
+        }
+      ],
+      "formula": "base_rate + specialty_bonus + level_bonus - energy_penalty"
+    },
+    "transformation_system": {
+      "id": "transformation_system",
+      "name": "Transformation System",
+      "name_zh": "變身系統",
+      "description": "Character transformation mechanics during missions",
+      "description_zh": "任務中的角色變身機制",
+      "trigger_conditions": [
+        "Arrival at mission location",
+        "Encountering problem that needs solving",
+        "Special event requiring abilities"
+      ],
+      "transformation_types": {
+        "jett": {
+          "vehicle_form": "Jet plane",
+          "robot_form": "Delivery specialist robot",
+          "special_ability": "Super speed delivery"
+        },
+        "flip": {
+          "vehicle_form": "Stunt plane",
+          "robot_form": "Sports robot",
+          "special_ability": "Athletic maneuvers"
+        },
+        "donnie": {
+          "vehicle_form": "Cargo plane",
+          "robot_form": "Construction robot",
+          "special_ability": "Tool deployment"
+        },
+        "todd": {
+          "vehicle_form": "Drill plane",
+          "robot_form": "Excavation robot",
+          "special_ability": "Ground drilling"
+        },
+        "paul": {
+          "vehicle_form": "Police plane",
+          "robot_form": "Police robot",
+          "special_ability": "Order maintenance"
+        },
+        "bello": {
+          "vehicle_form": "Safari plane",
+          "robot_form": "Animal care robot",
+          "special_ability": "Animal communication"
+        }
+      }
+    },
+    "event_system": {
+      "id": "event_system",
+      "name": "Random Event System",
+      "name_zh": "隨機事件系統",
+      "description": "Dynamic events during missions",
+      "description_zh": "任務中的動態隨機事件",
+      "event_types": {
+        "weather": {
+          "name": "Weather Events",
+          "name_zh": "天氣事件",
+          "occurrence_rate": 15,
+          "examples": ["Storm", "Fog", "Strong winds"]
+        },
+        "encounter": {
+          "name": "Encounter Events",
+          "name_zh": "偶遇事件",
+          "occurrence_rate": 20,
+          "examples": ["Friendly bird", "Lost balloon", "Fellow traveler"]
+        },
+        "obstacle": {
+          "name": "Obstacle Events",
+          "name_zh": "障礙事件",
+          "occurrence_rate": 10,
+          "examples": ["Bird flock", "Construction", "Detour needed"]
+        },
+        "bonus": {
+          "name": "Bonus Events",
+          "name_zh": "獎勵事件",
+          "occurrence_rate": 10,
+          "examples": ["Rainbow", "Tailwind", "Shortcut found"]
+        },
+        "help_request": {
+          "name": "Help Request Events",
+          "name_zh": "求助事件",
+          "occurrence_rate": 15,
+          "examples": ["Stranded hiker", "Broken vehicle", "Lost child"]
+        }
+      },
+      "choice_outcomes": {
+        "success_rewards": ["bonus_experience", "bonus_money", "item_drop"],
+        "failure_penalties": ["time_delay", "small_money_loss"]
+      }
+    },
+    "mission_phases": {
+      "id": "mission_phases",
+      "name": "Mission Phases",
+      "name_zh": "任務階段",
+      "description": "Sequential phases of a typical mission",
+      "description_zh": "典型任務的順序階段",
+      "phases": [
+        {
+          "id": "dispatch",
+          "name": "Dispatch",
+          "name_zh": "派遣",
+          "description": "Player selects character and confirms mission"
+        },
+        {
+          "id": "departure",
+          "name": "Departure",
+          "name_zh": "出發",
+          "description": "Character takes off from World Airport"
+        },
+        {
+          "id": "flying",
+          "name": "Flying",
+          "name_zh": "飛行",
+          "description": "Character travels to destination (events may occur)"
+        },
+        {
+          "id": "arrival",
+          "name": "Arrival",
+          "name_zh": "到達",
+          "description": "Character arrives at mission location"
+        },
+        {
+          "id": "meeting",
+          "name": "Meeting NPC",
+          "name_zh": "會面",
+          "description": "Character meets the NPC who needs help"
+        },
+        {
+          "id": "transformation",
+          "name": "Transformation",
+          "name_zh": "變身",
+          "description": "Character transforms to solve the problem"
+        },
+        {
+          "id": "solving",
+          "name": "Problem Solving",
+          "name_zh": "解決問題",
+          "description": "Character uses abilities to help"
+        },
+        {
+          "id": "success",
+          "name": "Success",
+          "name_zh": "成功",
+          "description": "Problem solved, mission accomplished"
+        },
+        {
+          "id": "celebration",
+          "name": "Celebration",
+          "name_zh": "慶祝",
+          "description": "NPC thanks the character"
+        },
+        {
+          "id": "return",
+          "name": "Return",
+          "name_zh": "返回",
+          "description": "Character flies back to World Airport"
+        }
+      ]
+    },
+    "difficulty_system": {
+      "id": "difficulty_system",
+      "name": "Difficulty System",
+      "name_zh": "難度系統",
+      "description": "Mission difficulty tiers and their characteristics",
+      "description_zh": "任務難度等級及其特點",
+      "tiers": {
+        "easy": {
+          "name": "Easy",
+          "name_zh": "簡單",
+          "stars": 1,
+          "base_success_rate": 95,
+          "experience_reward": 50,
+          "money_reward_range": [50, 100],
+          "energy_cost": 15,
+          "duration_minutes": 5
+        },
+        "normal": {
+          "name": "Normal",
+          "name_zh": "普通",
+          "stars": 2,
+          "base_success_rate": 85,
+          "experience_reward": 100,
+          "money_reward_range": [100, 200],
+          "energy_cost": 25,
+          "duration_minutes": 10
+        },
+        "hard": {
+          "name": "Hard",
+          "name_zh": "困難",
+          "stars": 3,
+          "base_success_rate": 70,
+          "experience_reward": 200,
+          "money_reward_range": [200, 400],
+          "energy_cost": 40,
+          "duration_minutes": 15
+        },
+        "expert": {
+          "name": "Expert",
+          "name_zh": "專家",
+          "stars": 4,
+          "base_success_rate": 55,
+          "experience_reward": 350,
+          "money_reward_range": [400, 800],
+          "energy_cost": 60,
+          "duration_minutes": 20
+        }
+      }
+    }
+  },
+  "formulas": {
+    "success_rate": {
+      "description": "Calculate final success rate for a mission",
+      "formula": "min(99, max(10, base_rate + specialty_bonus + (level - 1) * 2 - energy_penalty + perfect_energy_bonus))",
+      "variables": {
+        "base_rate": "From difficulty tier (55-95%)",
+        "specialty_bonus": "10 if primary match, 5 if secondary",
+        "level": "Character level (1-10)",
+        "energy_penalty": "20 if energy < 30%, else 0",
+        "perfect_energy_bonus": "5 if energy = 100%"
+      }
+    },
+    "experience_gain": {
+      "description": "Calculate experience gained from mission",
+      "formula": "base_exp * specialty_multiplier * speed_multiplier * first_visit_multiplier",
+      "variables": {
+        "base_exp": "From difficulty tier (50-350)",
+        "specialty_multiplier": "1.2 if specialty matches",
+        "speed_multiplier": "1.1 if completed fast",
+        "first_visit_multiplier": "1.5 if first time visiting location"
+      }
+    },
+    "money_reward": {
+      "description": "Calculate money reward from mission",
+      "formula": "random(min, max) * success_bonus",
+      "variables": {
+        "min": "Minimum from difficulty tier",
+        "max": "Maximum from difficulty tier",
+        "success_bonus": "1.2 if perfect execution"
+      }
+    }
+  }
+}

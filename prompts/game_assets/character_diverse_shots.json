@@ -1,0 +1,155 @@
+{
+  "meta": {
+    "description": "20 Diverse Prompts for Each Character - Multiple Angles, Actions, and Expressions",
+    "version": "1.0.0",
+    "created": "2025-12-18",
+    "total_prompts": 20,
+    "purpose": "Generate diverse character images with different poses, angles, actions, and expressions"
+  },
+  "templates": {
+    "front_view_neutral": {
+      "prompt_template": "{trigger}, {colors}, front view, standing pose, neutral expression, centered",
+      "description": "正面中性視角,標準站姿",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "side_profile_flying": {
+      "prompt_template": "{trigger}, {colors}, side view, flying horizontally, aerodynamic pose",
+      "description": "側面飛行姿態",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "three_quarter_action": {
+      "prompt_template": "{trigger}, {colors}, three-quarter view, dynamic action pose, energetic",
+      "description": "3/4視角動作姿勢",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "top_down_view": {
+      "prompt_template": "{trigger}, {colors}, top-down view, wings spread, aerial perspective",
+      "description": "俯視視角",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "dynamic_ascending": {
+      "prompt_template": "{trigger}, {colors}, flying upward, ascending pose, nose pointed up",
+      "description": "動態向上飛行",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "dynamic_diving": {
+      "prompt_template": "{trigger}, {colors}, diving pose, descending rapidly, nose pointed down",
+      "description": "動態俯衝",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "landing_approach": {
+      "prompt_template": "{trigger}, {colors}, landing pose, descending gently, landing gear visible",
+      "description": "降落姿勢",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "takeoff_launch": {
+      "prompt_template": "{trigger}, {colors}, takeoff pose, leaving ground, powerful thrust",
+      "description": "起飛姿勢",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "hovering_midair": {
+      "prompt_template": "{trigger}, {colors}, hovering midair, stationary flight, balanced",
+      "description": "空中懸停",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "heroic_stance": {
+      "prompt_template": "{trigger}, {colors}, heroic stance, confident pose, triumphant",
+      "description": "英雄姿勢",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "ready_action": {
+      "prompt_template": "{trigger}, {colors}, ready for action, alert stance, mission-ready",
+      "description": "準備行動姿勢",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "happy_cheerful": {
+      "prompt_template": "{trigger}, {colors}, happy expression, bright {eye_color} eyes, joyful",
+      "description": "開心表情",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "determined_focused": {
+      "prompt_template": "{trigger}, {colors}, determined expression, focused {eye_color} eyes, serious",
+      "description": "堅定表情",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "excited_enthusiastic": {
+      "prompt_template": "{trigger}, {colors}, excited expression, wide {eye_color} eyes, energetic",
+      "description": "興奮表情",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "confident_proud": {
+      "prompt_template": "{trigger}, {colors}, confident pose, self-assured stance, {eye_color} eyes",
+      "description": "自信姿勢",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "speed_motion": {
+      "prompt_template": "{trigger}, {colors}, extreme speed, fast flight, motion blur",
+      "description": "速度動感",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "banking_left": {
+      "prompt_template": "{trigger}, {colors}, banking left, tilted left, turning maneuver",
+      "description": "左轉動作",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "banking_right": {
+      "prompt_template": "{trigger}, {colors}, banking right, tilted right, turning maneuver",
+      "description": "右轉動作",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "celebration_victory": {
+      "prompt_template": "{trigger}, {colors}, celebration pose, triumphant, joyful {eye_color} eyes",
+      "description": "慶祝姿勢",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    },
+    "ready_to_help": {
+      "prompt_template": "{trigger}, {colors}, {unique}, ready to help, friendly {eye_color} eyes",
+      "description": "準備幫助姿勢",
+      "resolution": "portrait",
+      "steps": 35,
+      "cfg_scale": 7.8
+    }
+  },
+  "output_structure": {
+    "base_path": "characters/{character}/diverse_shots",
+    "filename_pattern": "{template_id}.png"
+  }
+}

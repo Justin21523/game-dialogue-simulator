@@ -1,0 +1,194 @@
+{
+  "meta": {
+    "description": "Transformation Shot Sequence - MAXIMUM WEIGHTS 3.0 ON KEY PARTS",
+    "total_per_character": 18,
+    "notes": "Key body parts at 3.0, supporting terms at 2.0+, LoRA 0.65-0.85"
+  },
+  "background_settings": {
+    "clean_background_negative": "scenery, landscape, sky, clouds, ground, buildings, complex background, outdoor, indoor, gradient"
+  },
+  "templates": {
+    "closeup_head": {
+      "id": "closeup_head",
+      "name": "Head Closeup",
+      "prompt_template": "(extreme closeup:3.0), (head only:3.0), (face filling frame:2.5), {trigger}, Super Wings, {colors}, glowing eyes, metallic, solo, (white background:2.0)",
+      "negative_extra": "full body, legs, arms, torso, wide shot, body",
+      "steps": 50,
+      "cfg_scale": 9.0,
+      "lora_weight": 0.7
+    },
+    "closeup_wings": {
+      "id": "closeup_wings",
+      "name": "Wings Closeup",
+      "prompt_template": "(extreme closeup:3.0), (wings only:3.0), (back view:2.5), (no face:2.5), (no head:2.5), {trigger}, Super Wings, {colors}, mechanical wings, solo, (white background:2.0)",
+      "negative_extra": "face, head, front view, full body, legs, portrait, eyes",
+      "steps": 50,
+      "cfg_scale": 10.0,
+      "lora_weight": 0.65
+    },
+    "closeup_arms": {
+      "id": "closeup_arms",
+      "name": "Arms Closeup",
+      "prompt_template": "(extreme closeup:3.0), (arm only:3.0), (robot arm:2.5), (side view:2.0), (no face:2.5), {trigger}, Super Wings, {colors}, mechanical joints, solo, (white background:2.0)",
+      "negative_extra": "face, head, full body, legs, wings, portrait, eyes",
+      "steps": 50,
+      "cfg_scale": 10.0,
+      "lora_weight": 0.65
+    },
+    "closeup_legs": {
+      "id": "closeup_legs",
+      "name": "Legs Closeup",
+      "prompt_template": "(extreme closeup:3.0), (legs only:3.0), (robot legs:2.5), (low angle:2.0), (no face:2.5), {trigger}, Super Wings, {colors}, mechanical joints, solo, (white background:2.0)",
+      "negative_extra": "face, head, upper body, arms, portrait, eyes",
+      "steps": 50,
+      "cfg_scale": 10.0,
+      "lora_weight": 0.65
+    },
+    "closeup_chest": {
+      "id": "closeup_chest",
+      "name": "Chest Closeup",
+      "prompt_template": "(extreme closeup:3.0), (chest only:3.0), (torso:2.5), (no face:2.5), cropped at neck, {trigger}, Super Wings, {colors}, chest armor, solo, (white background:2.0)",
+      "negative_extra": "full body, legs, head, face, wide shot, eyes",
+      "steps": 50,
+      "cfg_scale": 10.0,
+      "lora_weight": 0.65
+    },
+    "closeup_back": {
+      "id": "closeup_back",
+      "name": "Back Closeup",
+      "prompt_template": "(extreme closeup:3.0), (back only:3.0), (rear view:2.5), (jetpack:2.5), (no face:2.5), {trigger}, Super Wings, {colors}, wings backpack, solo, (white background:2.0)",
+      "negative_extra": "face, front view, full body, portrait, eyes",
+      "steps": 50,
+      "cfg_scale": 10.0,
+      "lora_weight": 0.65
+    },
+    "extreme_closeup": {
+      "id": "extreme_closeup",
+      "name": "Extreme Face Closeup",
+      "prompt_template": "(macro shot:3.0), (face only:3.0), (eyes closeup:2.5), cropped edges, {trigger}, Super Wings, {colors}, (huge glowing eyes:2.0), metallic, solo, (white background:2.0)",
+      "negative_extra": "full body, torso, arms, legs, medium shot",
+      "steps": 50,
+      "cfg_scale": 9.0,
+      "lora_weight": 0.75
+    },
+    "closeup": {
+      "id": "closeup",
+      "name": "Portrait Closeup",
+      "prompt_template": "(portrait:2.5), (head and shoulders:2.5), upper body, {trigger}, Super Wings, {colors}, confident expression, glowing eyes, solo, (white background:2.0)",
+      "negative_extra": "full body, legs, feet, wide shot",
+      "steps": 45,
+      "cfg_scale": 8.5,
+      "lora_weight": 0.75
+    },
+    "medium": {
+      "id": "medium",
+      "name": "Medium Shot",
+      "prompt_template": "(medium shot:2.5), (waist up:2.5), upper body, {trigger}, Super Wings, {colors}, heroic pose, solo, (white background:2.0)",
+      "negative_extra": "full body, legs visible, wide shot, feet",
+      "steps": 45,
+      "cfg_scale": 8.5,
+      "lora_weight": 0.8
+    },
+    "full": {
+      "id": "full",
+      "name": "Full Body",
+      "prompt_template": "(full body:2.0), (head to feet:2.0), entire body, {trigger}, Super Wings, {colors}, heroic standing pose, arms spread, solo, (white background:2.0)",
+      "negative_extra": "cropped, partial body",
+      "steps": 45,
+      "cfg_scale": 8.5,
+      "lora_weight": 0.85
+    },
+    "wide": {
+      "id": "wide",
+      "name": "Wide Shot",
+      "prompt_template": "(wide shot:2.5), (full body small:2.0), space around, {trigger}, Super Wings, {colors}, epic heroic pose, solo, (white background:2.0)",
+      "negative_extra": "closeup, portrait, face filling frame",
+      "steps": 45,
+      "cfg_scale": 8.5,
+      "lora_weight": 0.8
+    },
+    "stage_1": {
+      "id": "stage_1",
+      "name": "Stage 1 - Airplane",
+      "prompt_template": "(airplane mode:3.0), (aircraft:2.5), (no robot parts:2.5), no arms no legs, {trigger}, Super Wings, {colors}, flying, solo, (white background:2.0)",
+      "negative_extra": "robot, humanoid, arms, legs, standing, bipedal",
+      "steps": 45,
+      "cfg_scale": 9.0,
+      "lora_weight": 0.8
+    },
+    "stage_2": {
+      "id": "stage_2",
+      "name": "Stage 2 - Early Transform",
+      "prompt_template": "(early transformation:2.5), (mostly airplane:2.0), panels shifting, {trigger}, Super Wings, {colors}, glowing joints, energy, solo, (white background:2.0)",
+      "negative_extra": "full robot, complete transformation, standing",
+      "steps": 50,
+      "cfg_scale": 9.5,
+      "lora_weight": 0.7
+    },
+    "stage_3": {
+      "id": "stage_3",
+      "name": "Stage 3 - Mid Transform",
+      "prompt_template": "(mid transformation:3.0), (hybrid form:2.5), (half robot half plane:2.5), {trigger}, Super Wings, {colors}, arms extending, energy, solo, (white background:2.0)",
+      "negative_extra": "full robot, full airplane, complete form",
+      "steps": 55,
+      "cfg_scale": 10.0,
+      "lora_weight": 0.7
+    },
+    "stage_4": {
+      "id": "stage_4",
+      "name": "Stage 4 - Near Complete",
+      "prompt_template": "(late transformation:2.5), (mostly robot:2.0), robot body, {trigger}, Super Wings, {colors}, wings backpack, sparkles, solo, (white background:2.0)",
+      "negative_extra": "airplane mode, vehicle form, aircraft",
+      "steps": 50,
+      "cfg_scale": 9.5,
+      "lora_weight": 0.75
+    },
+    "stage_5": {
+      "id": "stage_5",
+      "name": "Stage 5 - Complete",
+      "prompt_template": "(transformation complete:2.0), full robot, (superhero landing:2.5), one knee down, {trigger}, Super Wings, {colors}, sparkles, solo, (white background:2.0)",
+      "negative_extra": "airplane, vehicle, standing straight",
+      "steps": 50,
+      "cfg_scale": 9.0,
+      "lora_weight": 0.85
+    },
+    "heroic_pose_glow": {
+      "id": "heroic_pose_glow",
+      "name": "Heroic Pose Glow",
+      "prompt_template": "(heroic pose:2.0), hands on hips, full body, {trigger}, Super Wings, {colors}, (body glowing:2.0), color aura, solo, (white background:2.0)",
+      "negative_extra": "airplane, vehicle mode",
+      "steps": 50,
+      "cfg_scale": 9.0,
+      "lora_weight": 0.85
+    },
+    "heroic_pose_burst": {
+      "id": "heroic_pose_burst",
+      "name": "Heroic Pose Burst",
+      "prompt_template": "dramatic pose, (arms spread:2.0), (energy burst:2.5), light rays, {trigger}, Super Wings, {colors}, epic moment, lens flare, solo, (white background:2.0)",
+      "negative_extra": "airplane, vehicle mode, calm",
+      "steps": 55,
+      "cfg_scale": 9.5,
+      "lora_weight": 0.8
+    }
+  },
+  "generation_order": [
+    "closeup_head",
+    "closeup_wings",
+    "closeup_arms",
+    "closeup_legs",
+    "closeup_chest",
+    "closeup_back",
+    "extreme_closeup",
+    "closeup",
+    "medium",
+    "full",
+    "wide",
+    "stage_1",
+    "stage_2",
+    "stage_3",
+    "stage_4",
+    "stage_5",
+    "heroic_pose_glow",
+    "heroic_pose_burst"
+  ]
+}

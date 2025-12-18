@@ -1,0 +1,316 @@
+{
+  "description": "建築內部場景生成提示詞配置",
+  "version": "1.0",
+  "generator": "exploration_assets",
+
+  "base_style": {
+    "art_style": "Super Wings cartoon style, colorful 2D platformer background",
+    "perspective": "side-scrolling view, slight depth",
+    "quality": "high quality background art, clean lines, vibrant colors",
+    "mood": "friendly, inviting, child-appropriate"
+  },
+
+  "interior_config": {
+    "size": "1920x1080",
+    "format": "PNG",
+    "layers": ["far_background", "mid_background", "foreground", "platforms"],
+    "parallax_depths": [0.2, 0.5, 0.8, 1.0]
+  },
+
+  "building_types": {
+    "shop": {
+      "description": "商店內部 - 各種零售商店",
+      "base_prompt": "interior of a {shop_type} shop, 2D platformer game background, shelves with products, counter area, warm lighting, Super Wings cartoon style",
+      "common_elements": ["counter", "shelves", "products", "cash register", "decorations"],
+      "variants": [
+        {
+          "id": "bakery",
+          "name": "烘焙坊",
+          "prompt": "cozy bakery interior, display cases with pastries, bread on shelves, flour bags, warm oven glow, checkered floor",
+          "interactive_objects": ["oven", "display_case", "counter"],
+          "spawn_items": ["food_croissant", "food_baguette"]
+        },
+        {
+          "id": "toy_store",
+          "name": "玩具店",
+          "prompt": "colorful toy store interior, shelves full of toys, plush animals, board games, bright playful colors, balloons",
+          "interactive_objects": ["toy_shelf", "play_area", "counter"],
+          "spawn_items": ["quest_toy", "package_gift"]
+        },
+        {
+          "id": "bookstore",
+          "name": "書店",
+          "prompt": "warm bookstore interior, tall wooden bookshelves, reading nook, ladder on rails, cozy lighting",
+          "interactive_objects": ["bookshelf", "reading_chair", "counter"],
+          "spawn_items": ["quest_book", "tool_map"]
+        },
+        {
+          "id": "flower_shop",
+          "name": "花店",
+          "prompt": "bright flower shop interior, colorful flower arrangements, potted plants, watering cans, natural light",
+          "interactive_objects": ["flower_display", "counter", "greenhouse_door"],
+          "spawn_items": ["package_gift"]
+        },
+        {
+          "id": "hardware_store",
+          "name": "五金行",
+          "prompt": "organized hardware store interior, tools on pegboards, boxes of parts, workbench area",
+          "interactive_objects": ["tool_wall", "workbench", "parts_bins"],
+          "spawn_items": ["tool_wrench", "ability_blueprint"]
+        }
+      ]
+    },
+
+    "restaurant": {
+      "description": "餐廳和咖啡廳",
+      "base_prompt": "interior of a {cuisine} restaurant, 2D game background, dining tables, kitchen visible, appetizing atmosphere",
+      "common_elements": ["tables", "chairs", "kitchen", "menu_board", "decorations"],
+      "variants": [
+        {
+          "id": "cafe",
+          "name": "咖啡廳",
+          "prompt": "cozy cafe interior, small tables, coffee machine, pastry display, warm brown tones, indie cafe vibe",
+          "interactive_objects": ["counter", "coffee_machine", "table"],
+          "spawn_items": ["food_croissant", "food_scone"]
+        },
+        {
+          "id": "pizza_parlor",
+          "name": "披薩店",
+          "prompt": "Italian pizzeria interior, brick oven, pizza dough station, hanging herbs, red and white checkered",
+          "interactive_objects": ["pizza_oven", "counter", "dough_station"],
+          "spawn_items": ["food_pizza", "quest_recipe"]
+        },
+        {
+          "id": "ramen_shop",
+          "name": "拉麵店",
+          "prompt": "Japanese ramen shop interior, counter seating, steaming pots, menu on wall, noren curtain",
+          "interactive_objects": ["counter", "kitchen", "vending_machine"],
+          "spawn_items": ["food_ramen", "food_onigiri"]
+        },
+        {
+          "id": "street_food_stall",
+          "name": "街頭小吃攤",
+          "prompt": "open-air food stall interior, cooking station, ingredient display, sizzling sounds implied",
+          "interactive_objects": ["grill", "ingredient_shelf", "serving_window"],
+          "spawn_items": ["food_hotdog", "food_falafel"]
+        }
+      ]
+    },
+
+    "public_building": {
+      "description": "公共建築",
+      "base_prompt": "interior of a {building_type}, 2D platformer background, public space, informative atmosphere",
+      "common_elements": ["information_desk", "displays", "seating", "signs"],
+      "variants": [
+        {
+          "id": "museum",
+          "name": "博物館",
+          "prompt": "museum gallery interior, artifacts on pedestals, information plaques, high ceilings, marble floor, dramatic lighting",
+          "interactive_objects": ["artifact", "info_panel", "guard_post"],
+          "spawn_items": ["quest_medal", "tool_map"]
+        },
+        {
+          "id": "library",
+          "name": "圖書館",
+          "prompt": "grand library interior, endless bookshelves, reading tables, spiral staircase, warm lamp light",
+          "interactive_objects": ["bookshelf", "computer_terminal", "librarian_desk"],
+          "spawn_items": ["quest_book", "tool_flashlight"]
+        },
+        {
+          "id": "post_office",
+          "name": "郵局",
+          "prompt": "busy post office interior, service counters, package sorting area, mailboxes on wall, official atmosphere",
+          "interactive_objects": ["counter", "mailbox_wall", "package_shelf"],
+          "spawn_items": ["package_standard", "letter", "postcard"]
+        },
+        {
+          "id": "train_station",
+          "name": "火車站",
+          "prompt": "train station interior, platform edge visible, departure board, benches, high arched ceiling",
+          "interactive_objects": ["ticket_booth", "departure_board", "platform_edge"],
+          "spawn_items": ["tool_map", "package_standard"]
+        },
+        {
+          "id": "fire_station",
+          "name": "消防局",
+          "prompt": "fire station interior, fire truck bay, sliding pole, gear lockers, emergency equipment",
+          "interactive_objects": ["fire_truck", "pole", "gear_locker"],
+          "spawn_items": ["tool_rope", "ability_traffic_cone"]
+        }
+      ]
+    },
+
+    "residence": {
+      "description": "住宅內部",
+      "base_prompt": "interior of a {room_type} in a home, 2D game background, lived-in feel, personal decorations",
+      "common_elements": ["furniture", "decorations", "windows", "doors"],
+      "variants": [
+        {
+          "id": "living_room",
+          "name": "客廳",
+          "prompt": "cozy living room interior, sofa, TV, family photos, bookshelf, warm home feeling",
+          "interactive_objects": ["sofa", "tv", "bookshelf"],
+          "spawn_items": ["quest_photo", "package_gift"]
+        },
+        {
+          "id": "kitchen",
+          "name": "廚房",
+          "prompt": "home kitchen interior, stove, refrigerator, counter with ingredients, family cooking space",
+          "interactive_objects": ["stove", "refrigerator", "counter"],
+          "spawn_items": ["quest_recipe", "food_dumpling"]
+        },
+        {
+          "id": "bedroom",
+          "name": "臥室",
+          "prompt": "child's bedroom interior, bed, desk, toys scattered, posters on wall, cozy personal space",
+          "interactive_objects": ["bed", "desk", "toy_box"],
+          "spawn_items": ["quest_toy", "quest_book"]
+        },
+        {
+          "id": "workshop",
+          "name": "工作室",
+          "prompt": "home workshop interior, workbench, tools on wall, projects in progress, creative space",
+          "interactive_objects": ["workbench", "tool_cabinet", "project_table"],
+          "spawn_items": ["tool_wrench", "ability_blueprint"]
+        }
+      ]
+    },
+
+    "special": {
+      "description": "特殊場所",
+      "base_prompt": "interior of a {place_type}, unique atmosphere, 2D platformer style",
+      "variants": [
+        {
+          "id": "cave",
+          "name": "洞穴",
+          "prompt": "mysterious cave interior, stalactites, underground pool, glowing crystals, adventure atmosphere",
+          "interactive_objects": ["crystal", "rock_pile", "underground_stream"],
+          "spawn_items": ["gem_ruby", "gem_sapphire", "gem_emerald"],
+          "requires_ability": "drill"
+        },
+        {
+          "id": "greenhouse",
+          "name": "溫室",
+          "prompt": "lush greenhouse interior, tropical plants, glass ceiling, humid atmosphere, garden paths",
+          "interactive_objects": ["exotic_plant", "watering_station", "butterfly_area"],
+          "spawn_items": ["ability_animal_treat"],
+          "requires_ability": "animal_talk"
+        },
+        {
+          "id": "control_room",
+          "name": "控制室",
+          "prompt": "high-tech control room interior, monitors, control panels, blinking lights, futuristic",
+          "interactive_objects": ["main_console", "monitor_wall", "emergency_button"],
+          "spawn_items": ["keycard", "ability_traffic_cone"]
+        },
+        {
+          "id": "treasure_room",
+          "name": "寶藏室",
+          "prompt": "ancient treasure room interior, gold coins piled, jewels in chests, torch lighting, adventure climax",
+          "interactive_objects": ["treasure_chest", "gold_pile", "artifact_pedestal"],
+          "spawn_items": ["coin_gold", "gem_ruby", "key_golden"]
+        }
+      ]
+    }
+  },
+
+  "destination_styles": {
+    "paris": {
+      "architectural_style": "Haussmann style, ornate moldings, tall windows",
+      "color_palette": "cream walls, gold accents, deep blue touches",
+      "decorations": "chandeliers, artwork, elegant furniture"
+    },
+    "tokyo": {
+      "architectural_style": "mix of traditional and modern, clean lines",
+      "color_palette": "natural wood, white, soft pastels, red accents",
+      "decorations": "sliding doors, bonsai, modern tech elements"
+    },
+    "new_york": {
+      "architectural_style": "industrial loft, exposed brick, large windows",
+      "color_palette": "warm brick red, metal gray, pops of color",
+      "decorations": "neon signs, urban art, modern furniture"
+    },
+    "cairo": {
+      "architectural_style": "Middle Eastern arches, carved details",
+      "color_palette": "sandy gold, turquoise tiles, terracotta",
+      "decorations": "lanterns, geometric patterns, fabric drapes"
+    },
+    "beijing": {
+      "architectural_style": "Chinese traditional, red pillars, curved roofs",
+      "color_palette": "red, gold, black lacquer, jade green",
+      "decorations": "paper lanterns, calligraphy, ceramic vases"
+    },
+    "london": {
+      "architectural_style": "Victorian, detailed woodwork, formal layout",
+      "color_palette": "deep green, burgundy, warm wood tones",
+      "decorations": "portraits, antiques, fireplace"
+    },
+    "sydney": {
+      "architectural_style": "modern coastal, open plan, lots of light",
+      "color_palette": "ocean blue, sandy beige, white, coral",
+      "decorations": "beach art, surfboards, plants"
+    },
+    "rio": {
+      "architectural_style": "colorful colonial, tile work, open spaces",
+      "color_palette": "vibrant yellow, green, blue, orange",
+      "decorations": "carnival masks, musical instruments, tropical plants"
+    }
+  },
+
+  "platform_placement": {
+    "rules": [
+      "Main floor at y=500 (ground level)",
+      "Secondary platforms at y=300-400",
+      "High platforms at y=150-250",
+      "Minimum platform width: 200px",
+      "Gap between platforms: 100-300px"
+    ],
+    "interactive_zones": {
+      "npc_spawn": "near counters, desks, or central areas",
+      "item_spawn": "on shelves, in corners, hidden spots",
+      "exit_door": "clearly visible, usually left or right edge"
+    }
+  },
+
+  "procedural_elements": {
+    "furniture_pool": {
+      "seating": ["chair", "bench", "stool", "sofa", "cushion"],
+      "storage": ["shelf", "cabinet", "drawer", "box", "basket"],
+      "surfaces": ["table", "counter", "desk", "workbench"],
+      "decorative": ["plant", "painting", "lamp", "clock", "vase"]
+    },
+    "lighting_types": ["natural_window", "ceiling_lamp", "wall_sconce", "candle", "neon"],
+    "floor_types": ["wood", "tile", "carpet", "stone", "metal"]
+  },
+
+  "output_paths": {
+    "backgrounds": "assets/images/interiors/{building_type}/{variant_id}_bg.png",
+    "platforms": "assets/images/interiors/{building_type}/{variant_id}_platforms.png",
+    "foreground": "assets/images/interiors/{building_type}/{variant_id}_fg.png"
+  },
+
+  "generation_config": {
+    "ai_model": "stable-diffusion-xl",
+    "steps": 30,
+    "cfg_scale": 7,
+    "batch_size": 4,
+    "negative_prompt": "realistic photo, 3D render, dark scary, horror, violence, nsfw, blurry, low quality"
+  },
+
+  "fallback_templates": {
+    "generic_shop": {
+      "layout": "simple room with counter on right, shelves on walls, door on left",
+      "platforms": [
+        { "x": 0, "y": 500, "width": 1920, "type": "floor" },
+        { "x": 200, "y": 350, "width": 300, "type": "shelf" },
+        { "x": 1400, "y": 300, "width": 400, "type": "counter" }
+      ]
+    },
+    "generic_room": {
+      "layout": "rectangular room with furniture, door on left edge",
+      "platforms": [
+        { "x": 0, "y": 500, "width": 1920, "type": "floor" }
+      ]
+    }
+  }
+}

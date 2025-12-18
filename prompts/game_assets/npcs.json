@@ -1,0 +1,164 @@
+{
+  "description": "NPC 資產生成提示詞配置",
+  "version": "1.0",
+  "generator": "exploration_assets",
+
+  "base_style": {
+    "art_style": "Super Wings animated cartoon style, bright colors, friendly expressions, simple shapes",
+    "quality": "high quality, clean lines, transparent background PNG",
+    "consistency": "consistent with Super Wings character design aesthetic"
+  },
+
+  "portrait_config": {
+    "size": "256x256",
+    "format": "PNG with transparency",
+    "view": "front-facing bust shot",
+    "expression_variants": ["neutral", "happy", "surprised", "concerned"]
+  },
+
+  "fullbody_config": {
+    "size": "512x768",
+    "format": "PNG with transparency",
+    "view": "full body, slight 3/4 angle",
+    "pose_variants": ["standing", "pointing", "waving", "working"]
+  },
+
+  "npc_templates": {
+    "generic": {
+      "prompt_template": "A friendly {age} {gender} {occupation} character, {description}, Super Wings cartoon style, {view}, {expression}, bright cheerful colors, clean vector art style, transparent background",
+      "negative_prompt": "realistic, photograph, dark, scary, complex background, blurry"
+    },
+
+    "destination_specific": {
+      "paris": {
+        "cultural_elements": "French fashion, berets, striped shirts, baguettes",
+        "color_palette": "blue, white, red accents, warm browns",
+        "architecture_style": "Parisian cafe, Eiffel Tower background elements"
+      },
+      "tokyo": {
+        "cultural_elements": "Japanese traditional and modern mix, kimonos, school uniforms",
+        "color_palette": "pink cherry blossoms, white, red, soft pastels",
+        "architecture_style": "Japanese temples, modern Tokyo buildings"
+      },
+      "new_york": {
+        "cultural_elements": "diverse urban fashion, baseball caps, casual American style",
+        "color_palette": "yellow taxi, blue jeans, red fire trucks",
+        "architecture_style": "skyscrapers, brownstones, busy streets"
+      },
+      "cairo": {
+        "cultural_elements": "Egyptian traditional dress, head coverings, desert wear",
+        "color_palette": "sandy gold, terracotta, turquoise accents",
+        "architecture_style": "pyramids, ancient temples, desert oasis"
+      },
+      "sydney": {
+        "cultural_elements": "casual beach wear, surfing culture, outdoor lifestyle",
+        "color_palette": "ocean blue, sunny yellow, coral",
+        "architecture_style": "Opera House, beaches, harbor"
+      },
+      "rio": {
+        "cultural_elements": "colorful carnival inspired, Brazilian fashion",
+        "color_palette": "vibrant green, yellow, blue, orange",
+        "architecture_style": "Christ the Redeemer, favelas, beaches"
+      },
+      "beijing": {
+        "cultural_elements": "Chinese traditional elements, modern Chinese fashion",
+        "color_palette": "red, gold, black accents",
+        "architecture_style": "Forbidden City, Great Wall, modern Beijing"
+      },
+      "london": {
+        "cultural_elements": "British style, umbrellas, formal wear",
+        "color_palette": "red phone boxes, black cabs, royal blue",
+        "architecture_style": "Big Ben, Tower Bridge, double-decker buses"
+      }
+    }
+  },
+
+  "npc_archetypes": [
+    {
+      "id": "shopkeeper",
+      "name_variants": ["店主", "老闆", "商人"],
+      "occupations": ["baker", "florist", "toy shop owner", "bookstore keeper", "cafe owner"],
+      "typical_quests": ["fetch ingredient", "deliver package", "find lost item"],
+      "personality_traits": ["friendly", "busy", "helpful"],
+      "prompt_additions": "standing behind counter, apron, warm smile"
+    },
+    {
+      "id": "child",
+      "name_variants": ["小朋友", "孩子", "學生"],
+      "occupations": ["student", "young explorer", "curious kid"],
+      "typical_quests": ["find lost toy", "help with homework", "deliver message"],
+      "personality_traits": ["curious", "energetic", "playful"],
+      "prompt_additions": "small stature, big eyes, colorful clothes"
+    },
+    {
+      "id": "elder",
+      "name_variants": ["老人家", "爺爺", "奶奶"],
+      "occupations": ["retired teacher", "wise storyteller", "museum guide"],
+      "typical_quests": ["share wisdom", "remember the past", "find keepsake"],
+      "personality_traits": ["wise", "kind", "patient"],
+      "prompt_additions": "gentle expression, comfortable clothes, glasses optional"
+    },
+    {
+      "id": "official",
+      "name_variants": ["官員", "警察", "消防員"],
+      "occupations": ["police officer", "firefighter", "park ranger", "lifeguard"],
+      "typical_quests": ["emergency help", "safety check", "rescue mission"],
+      "personality_traits": ["responsible", "brave", "professional"],
+      "prompt_additions": "uniform, badge, confident pose"
+    },
+    {
+      "id": "artist",
+      "name_variants": ["藝術家", "音樂家", "表演者"],
+      "occupations": ["painter", "musician", "street performer", "dancer"],
+      "typical_quests": ["find inspiration", "gather materials", "prepare for show"],
+      "personality_traits": ["creative", "expressive", "passionate"],
+      "prompt_additions": "artistic attire, creative tools nearby"
+    },
+    {
+      "id": "scientist",
+      "name_variants": ["科學家", "研究員", "發明家"],
+      "occupations": ["researcher", "inventor", "professor", "archaeologist"],
+      "typical_quests": ["collect samples", "test invention", "solve mystery"],
+      "personality_traits": ["curious", "intelligent", "focused"],
+      "prompt_additions": "lab coat or field gear, scientific equipment"
+    },
+    {
+      "id": "athlete",
+      "name_variants": ["運動員", "教練", "選手"],
+      "occupations": ["soccer player", "swimmer", "gymnast", "coach"],
+      "typical_quests": ["sports challenge", "find equipment", "training help"],
+      "personality_traits": ["energetic", "competitive", "encouraging"],
+      "prompt_additions": "athletic wear, sports equipment"
+    },
+    {
+      "id": "chef",
+      "name_variants": ["廚師", "主廚", "美食家"],
+      "occupations": ["restaurant chef", "street food vendor", "pastry chef"],
+      "typical_quests": ["find ingredients", "cooking competition", "recipe search"],
+      "personality_traits": ["passionate", "perfectionist", "generous"],
+      "prompt_additions": "chef hat, cooking apron, kitchen tools"
+    }
+  ],
+
+  "procedural_generation": {
+    "name_pools": {
+      "male": ["Marco", "Takeshi", "Ahmed", "Pierre", "Miguel", "Chen", "Oliver", "Hans"],
+      "female": ["Sofia", "Yuki", "Fatima", "Marie", "Isabella", "Mei", "Emma", "Greta"],
+      "neutral": ["Alex", "Sam", "Jordan", "Casey", "Riley", "Morgan", "Taylor", "Quinn"]
+    },
+    "age_ranges": ["child (6-12)", "teen (13-17)", "adult (25-40)", "middle-aged (40-55)", "elder (60+)"],
+    "relationship_types": ["stranger", "acquaintance", "friend", "mentor", "rival"]
+  },
+
+  "output_paths": {
+    "portraits": "assets/images/npcs/{destination}/{npc_id}_portrait.png",
+    "fullbody": "assets/images/npcs/{destination}/{npc_id}_full.png",
+    "expressions": "assets/images/npcs/{destination}/{npc_id}_{expression}.png"
+  },
+
+  "batch_config": {
+    "npcs_per_destination": 5,
+    "expressions_per_npc": 4,
+    "priority_destinations": ["paris", "tokyo", "new_york"]
+  }
+}

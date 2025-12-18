@@ -1,0 +1,112 @@
+{
+  "locations": {
+    "world_airport": {
+      "name": "World Airport",
+      "name_zh": "世界機場",
+      "region": "headquarters",
+      "description": "The Super Wings headquarters where all missions begin and end. A modern airport with advanced technology for package delivery and rescue operations.",
+      "cultural_notes": "International hub with diverse staff and visitors from around the world",
+      "landmarks": ["Control Tower", "Runway", "Package Sorting Center", "Transformation Pad"],
+      "common_problems": []
+    },
+    "paris_france": {
+      "name": "Paris",
+      "name_zh": "巴黎",
+      "region": "Europe",
+      "description": "The romantic capital of France, known for the Eiffel Tower, art museums, and delicious pastries.",
+      "cultural_notes": "French culture values art, cuisine, and elegance. Greetings often include 'Bonjour'",
+      "landmarks": ["Eiffel Tower", "Louvre Museum", "Arc de Triomphe", "Seine River"],
+      "common_problems": ["Art delivery", "Bakery emergencies", "Fashion shows", "Museum exhibits"]
+    },
+    "tokyo_japan": {
+      "name": "Tokyo",
+      "name_zh": "東京",
+      "region": "Asia",
+      "description": "A vibrant Japanese metropolis blending ancient traditions with cutting-edge technology.",
+      "cultural_notes": "Japanese culture emphasizes respect, cleanliness, and precision. Bowing is a common greeting",
+      "landmarks": ["Tokyo Tower", "Shibuya Crossing", "Cherry Blossom Gardens", "Traditional Temples"],
+      "common_problems": ["Festival preparations", "Robot malfunctions", "Traditional ceremonies", "Train delays"]
+    },
+    "new_york_usa": {
+      "name": "New York City",
+      "name_zh": "紐約",
+      "region": "North America",
+      "description": "The bustling American city that never sleeps, famous for skyscrapers and diverse neighborhoods.",
+      "cultural_notes": "Fast-paced, diverse culture. People are direct and friendly",
+      "landmarks": ["Statue of Liberty", "Central Park", "Times Square", "Brooklyn Bridge"],
+      "common_problems": ["Parade preparations", "Sports events", "Theater emergencies", "Traffic jams"]
+    },
+    "sydney_australia": {
+      "name": "Sydney",
+      "name_zh": "雪梨",
+      "region": "Oceania",
+      "description": "A beautiful coastal Australian city with stunning beaches and the iconic Opera House.",
+      "cultural_notes": "Relaxed, outdoor-loving culture. 'G'day' is a common greeting",
+      "landmarks": ["Sydney Opera House", "Harbour Bridge", "Bondi Beach", "Taronga Zoo"],
+      "common_problems": ["Beach rescues", "Wildlife encounters", "Surfing competitions", "Harbor events"]
+    },
+    "cairo_egypt": {
+      "name": "Cairo",
+      "name_zh": "開羅",
+      "region": "Africa",
+      "description": "Ancient Egyptian city near the pyramids, where history and modern life blend together.",
+      "cultural_notes": "Rich in ancient history and traditions. Hospitality is very important",
+      "landmarks": ["Great Pyramids", "Sphinx", "Nile River", "Egyptian Museum"],
+      "common_problems": ["Archaeological discoveries", "Desert adventures", "Ancient artifact delivery", "Sand storms"]
+    },
+    "rio_brazil": {
+      "name": "Rio de Janeiro",
+      "name_zh": "里約熱內盧",
+      "region": "South America",
+      "description": "A colorful Brazilian city famous for carnival, samba, and beautiful beaches.",
+      "cultural_notes": "Joyful culture that loves music, dance, and celebrations",
+      "landmarks": ["Christ the Redeemer", "Sugarloaf Mountain", "Copacabana Beach", "Maracana Stadium"],
+      "common_problems": ["Carnival preparations", "Soccer matches", "Beach activities", "Jungle adventures"]
+    },
+    "beijing_china": {
+      "name": "Beijing",
+      "name_zh": "北京",
+      "region": "Asia",
+      "description": "China's historic capital with ancient palaces and modern developments.",
+      "cultural_notes": "Rich cultural heritage with emphasis on respect for elders and tradition",
+      "landmarks": ["Great Wall", "Forbidden City", "Temple of Heaven", "Beijing Opera House"],
+      "common_problems": ["Festival preparations", "Traditional performances", "Lantern festivals", "Panda conservation"]
+    },
+    "london_uk": {
+      "name": "London",
+      "name_zh": "倫敦",
+      "region": "Europe",
+      "description": "Historic British capital known for its royal heritage and diverse culture.",
+      "cultural_notes": "Polite culture with queuing traditions. Tea time is important",
+      "landmarks": ["Big Ben", "Tower Bridge", "Buckingham Palace", "London Eye"],
+      "common_problems": ["Royal events", "Double-decker bus troubles", "Museum deliveries", "Rainy day rescues"]
+    },
+    "mumbai_india": {
+      "name": "Mumbai",
+      "name_zh": "孟買",
+      "region": "Asia",
+      "description": "India's largest city, home to Bollywood and vibrant street markets.",
+      "cultural_notes": "Colorful culture with festivals, music, and delicious food. 'Namaste' is a respectful greeting",
+      "landmarks": ["Gateway of India", "Bollywood Studios", "Marine Drive", "Elephanta Caves"],
+      "common_problems": ["Film productions", "Festival celebrations", "Monsoon challenges", "Market deliveries"]
+    },
+    "arctic_region": {
+      "name": "Arctic",
+      "name_zh": "北極",
+      "region": "Polar",
+      "description": "The frozen northern region with ice, snow, and amazing northern lights.",
+      "cultural_notes": "Home to indigenous peoples who respect nature and wildlife",
+      "landmarks": ["Ice Glaciers", "Northern Lights", "Research Stations", "Polar Bear Habitats"],
+      "common_problems": ["Ice rescues", "Research deliveries", "Wildlife protection", "Blizzard emergencies"]
+    },
+    "amazon_rainforest": {
+      "name": "Amazon Rainforest",
+      "name_zh": "亞馬遜雨林",
+      "region": "South America",
+      "description": "The world's largest rainforest, full of amazing wildlife and indigenous communities.",
+      "cultural_notes": "Indigenous communities live in harmony with nature",
+      "landmarks": ["Amazon River", "Canopy Walkways", "Indigenous Villages", "Wildlife Sanctuaries"],
+      "common_problems": ["Animal rescues", "River navigation", "Rain shelter", "Jungle exploration"]
+    }
+  }
+}

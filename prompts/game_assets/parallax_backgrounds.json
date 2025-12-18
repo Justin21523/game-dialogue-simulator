@@ -1,0 +1,404 @@
+{
+  "meta": {
+    "description": "2.5D Parallax Background System - Complete asset list for 200+ images",
+    "resolution_wide": {"width": 2560, "height": 720},
+    "resolution_standard": {"width": 1280, "height": 720}
+  },
+  "sky_layers": {
+    "description": "Sky gradient backgrounds - 8 weather types",
+    "resolution": "background",
+    "output_path": "backgrounds/sky/",
+    "templates": {
+      "sky_blue_gradient": {"prompt": "seamless tileable sky gradient, clear bright blue sky fading to light blue at horizon, no clouds no ground no buildings, pure sky only, Super Wings animated style, 3d CGI render, high quality", "weather": "clear"},
+      "sky_sunset_gradient": {"prompt": "seamless tileable sunset sky gradient, deep orange to pink to purple gradient, golden hour colors, no clouds no ground, pure sky only, Super Wings animated style, 3d CGI render", "weather": "sunset"},
+      "sky_sunrise_gradient": {"prompt": "seamless tileable sunrise sky gradient, soft pink to golden orange to light blue, morning colors, no clouds no ground, pure sky only, Super Wings animated style, 3d CGI render", "weather": "sunrise"},
+      "sky_night_gradient": {"prompt": "seamless tileable night sky gradient, deep dark blue to black, scattered stars twinkling, moon glow, no clouds no ground, pure sky only, Super Wings animated style, 3d CGI render", "weather": "night"},
+      "sky_stormy_gradient": {"prompt": "seamless tileable stormy sky gradient, dark ominous gray to purple, dramatic atmosphere, no clouds separate layer, pure sky only, Super Wings animated style, 3d CGI render", "weather": "stormy"},
+      "sky_cloudy_gradient": {"prompt": "seamless tileable overcast sky gradient, soft gray to white, diffused lighting, no distinct clouds, pure sky only, Super Wings animated style, 3d CGI render", "weather": "cloudy"},
+      "sky_rainy_gradient": {"prompt": "seamless tileable rainy sky gradient, dark gray atmosphere, wet misty look, no rain drops separate layer, pure sky only, Super Wings animated style, 3d CGI render", "weather": "rainy"},
+      "sky_rainbow_gradient": {"prompt": "seamless tileable post-rain sky gradient, bright blue with subtle rainbow colors, hopeful atmosphere, no clouds, pure sky only, Super Wings animated style, 3d CGI render", "weather": "rainbow"}
+    }
+  },
+  "cloud_layers": {
+    "description": "Cloud layers on transparent background",
+    "resolution": "background",
+    "output_path": "backgrounds/clouds/",
+    "templates": {
+      "clouds_far_white": {"prompt": "seamless tileable distant white clouds on transparent background, small fluffy cumulus clouds scattered evenly, far away perspective, thin wispy appearance, Super Wings animated style, 3d CGI render", "layer": "far"},
+      "clouds_near_white": {"prompt": "seamless tileable close white clouds on transparent background, large fluffy cumulus clouds, near perspective, thick puffy appearance, Super Wings animated style, 3d CGI render", "layer": "near"},
+      "clouds_far_sunset": {"prompt": "seamless tileable distant sunset clouds on transparent background, small clouds catching golden orange light, far away perspective, Super Wings animated style, 3d CGI render", "layer": "far"},
+      "clouds_near_sunset": {"prompt": "seamless tileable close sunset clouds on transparent background, large clouds with pink and orange highlights, near perspective, Super Wings animated style, 3d CGI render", "layer": "near"},
+      "clouds_storm_dark": {"prompt": "seamless tileable storm clouds on transparent background, dark gray ominous clouds swirling, threatening appearance, Super Wings animated style, 3d CGI render", "layer": "storm"},
+      "clouds_rain_gray": {"prompt": "seamless tileable rain clouds on transparent background, heavy gray nimbus clouds, wet appearance, Super Wings animated style, 3d CGI render", "layer": "rain"}
+    }
+  },
+  "base_scenes": {
+    "description": "Base location layered backgrounds - 3 scenes × 3 layers",
+    "resolution": "background",
+    "output_path": "backgrounds/base/",
+    "templates": {
+      "world_airport_far": {"prompt": "seamless tileable distant airport view, control tower and terminal buildings silhouette, far background layer, Super Wings World Airport style, 3d CGI render, vibrant colors", "scene": "world_airport", "layer": "far"},
+      "world_airport_mid": {"prompt": "seamless tileable airport mid ground, parked airplanes and hangars, runway lights, medium distance, Super Wings World Airport style, 3d CGI render", "scene": "world_airport", "layer": "mid"},
+      "world_airport_near": {"prompt": "seamless tileable airport foreground on transparent background, runway markings, taxiway signs, ground equipment, near layer, Super Wings style, 3d CGI render", "scene": "world_airport", "layer": "near"},
+      "hangar_interior_far": {"prompt": "seamless tileable hangar interior back wall, tool boards, windows with light, distant shelves, far background, Super Wings style, 3d CGI render", "scene": "hangar_interior", "layer": "far"},
+      "hangar_interior_mid": {"prompt": "seamless tileable hangar interior middle, workbenches, equipment stands, ladders, medium distance, Super Wings style, 3d CGI render", "scene": "hangar_interior", "layer": "mid"},
+      "hangar_interior_near": {"prompt": "seamless tileable hangar interior foreground on transparent background, tool boxes, safety cones, floor markings, near layer, Super Wings style, 3d CGI render", "scene": "hangar_interior", "layer": "near"},
+      "runway_far": {"prompt": "seamless tileable runway far view, airport buildings in distance, control tower, far horizon, Super Wings style, 3d CGI render", "scene": "runway", "layer": "far"},
+      "runway_mid": {"prompt": "seamless tileable runway middle view, runway lights, taxiway intersections, grass edges, medium distance, Super Wings style, 3d CGI render", "scene": "runway", "layer": "mid"},
+      "runway_near": {"prompt": "seamless tileable runway foreground on transparent background, tarmac texture, runway stripes, close up details, near layer, Super Wings style, 3d CGI render", "scene": "runway", "layer": "near"}
+    }
+  },
+  "destinations": {
+    "description": "Destination layered backgrounds - 30 locations × 4 layers",
+    "resolution": "background",
+    "output_path": "backgrounds/destinations/",
+    "locations": {
+      "paris": {
+        "name": "Paris, France",
+        "templates": {
+          "paris_sky": {"prompt": "seamless tileable Paris sky, clear blue European sky, soft clouds, romantic atmosphere, Super Wings style, 3d CGI render"},
+          "paris_landmark": {"prompt": "Eiffel Tower silhouette on transparent background, iconic Paris landmark, distant view, Super Wings style, 3d CGI render"},
+          "paris_buildings": {"prompt": "seamless tileable Parisian buildings, Haussmann architecture, cream colored facades, gray roofs, charming balconies, Super Wings style, 3d CGI render"},
+          "paris_ground": {"prompt": "seamless tileable Paris street on transparent background, cobblestone pavement, cafe terraces, street lamps, Super Wings style, 3d CGI render"}
+        }
+      },
+      "tokyo": {
+        "name": "Tokyo, Japan",
+        "templates": {
+          "tokyo_sky": {"prompt": "seamless tileable Tokyo sky, modern city atmosphere, slight haze, Super Wings style, 3d CGI render"},
+          "tokyo_landmark": {"prompt": "Tokyo Tower and Skytree silhouette on transparent background, iconic landmarks, distant view, Super Wings style, 3d CGI render"},
+          "tokyo_buildings": {"prompt": "seamless tileable Tokyo cityscape, mix of modern skyscrapers and traditional buildings, neon signs, busy urban scene, Super Wings style, 3d CGI render"},
+          "tokyo_ground": {"prompt": "seamless tileable Tokyo street on transparent background, crosswalks, vending machines, shop fronts, Super Wings style, 3d CGI render"}
+        }
+      },
+      "new_york": {
+        "name": "New York, USA",
+        "templates": {
+          "new_york_sky": {"prompt": "seamless tileable New York sky, bright American sky, scattered clouds, Super Wings style, 3d CGI render"},
+          "new_york_landmark": {"prompt": "Statue of Liberty and Empire State Building silhouette on transparent background, iconic NYC landmarks, distant view, Super Wings style, 3d CGI render"},
+          "new_york_buildings": {"prompt": "seamless tileable Manhattan skyline, tall skyscrapers, art deco buildings, yellow taxis, Super Wings style, 3d CGI render"},
+          "new_york_ground": {"prompt": "seamless tileable NYC street on transparent background, fire hydrants, steam vents, subway entrances, Super Wings style, 3d CGI render"}
+        }
+      },
+      "london": {
+        "name": "London, UK",
+        "templates": {
+          "london_sky": {"prompt": "seamless tileable London sky, overcast British weather, gray clouds, Super Wings style, 3d CGI render"},
+          "london_landmark": {"prompt": "Big Ben and Tower Bridge silhouette on transparent background, iconic London landmarks, distant view, Super Wings style, 3d CGI render"},
+          "london_buildings": {"prompt": "seamless tileable London street, Victorian architecture, brick buildings, chimneys, Super Wings style, 3d CGI render"},
+          "london_ground": {"prompt": "seamless tileable London street on transparent background, red phone boxes, black cabs, pedestrian crossings, Super Wings style, 3d CGI render"}
+        }
+      },
+      "sydney": {
+        "name": "Sydney, Australia",
+        "templates": {
+          "sydney_sky": {"prompt": "seamless tileable Sydney sky, bright Australian sun, deep blue sky, Super Wings style, 3d CGI render"},
+          "sydney_landmark": {"prompt": "Sydney Opera House and Harbour Bridge silhouette on transparent background, iconic landmarks, distant view, Super Wings style, 3d CGI render"},
+          "sydney_buildings": {"prompt": "seamless tileable Sydney harbor view, modern buildings, waterfront, palm trees, Super Wings style, 3d CGI render"},
+          "sydney_ground": {"prompt": "seamless tileable Sydney street on transparent background, boardwalk, beach elements, surfboards, Super Wings style, 3d CGI render"}
+        }
+      },
+      "cairo": {
+        "name": "Cairo, Egypt",
+        "templates": {
+          "cairo_sky": {"prompt": "seamless tileable Cairo sky, hot desert sun, golden haze, Super Wings style, 3d CGI render"},
+          "cairo_landmark": {"prompt": "Egyptian pyramids and Sphinx silhouette on transparent background, iconic ancient landmarks, distant view, Super Wings style, 3d CGI render"},
+          "cairo_buildings": {"prompt": "seamless tileable Cairo cityscape, mix of ancient and modern, minarets, markets, Super Wings style, 3d CGI render"},
+          "cairo_ground": {"prompt": "seamless tileable Cairo street on transparent background, market stalls, desert sand, pottery, Super Wings style, 3d CGI render"}
+        }
+      },
+      "rio": {
+        "name": "Rio de Janeiro, Brazil",
+        "templates": {
+          "rio_sky": {"prompt": "seamless tileable Rio sky, tropical blue sky, white fluffy clouds, Super Wings style, 3d CGI render"},
+          "rio_landmark": {"prompt": "Christ the Redeemer and Sugarloaf Mountain silhouette on transparent background, iconic Rio landmarks, distant view, Super Wings style, 3d CGI render"},
+          "rio_buildings": {"prompt": "seamless tileable Rio cityscape, colorful favelas, beach buildings, palm trees, Super Wings style, 3d CGI render"},
+          "rio_ground": {"prompt": "seamless tileable Rio beach on transparent background, Copacabana pattern, beach umbrellas, volleyball nets, Super Wings style, 3d CGI render"}
+        }
+      },
+      "beijing": {
+        "name": "Beijing, China",
+        "templates": {
+          "beijing_sky": {"prompt": "seamless tileable Beijing sky, traditional Chinese atmosphere, soft clouds, Super Wings style, 3d CGI render"},
+          "beijing_landmark": {"prompt": "Forbidden City and Temple of Heaven silhouette on transparent background, iconic Beijing landmarks, distant view, Super Wings style, 3d CGI render"},
+          "beijing_buildings": {"prompt": "seamless tileable Beijing cityscape, mix of ancient palaces and modern towers, red lanterns, Super Wings style, 3d CGI render"},
+          "beijing_ground": {"prompt": "seamless tileable Beijing street on transparent background, traditional gates, hutong elements, bicycles, Super Wings style, 3d CGI render"}
+        }
+      },
+      "mumbai": {
+        "name": "Mumbai, India",
+        "templates": {
+          "mumbai_sky": {"prompt": "seamless tileable Mumbai sky, tropical monsoon atmosphere, warm colors, Super Wings style, 3d CGI render"},
+          "mumbai_landmark": {"prompt": "Gateway of India silhouette on transparent background, iconic Mumbai landmark, distant view, Super Wings style, 3d CGI render"},
+          "mumbai_buildings": {"prompt": "seamless tileable Mumbai cityscape, colonial architecture, colorful markets, busy streets, Super Wings style, 3d CGI render"},
+          "mumbai_ground": {"prompt": "seamless tileable Mumbai street on transparent background, market stalls, auto-rickshaws, vibrant colors, Super Wings style, 3d CGI render"}
+        }
+      },
+      "rome": {
+        "name": "Rome, Italy",
+        "templates": {
+          "rome_sky": {"prompt": "seamless tileable Rome sky, Mediterranean blue, warm golden light, Super Wings style, 3d CGI render"},
+          "rome_landmark": {"prompt": "Colosseum and Vatican dome silhouette on transparent background, iconic Rome landmarks, distant view, Super Wings style, 3d CGI render"},
+          "rome_buildings": {"prompt": "seamless tileable Roman cityscape, ancient ruins, baroque buildings, terracotta roofs, Super Wings style, 3d CGI render"},
+          "rome_ground": {"prompt": "seamless tileable Rome street on transparent background, cobblestones, fountains, gelato shops, Super Wings style, 3d CGI render"}
+        }
+      },
+      "dubai": {
+        "name": "Dubai, UAE",
+        "templates": {
+          "dubai_sky": {"prompt": "seamless tileable Dubai sky, desert sun, clear blue, Super Wings style, 3d CGI render"},
+          "dubai_landmark": {"prompt": "Burj Khalifa silhouette on transparent background, iconic Dubai landmark, distant view, Super Wings style, 3d CGI render"},
+          "dubai_buildings": {"prompt": "seamless tileable Dubai skyline, futuristic skyscrapers, glass towers, Super Wings style, 3d CGI render"},
+          "dubai_ground": {"prompt": "seamless tileable Dubai street on transparent background, luxury cars, palm trees, modern architecture, Super Wings style, 3d CGI render"}
+        }
+      },
+      "moscow": {
+        "name": "Moscow, Russia",
+        "templates": {
+          "moscow_sky": {"prompt": "seamless tileable Moscow sky, cold winter atmosphere, gray clouds, Super Wings style, 3d CGI render"},
+          "moscow_landmark": {"prompt": "Saint Basil Cathedral colorful domes silhouette on transparent background, iconic Moscow landmark, distant view, Super Wings style, 3d CGI render"},
+          "moscow_buildings": {"prompt": "seamless tileable Moscow cityscape, Soviet architecture, onion domes, red buildings, Super Wings style, 3d CGI render"},
+          "moscow_ground": {"prompt": "seamless tileable Moscow street on transparent background, snow covered, metro entrance, Red Square elements, Super Wings style, 3d CGI render"}
+        }
+      },
+      "barcelona": {
+        "name": "Barcelona, Spain",
+        "templates": {
+          "barcelona_sky": {"prompt": "seamless tileable Barcelona sky, Mediterranean sun, warm blue, Super Wings style, 3d CGI render"},
+          "barcelona_landmark": {"prompt": "Sagrada Familia silhouette on transparent background, iconic Barcelona landmark, distant view, Super Wings style, 3d CGI render"},
+          "barcelona_buildings": {"prompt": "seamless tileable Barcelona cityscape, Gaudi architecture, colorful mosaics, palm trees, Super Wings style, 3d CGI render"},
+          "barcelona_ground": {"prompt": "seamless tileable Barcelona street on transparent background, La Rambla style, tapas bars, mosaic tiles, Super Wings style, 3d CGI render"}
+        }
+      },
+      "amsterdam": {
+        "name": "Amsterdam, Netherlands",
+        "templates": {
+          "amsterdam_sky": {"prompt": "seamless tileable Amsterdam sky, Dutch clouds, soft light, Super Wings style, 3d CGI render"},
+          "amsterdam_landmark": {"prompt": "Amsterdam canal houses silhouette on transparent background, iconic Dutch architecture, distant view, Super Wings style, 3d CGI render"},
+          "amsterdam_buildings": {"prompt": "seamless tileable Amsterdam canal view, narrow houses, bicycles, bridges, Super Wings style, 3d CGI render"},
+          "amsterdam_ground": {"prompt": "seamless tileable Amsterdam street on transparent background, cobblestones, bike lanes, tulips, Super Wings style, 3d CGI render"}
+        }
+      },
+      "bangkok": {
+        "name": "Bangkok, Thailand",
+        "templates": {
+          "bangkok_sky": {"prompt": "seamless tileable Bangkok sky, tropical humid atmosphere, golden light, Super Wings style, 3d CGI render"},
+          "bangkok_landmark": {"prompt": "Thai temple spires and Grand Palace silhouette on transparent background, iconic Bangkok landmarks, distant view, Super Wings style, 3d CGI render"},
+          "bangkok_buildings": {"prompt": "seamless tileable Bangkok cityscape, temples and skyscrapers, tuk-tuks, busy streets, Super Wings style, 3d CGI render"},
+          "bangkok_ground": {"prompt": "seamless tileable Bangkok street on transparent background, street food stalls, flower markets, spirit houses, Super Wings style, 3d CGI render"}
+        }
+      },
+      "singapore": {
+        "name": "Singapore",
+        "templates": {
+          "singapore_sky": {"prompt": "seamless tileable Singapore sky, tropical clear blue, modern atmosphere, Super Wings style, 3d CGI render"},
+          "singapore_landmark": {"prompt": "Marina Bay Sands and Merlion silhouette on transparent background, iconic Singapore landmarks, distant view, Super Wings style, 3d CGI render"},
+          "singapore_buildings": {"prompt": "seamless tileable Singapore skyline, futuristic gardens, green buildings, clean streets, Super Wings style, 3d CGI render"},
+          "singapore_ground": {"prompt": "seamless tileable Singapore street on transparent background, hawker center, tropical plants, modern design, Super Wings style, 3d CGI render"}
+        }
+      },
+      "istanbul": {
+        "name": "Istanbul, Turkey",
+        "templates": {
+          "istanbul_sky": {"prompt": "seamless tileable Istanbul sky, between Europe and Asia, warm sunset colors, Super Wings style, 3d CGI render"},
+          "istanbul_landmark": {"prompt": "Blue Mosque and Hagia Sophia silhouette on transparent background, iconic Istanbul landmarks, distant view, Super Wings style, 3d CGI render"},
+          "istanbul_buildings": {"prompt": "seamless tileable Istanbul cityscape, minarets, bazaars, Bosphorus view, Super Wings style, 3d CGI render"},
+          "istanbul_ground": {"prompt": "seamless tileable Istanbul street on transparent background, Grand Bazaar elements, carpets, spice market, Super Wings style, 3d CGI render"}
+        }
+      },
+      "athens": {
+        "name": "Athens, Greece",
+        "templates": {
+          "athens_sky": {"prompt": "seamless tileable Athens sky, Mediterranean blue, ancient glory, Super Wings style, 3d CGI render"},
+          "athens_landmark": {"prompt": "Parthenon and Acropolis silhouette on transparent background, iconic Athens landmarks, distant view, Super Wings style, 3d CGI render"},
+          "athens_buildings": {"prompt": "seamless tileable Athens cityscape, white buildings, ancient ruins, olive trees, Super Wings style, 3d CGI render"},
+          "athens_ground": {"prompt": "seamless tileable Athens street on transparent background, marble paths, tavernas, ancient columns, Super Wings style, 3d CGI render"}
+        }
+      },
+      "nairobi": {
+        "name": "Nairobi, Kenya",
+        "templates": {
+          "nairobi_sky": {"prompt": "seamless tileable African savanna sky, warm golden hour, wide horizon, Super Wings style, 3d CGI render"},
+          "nairobi_landmark": {"prompt": "African wildlife silhouettes on transparent background, giraffes and acacia trees, distant view, Super Wings style, 3d CGI render"},
+          "nairobi_buildings": {"prompt": "seamless tileable Nairobi cityscape, modern African city, safari lodges, Super Wings style, 3d CGI render"},
+          "nairobi_ground": {"prompt": "seamless tileable savanna ground on transparent background, red earth, safari jeep tracks, grass, Super Wings style, 3d CGI render"}
+        }
+      },
+      "mexico_city": {
+        "name": "Mexico City, Mexico",
+        "templates": {
+          "mexico_city_sky": {"prompt": "seamless tileable Mexico City sky, high altitude clear sky, warm colors, Super Wings style, 3d CGI render"},
+          "mexico_city_landmark": {"prompt": "Aztec pyramid and Angel of Independence silhouette on transparent background, iconic Mexico landmarks, distant view, Super Wings style, 3d CGI render"},
+          "mexico_city_buildings": {"prompt": "seamless tileable Mexico City cityscape, colonial architecture, colorful buildings, Super Wings style, 3d CGI render"},
+          "mexico_city_ground": {"prompt": "seamless tileable Mexico City street on transparent background, Day of Dead decorations, tacos stands, mariachi, Super Wings style, 3d CGI render"}
+        }
+      }
+    }
+  },
+  "background_objects": {
+    "description": "Individual objects on transparent background - 50+ items",
+    "resolution": "portrait",
+    "output_path": "objects/",
+    "categories": {
+      "nature": {
+        "trees": [
+          {"id": "tree_evergreen", "prompt": "evergreen pine tree on transparent background, isolated single tree, clean edges, no shadow on ground, Super Wings animated style, 3d CGI render"},
+          {"id": "tree_cherry_blossom", "prompt": "cherry blossom tree with pink flowers on transparent background, isolated single tree, clean edges, Super Wings animated style, 3d CGI render"},
+          {"id": "tree_palm", "prompt": "tropical palm tree on transparent background, isolated single tree, clean edges, Super Wings animated style, 3d CGI render"},
+          {"id": "tree_autumn", "prompt": "autumn tree with orange red leaves on transparent background, isolated single tree, Super Wings animated style, 3d CGI render"},
+          {"id": "tree_bare", "prompt": "bare winter tree with no leaves on transparent background, isolated single tree, Super Wings animated style, 3d CGI render"}
+        ],
+        "clouds_objects": [
+          {"id": "cloud_small_1", "prompt": "small fluffy white cloud on transparent background, isolated single cloud, cute cartoon style, Super Wings animated style, 3d CGI render"},
+          {"id": "cloud_small_2", "prompt": "small puffy white cloud on transparent background, slightly different shape, Super Wings animated style, 3d CGI render"},
+          {"id": "cloud_medium_1", "prompt": "medium sized white fluffy cloud on transparent background, isolated cloud, Super Wings animated style, 3d CGI render"},
+          {"id": "cloud_large_1", "prompt": "large fluffy white cloud on transparent background, big cumulus cloud, Super Wings animated style, 3d CGI render"},
+          {"id": "cloud_wispy", "prompt": "thin wispy cirrus cloud on transparent background, stretched cloud, Super Wings animated style, 3d CGI render"}
+        ],
+        "birds": [
+          {"id": "bird_flock_small", "prompt": "small flock of birds flying silhouette on transparent background, 3-5 birds, Super Wings animated style, 3d CGI render"},
+          {"id": "bird_single", "prompt": "single flying bird on transparent background, side view, wings spread, Super Wings animated style, 3d CGI render"},
+          {"id": "bird_seagull", "prompt": "white seagull flying on transparent background, side view, Super Wings animated style, 3d CGI render"}
+        ]
+      },
+      "vehicles": {
+        "cars": [
+          {"id": "car_red", "prompt": "red cartoon car on transparent background, side view, cute toy-like design, Super Wings animated style, 3d CGI render"},
+          {"id": "car_blue", "prompt": "blue cartoon car on transparent background, side view, cute design, Super Wings animated style, 3d CGI render"},
+          {"id": "car_yellow_taxi", "prompt": "yellow taxi cab on transparent background, side view, NYC style, Super Wings animated style, 3d CGI render"},
+          {"id": "car_police", "prompt": "police car with lights on transparent background, side view, Super Wings animated style, 3d CGI render"}
+        ],
+        "buses": [
+          {"id": "bus_red_double", "prompt": "red double decker bus on transparent background, side view, London style, Super Wings animated style, 3d CGI render"},
+          {"id": "bus_school", "prompt": "yellow school bus on transparent background, side view, American style, Super Wings animated style, 3d CGI render"}
+        ],
+        "air": [
+          {"id": "balloon_hot_air", "prompt": "colorful hot air balloon on transparent background, rainbow stripes, Super Wings animated style, 3d CGI render"},
+          {"id": "balloon_party", "prompt": "bunch of party balloons on transparent background, multiple colors, Super Wings animated style, 3d CGI render"}
+        ]
+      },
+      "landmarks": {
+        "paris": [
+          {"id": "eiffel_tower", "prompt": "Eiffel Tower on transparent background, full view, iconic Paris landmark, Super Wings animated style, 3d CGI render"},
+          {"id": "paris_cafe_table", "prompt": "Parisian cafe table with chairs on transparent background, outdoor bistro style, Super Wings animated style, 3d CGI render"},
+          {"id": "paris_lamp_post", "prompt": "ornate Parisian street lamp on transparent background, classic design, Super Wings animated style, 3d CGI render"}
+        ],
+        "tokyo": [
+          {"id": "tokyo_tower", "prompt": "Tokyo Tower on transparent background, red and white landmark, Super Wings animated style, 3d CGI render"},
+          {"id": "tokyo_vending_machine", "prompt": "Japanese vending machine on transparent background, colorful drinks, Super Wings animated style, 3d CGI render"},
+          {"id": "tokyo_torii_gate", "prompt": "red Japanese torii gate on transparent background, shrine entrance, Super Wings animated style, 3d CGI render"}
+        ],
+        "london": [
+          {"id": "big_ben", "prompt": "Big Ben clock tower on transparent background, iconic London landmark, Super Wings animated style, 3d CGI render"},
+          {"id": "london_phone_booth", "prompt": "red British telephone box on transparent background, classic design, Super Wings animated style, 3d CGI render"},
+          {"id": "london_mailbox", "prompt": "red British post box on transparent background, traditional pillar box, Super Wings animated style, 3d CGI render"}
+        ],
+        "new_york": [
+          {"id": "statue_liberty", "prompt": "Statue of Liberty on transparent background, iconic NYC landmark, Super Wings animated style, 3d CGI render"},
+          {"id": "ny_fire_hydrant", "prompt": "red fire hydrant on transparent background, NYC street object, Super Wings animated style, 3d CGI render"},
+          {"id": "ny_hotdog_stand", "prompt": "hotdog street vendor cart on transparent background, NYC style, Super Wings animated style, 3d CGI render"}
+        ],
+        "cairo": [
+          {"id": "pyramid", "prompt": "Egyptian pyramid on transparent background, Giza style, Super Wings animated style, 3d CGI render"},
+          {"id": "sphinx", "prompt": "Great Sphinx on transparent background, Egyptian landmark, Super Wings animated style, 3d CGI render"},
+          {"id": "camel", "prompt": "camel standing on transparent background, desert animal, Super Wings animated style, 3d CGI render"}
+        ]
+      },
+      "street_furniture": [
+        {"id": "bench_park", "prompt": "park bench on transparent background, wooden seat, Super Wings animated style, 3d CGI render"},
+        {"id": "lamp_street", "prompt": "street lamp post on transparent background, modern design, Super Wings animated style, 3d CGI render"},
+        {"id": "trash_bin", "prompt": "public trash bin on transparent background, clean design, Super Wings animated style, 3d CGI render"},
+        {"id": "mailbox_blue", "prompt": "blue mailbox on transparent background, postal box, Super Wings animated style, 3d CGI render"},
+        {"id": "traffic_light", "prompt": "traffic light on transparent background, three lights, Super Wings animated style, 3d CGI render"},
+        {"id": "stop_sign", "prompt": "stop sign on transparent background, red octagon, Super Wings animated style, 3d CGI render"}
+      ]
+    }
+  },
+  "ui_elements": {
+    "description": "Game UI icons and elements - 30+ types × 3 variations",
+    "resolution": {"width": 256, "height": 256},
+    "output_path": "ui/icons/",
+    "categories": {
+      "resources": {
+        "output_path": "ui/icons/resources/",
+        "items": [
+          {"id": "coin_gold", "prompt": "shiny gold coin icon on transparent background, game currency, Super Wings animated style, 3d CGI render, clean icon design"},
+          {"id": "fuel_can", "prompt": "red fuel canister icon on transparent background, airplane fuel, Super Wings animated style, 3d CGI render, clean icon design"},
+          {"id": "star_yellow", "prompt": "golden star icon on transparent background, achievement star, Super Wings animated style, 3d CGI render, glowing effect"},
+          {"id": "heart_red", "prompt": "red heart icon on transparent background, health/life, Super Wings animated style, 3d CGI render, cute design"},
+          {"id": "gem_blue", "prompt": "sparkling blue gem icon on transparent background, premium currency, Super Wings animated style, 3d CGI render, shiny"},
+          {"id": "package_box", "prompt": "cardboard delivery package icon on transparent background, parcel box, Super Wings animated style, 3d CGI render"},
+          {"id": "letter_envelope", "prompt": "white envelope with red seal icon on transparent background, mail delivery, Super Wings animated style, 3d CGI render"},
+          {"id": "tool_wrench", "prompt": "silver wrench tool icon on transparent background, repair item, Super Wings animated style, 3d CGI render"}
+        ]
+      },
+      "actions": {
+        "output_path": "ui/icons/actions/",
+        "items": [
+          {"id": "btn_play", "prompt": "green play button triangle icon on transparent background, game UI, Super Wings animated style, 3d CGI render, glossy"},
+          {"id": "btn_pause", "prompt": "blue pause button icon with two bars on transparent background, game UI, Super Wings animated style, 3d CGI render"},
+          {"id": "btn_stop", "prompt": "red stop button square icon on transparent background, game UI, Super Wings animated style, 3d CGI render"},
+          {"id": "btn_back", "prompt": "left arrow back button icon on transparent background, navigation, Super Wings animated style, 3d CGI render"},
+          {"id": "btn_forward", "prompt": "right arrow forward button icon on transparent background, navigation, Super Wings animated style, 3d CGI render"},
+          {"id": "btn_settings", "prompt": "gear cog settings icon on transparent background, game options, Super Wings animated style, 3d CGI render"},
+          {"id": "btn_home", "prompt": "house home button icon on transparent background, main menu, Super Wings animated style, 3d CGI render"},
+          {"id": "btn_refresh", "prompt": "circular refresh arrow icon on transparent background, reload, Super Wings animated style, 3d CGI render"}
+        ]
+      },
+      "status": {
+        "output_path": "ui/icons/status/",
+        "items": [
+          {"id": "happy", "prompt": "happy smiling face emoji icon on transparent background, yellow cheerful expression, Super Wings animated style, 3d CGI render"},
+          {"id": "sad", "prompt": "sad frowning face emoji icon on transparent background, blue unhappy expression, Super Wings animated style, 3d CGI render"},
+          {"id": "excited", "prompt": "excited starry eyes face emoji icon on transparent background, very happy expression, Super Wings animated style, 3d CGI render"},
+          {"id": "confused", "prompt": "confused face emoji icon with question mark on transparent background, puzzled expression, Super Wings animated style, 3d CGI render"},
+          {"id": "success", "prompt": "green checkmark success icon on transparent background, completed task, Super Wings animated style, 3d CGI render"},
+          {"id": "failed", "prompt": "red X failure icon on transparent background, failed task, Super Wings animated style, 3d CGI render"},
+          {"id": "warning", "prompt": "yellow warning triangle icon with exclamation on transparent background, caution, Super Wings animated style, 3d CGI render"},
+          {"id": "locked", "prompt": "silver padlock locked icon on transparent background, unavailable item, Super Wings animated style, 3d CGI render"}
+        ]
+      },
+      "hud": {
+        "output_path": "ui/icons/hud/",
+        "items": [
+          {"id": "compass", "prompt": "navigation compass icon on transparent background, flight direction, Super Wings animated style, 3d CGI render"},
+          {"id": "speedometer", "prompt": "speedometer gauge icon on transparent background, velocity meter, Super Wings animated style, 3d CGI render"},
+          {"id": "altimeter", "prompt": "altimeter altitude gauge icon on transparent background, height indicator, Super Wings animated style, 3d CGI render"},
+          {"id": "fuel_gauge", "prompt": "fuel gauge meter icon on transparent background, fuel level indicator, Super Wings animated style, 3d CGI render"},
+          {"id": "map_marker", "prompt": "red location pin marker icon on transparent background, destination marker, Super Wings animated style, 3d CGI render"},
+          {"id": "radar", "prompt": "circular radar screen icon on transparent background, detection display, Super Wings animated style, 3d CGI render"}
+        ]
+      },
+      "weather": {
+        "output_path": "ui/icons/weather/",
+        "items": [
+          {"id": "sunny", "prompt": "bright yellow sun icon on transparent background, clear weather, Super Wings animated style, 3d CGI render, glowing rays"},
+          {"id": "cloudy", "prompt": "gray fluffy cloud icon on transparent background, overcast weather, Super Wings animated style, 3d CGI render"},
+          {"id": "rainy", "prompt": "rain cloud with water drops icon on transparent background, rainy weather, Super Wings animated style, 3d CGI render"},
+          {"id": "stormy", "prompt": "dark storm cloud with lightning bolt icon on transparent background, thunder weather, Super Wings animated style, 3d CGI render"},
+          {"id": "snowy", "prompt": "white cloud with snowflakes icon on transparent background, winter weather, Super Wings animated style, 3d CGI render"},
+          {"id": "windy", "prompt": "wind swirl lines icon on transparent background, windy weather, Super Wings animated style, 3d CGI render"}
+        ]
+      },
+      "missions": {
+        "output_path": "ui/icons/missions/",
+        "items": [
+          {"id": "delivery", "prompt": "package with wings delivery icon on transparent background, delivery mission, Super Wings animated style, 3d CGI render"},
+          {"id": "rescue", "prompt": "red cross rescue icon with wings on transparent background, rescue mission, Super Wings animated style, 3d CGI render"},
+          {"id": "race", "prompt": "checkered flag race icon on transparent background, race mission, Super Wings animated style, 3d CGI render"},
+          {"id": "explore", "prompt": "magnifying glass explore icon on transparent background, exploration mission, Super Wings animated style, 3d CGI render"},
+          {"id": "collect", "prompt": "treasure chest collect icon on transparent background, collection mission, Super Wings animated style, 3d CGI render"},
+          {"id": "escort", "prompt": "shield protection escort icon on transparent background, escort mission, Super Wings animated style, 3d CGI render"}
+        ]
+      }
+    }
+  },
+  "generation_order": [
+    "sky_layers",
+    "cloud_layers",
+    "base_scenes",
+    "destinations",
+    "background_objects",
+    "ui_elements"
+  ]
+}

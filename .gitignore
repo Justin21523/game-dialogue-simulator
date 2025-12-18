@@ -1,0 +1,76 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Environment variables
+.env
+.env.local
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+
+# Large model files (if any)
+*.safetensors
+*.ckpt
+*.bin
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# AI training data (optional - uncomment if needed)
+# /mnt/data/
+
+# Assets (images, videos, audio)
+assets/images/
+assets/audio/
+assets/videos/
+assets/models/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.mp3
+*.wav
+*.ogg
+*.mp4
+*.webm
+
+# Cache directories
+.cache/
+__pycache__/

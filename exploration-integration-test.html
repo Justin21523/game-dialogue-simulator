@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>探索系統整合測試</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 20px;
+        }
+        h1 { color: #FFD700; margin-bottom: 20px; }
+        h2 { color: #4ECDC4; margin: 20px 0 10px; font-size: 18px; }
+        .test-section {
+            background: #2a2a4a;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .test-item {
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test-item.pass { background: rgba(76, 175, 80, 0.2); }
+        .test-item.fail { background: rgba(244, 67, 54, 0.2); }
+        .test-item.pending { background: rgba(255, 193, 7, 0.2); }
+        .status { font-weight: bold; }
+        .status.pass { color: #4CAF50; }
+        .status.fail { color: #F44336; }
+        .status.pending { color: #FFC107; }
+        .error-details {
+            background: #1a1a2e;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #F44336;
+            white-space: pre-wrap;
+        }
+        .summary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .summary-stats {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+        .stat { text-align: center; }
+        .stat-value { font-size: 36px; font-weight: bold; }
+        .stat-label { font-size: 14px; opacity: 0.8; }
+        #game-test-area {
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        #test-canvas {
+            width: 100%;
+            height: 400px;
+        }
+        .controls {
+            padding: 10px;
+            background: #333;
+            display: flex;
+            gap: 10px;
+        }
+        .controls button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { background: #4CAF50; color: white; }
+        .btn-secondary { background: #666; color: white; }
+        .btn-danger { background: #F44336; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🎮 Super Wings 探索系統整合測試</h1>
+
+    <div class="summary" id="summary">
+        <div class="summary-stats">
+            <div class="stat">
+                <div class="stat-value" id="total-tests">0</div>
+                <div class="stat-label">總測試</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="passed-tests" style="color: #4CAF50;">0</div>
+                <div class="stat-label">通過</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="failed-tests" style="color: #F44336;">0</div>
+                <div class="stat-label">失敗</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="test-results"></div>
+
+    <div id="game-test-area" style="display: none;">
+        <canvas id="test-canvas"></canvas>
+        <div class="controls">
+            <button class="btn-primary" onclick="runGameTest()">執行遊戲測試</button>
+            <button class="btn-secondary" onclick="testPlayer()">測試玩家</button>
+            <button class="btn-secondary" onclick="testNPC()">測試 NPC</button>
+            <button class="btn-secondary" onclick="testAbility()">測試能力</button>
+            <button class="btn-danger" onclick="stopTest()">停止</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // 測試結果收集
+        const testResults = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            sections: {}
+        };
+
+        function addTestResult(section, name, passed, error = null) {
+            testResults.total++;
+            if (passed) testResults.passed++;
+            else testResults.failed++;
+
+            if (!testResults.sections[section]) {
+                testResults.sections[section] = [];
+            }
+            testResults.sections[section].push({ name, passed, error });
+        }
+
+        function updateUI() {
+            document.getElementById('total-tests').textContent = testResults.total;
+            document.getElementById('passed-tests').textContent = testResults.passed;
+            document.getElementById('failed-tests').textContent = testResults.failed;
+
+            const container = document.getElementById('test-results');
+            container.innerHTML = '';
+
+            for (const [section, tests] of Object.entries(testResults.sections)) {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'test-section';
+                sectionDiv.innerHTML = `<h2>${section}</h2>`;
+
+                for (const test of tests) {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = `test-item ${test.passed ? 'pass' : 'fail'}`;
+                    itemDiv.innerHTML = `
+                        <span>${test.name}</span>
+                        <span class="status ${test.passed ? 'pass' : 'fail'}">
+                            ${test.passed ? '✓ PASS' : '✗ FAIL'}
+                        </span>
+                    `;
+                    if (test.error) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'error-details';
+                        errorDiv.textContent = test.error;
+                        itemDiv.appendChild(errorDiv);
+                    }
+                    sectionDiv.appendChild(itemDiv);
+                }
+
+                container.appendChild(sectionDiv);
+            }
+        }
+
+        // ==================== 模組載入測試 ====================
+
+        async function testModuleLoad(section, name, importPath) {
+            try {
+                const module = await import(importPath);
+                addTestResult(section, name, true);
+                return module;
+            } catch (error) {
+                addTestResult(section, name, false, error.message);
+                return null;
+            }
+        }
+
+        // ==================== 執行所有測試 ====================
+
+        async function runAllTests() {
+            console.log('開始整合測試...');
+
+            // 1. 核心依賴
+            const eventBusModule = await testModuleLoad('核心依賴', 'event-bus.js', './js/core/event-bus.js');
+            const configModule = await testModuleLoad('核心依賴', 'config.js', './js/config.js');
+            const audioModule = await testModuleLoad('核心依賴', 'audio-manager.js', './js/core/audio-manager.js');
+
+            // 2. 探索引擎核心
+            const physicsModule = await testModuleLoad('探索引擎', 'exploration-physics.js', './js/game/exploration/exploration-physics.js');
+            const cameraModule = await testModuleLoad('探索引擎', 'camera.js', './js/game/exploration/camera.js');
+            const inputModule = await testModuleLoad('探索引擎', 'input-handler-exploration.js', './js/game/exploration/input-handler-exploration.js');
+            const worldModule = await testModuleLoad('探索引擎', 'world.js', './js/game/exploration/world.js');
+            const rendererModule = await testModuleLoad('探索引擎', 'exploration-renderer.js', './js/game/exploration/exploration-renderer.js');
+            const engineModule = await testModuleLoad('探索引擎', 'exploration-engine.js', './js/game/exploration/exploration-engine.js');
+            const sceneStackModule = await testModuleLoad('探索引擎', 'scene-stack.js', './js/game/exploration/scene-stack.js');
+            const interactionModule = await testModuleLoad('探索引擎', 'interaction-system.js', './js/game/exploration/interaction-system.js');
+
+            // 3. 實體
+            const baseEntityModule = await testModuleLoad('實體系統', 'base-entity.js', './js/game/entities/base-entity.js');
+            const playerModule = await testModuleLoad('實體系統', 'player-character.js', './js/game/entities/player-character.js');
+            const npcModule = await testModuleLoad('實體系統', 'npc.js', './js/game/entities/npc.js');
+            const itemModule = await testModuleLoad('實體系統', 'collectible-item.js', './js/game/entities/collectible-item.js');
+            const blockerModule = await testModuleLoad('實體系統', 'ability-blocker.js', './js/game/entities/ability-blocker.js');
+
+            // 4. 能力系統
+            const abilitySystemModule = await testModuleLoad('能力系統', 'ability-system.js', './js/game/abilities/ability-system.js');
+            const abilityDefsModule = await testModuleLoad('能力系統', 'ability-definitions.js', './js/game/abilities/ability-definitions.js');
+            const abilityEffectsModule = await testModuleLoad('能力系統', 'ability-effects.js', './js/game/abilities/ability-effects.js');
+
+            // 5. 系統
+            const partnerModule = await testModuleLoad('系統', 'partner-system.js', './js/systems/partner-system.js');
+            const missionGenModule = await testModuleLoad('系統', 'exploration-mission-generator.js', './js/systems/exploration-mission-generator.js');
+
+            // 6. 模型
+            const missionModelModule = await testModuleLoad('模型', 'exploration-mission.js', './js/models/exploration-mission.js');
+
+            // 7. UI 元件
+            const trackerModule = await testModuleLoad('UI 元件', 'mission-tracker.js', './js/ui/components/mission-tracker.js');
+            const inventoryModule = await testModuleLoad('UI 元件', 'inventory-bar.js', './js/ui/components/inventory-bar.js');
+            const partnerSwitcherModule = await testModuleLoad('UI 元件', 'partner-switcher.js', './js/ui/components/partner-switcher.js');
+            const abilityBarModule = await testModuleLoad('UI 元件', 'ability-bar.js', './js/ui/components/ability-bar.js');
+
+            // 8. UI 畫面
+            const dialogueModule = await testModuleLoad('UI 畫面', 'exploration-dialogue.js', './js/ui/screens/exploration-dialogue.js');
+            const resultsModule = await testModuleLoad('UI 畫面', 'exploration-results.js', './js/ui/screens/exploration-results.js');
+            const explorationScreenModule = await testModuleLoad('UI 畫面', 'exploration.js', './js/ui/screens/exploration.js');
+
+            // 9. UI 效果
+            const arrivalModule = await testModuleLoad('UI 效果', 'partner-arrival.js', './js/ui/effects/partner-arrival.js');
+
+            // ==================== 類別實例化測試 ====================
+
+            // 測試 EventBus
+            if (eventBusModule) {
+                try {
+                    const { eventBus } = eventBusModule;
+                    let received = false;
+                    eventBus.on('TEST_EVENT', () => { received = true; });
+                    eventBus.emit('TEST_EVENT');
+                    addTestResult('實例化測試', 'EventBus emit/on', received);
+                } catch (e) {
+                    addTestResult('實例化測試', 'EventBus emit/on', false, e.message);
+                }
+            }
+
+            // 測試 Camera
+            if (cameraModule) {
+                try {
+                    const { Camera } = cameraModule;
+                    const camera = new Camera(1280, 720);
+                    addTestResult('實例化測試', 'Camera 建立', camera && camera.viewportWidth === 1280);
+                } catch (e) {
+                    addTestResult('實例化測試', 'Camera 建立', false, e.message);
+                }
+            }
+
+            // 測試 Physics
+            if (physicsModule) {
+                try {
+                    const { ExplorationPhysics } = physicsModule;
+                    const physics = new ExplorationPhysics();
+                    addTestResult('實例化測試', 'Physics 建立', physics && physics.gravity > 0);
+                } catch (e) {
+                    addTestResult('實例化測試', 'Physics 建立', false, e.message);
+                }
+            }
+
+            // 測試 World
+            if (worldModule) {
+                try {
+                    const { ExplorationWorld } = worldModule;
+                    const world = new ExplorationWorld({ width: 1920, height: 1080 });
+                    addTestResult('實例化測試', 'World 建立', world !== null);
+                } catch (e) {
+                    addTestResult('實例化測試', 'World 建立', false, e.message);
+                }
+            }
+
+            // 測試 PlayerCharacter
+            if (playerModule) {
+                try {
+                    const { PlayerCharacter } = playerModule;
+                    const player = new PlayerCharacter('jett', { name: 'Jett', level: 1 });
+                    addTestResult('實例化測試', 'PlayerCharacter 建立', player && player.characterId === 'jett');
+                } catch (e) {
+                    addTestResult('實例化測試', 'PlayerCharacter 建立', false, e.message);
+                }
+            }
+
+            // 測試 NPC
+            if (npcModule) {
+                try {
+                    const { NPC } = npcModule;
+                    const npc = new NPC({ id: 'test', name: 'Test NPC', x: 100, y: 100 });
+                    addTestResult('實例化測試', 'NPC 建立', npc && npc.name === 'Test NPC');
+                } catch (e) {
+                    addTestResult('實例化測試', 'NPC 建立', false, e.message);
+                }
+            }
+
+            // 測試 ItemFactory
+            if (itemModule) {
+                try {
+                    const { ItemFactory } = itemModule;
+                    const item = ItemFactory.create('coin', { x: 100, y: 100 });
+                    addTestResult('實例化測試', 'ItemFactory 建立', item !== null);
+                } catch (e) {
+                    addTestResult('實例化測試', 'ItemFactory 建立', false, e.message);
+                }
+            }
+
+            // 測試 AbilitySystem
+            if (abilitySystemModule) {
+                try {
+                    const { AbilitySystem } = abilitySystemModule;
+                    const abilitySystem = new AbilitySystem();
+                    addTestResult('實例化測試', 'AbilitySystem 建立', abilitySystem !== null);
+                } catch (e) {
+                    addTestResult('實例化測試', 'AbilitySystem 建立', false, e.message);
+                }
+            }
+
+            // 測試 ABILITY_DEFINITIONS
+            if (abilityDefsModule) {
+                try {
+                    const { ABILITY_DEFINITIONS } = abilityDefsModule;
+                    const hasJett = ABILITY_DEFINITIONS.jett && ABILITY_DEFINITIONS.jett.length > 0;
+                    addTestResult('實例化測試', 'ABILITY_DEFINITIONS 有 Jett 能力', hasJett);
+                } catch (e) {
+                    addTestResult('實例化測試', 'ABILITY_DEFINITIONS', false, e.message);
+                }
+            }
+
+            // 測試 ExplorationMission
+            if (missionModelModule) {
+                try {
+                    const { ExplorationMission } = missionModelModule;
+                    const mission = new ExplorationMission({
+                        id: 'test',
+                        title: 'Test Mission',
+                        destination: 'paris',
+                        subTasks: [{ id: 'task1', type: 'talk', title: 'Talk to NPC' }]
+                    });
+                    addTestResult('實例化測試', 'ExplorationMission 建立', mission && mission.subTasks.length === 1);
+                } catch (e) {
+                    addTestResult('實例化測試', 'ExplorationMission 建立', false, e.message);
+                }
+            }
+
+            // 更新 UI
+            updateUI();
+
+            // 如果通過率高，顯示遊戲測試區
+            if (testResults.passed / testResults.total > 0.7) {
+                document.getElementById('game-test-area').style.display = 'block';
+
+                // 儲存模組供遊戲測試使用
+                window.testModules = {
+                    eventBus: eventBusModule?.eventBus,
+                    Camera: cameraModule?.Camera,
+                    ExplorationPhysics: physicsModule?.ExplorationPhysics,
+                    ExplorationWorld: worldModule?.ExplorationWorld,
+                    PlayerCharacter: playerModule?.PlayerCharacter,
+                    NPC: npcModule?.NPC,
+                    ItemFactory: itemModule?.ItemFactory,
+                    AbilitySystem: abilitySystemModule?.AbilitySystem,
+                    ABILITY_DEFINITIONS: abilityDefsModule?.ABILITY_DEFINITIONS
+                };
+            }
+
+            console.log(`測試完成: ${testResults.passed}/${testResults.total} 通過`);
+        }
+
+        // 執行測試
+        runAllTests();
+
+        // ==================== 遊戲運行測試 ====================
+
+        window.gameInstance = null;
+
+        window.runGameTest = function() {
+            const canvas = document.getElementById('test-canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 400;
+
+            const { Camera, ExplorationPhysics, PlayerCharacter, NPC, eventBus } = window.testModules;
+
+            if (!Camera || !PlayerCharacter) {
+                alert('必要模組未載入');
+                return;
+            }
+
+            // 簡單遊戲測試
+            const camera = new Camera(canvas.width, canvas.height);
+            const physics = new ExplorationPhysics();
+
+            const player = new PlayerCharacter('jett', { name: 'Jett', level: 1 });
+            player.x = 200;
+            player.y = 300;
+
+            const npcs = [
+                new NPC({ id: 'npc1', name: 'Maria', x: 500, y: 300 })
+            ];
+
+            // 輸入
+            const keys = {};
+            document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+            document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+            let running = true;
+
+            function gameLoop() {
+                if (!running) return;
+
+                // 輸入
+                let vx = 0;
+                if (keys['a'] || keys['arrowleft']) vx = -300;
+                if (keys['d'] || keys['arrowright']) vx = 300;
+                player.vx = vx;
+
+                if (keys[' '] && player.y >= 300) {
+                    player.vy = -400;
+                }
+
+                // 物理
+                physics.update(player, 1/60);
+
+                // 攝影機
+                camera.x = player.x - canvas.width / 2;
+
+                // 渲染
+                ctx.fillStyle = '#87CEEB';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // 地面
+                ctx.fillStyle = '#7CB342';
+                ctx.fillRect(0, 350, canvas.width, 50);
+
+                ctx.save();
+                ctx.translate(-camera.x, 0);
+
+                // NPC
+                for (const npc of npcs) {
+                    ctx.fillStyle = '#9B59B6';
+                    ctx.fillRect(npc.x - 30, npc.y - 80, 60, 80);
+                    ctx.fillStyle = '#FFF';
+                    ctx.font = '14px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(npc.name, npc.x, npc.y - 90);
+                }
+
+                // 玩家
+                ctx.fillStyle = '#FF6B6B';
+                ctx.fillRect(player.x - 40, player.y - 80, 80, 80);
+                ctx.fillStyle = '#FFF';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Jett', player.x, player.y - 90);
+
+                ctx.restore();
+
+                // 提示
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                ctx.fillRect(10, 10, 200, 60);
+                ctx.fillStyle = '#FFF';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText('WASD: 移動', 20, 30);
+                ctx.fillText('Space: 跳躍', 20, 50);
+
+                requestAnimationFrame(gameLoop);
+            }
+
+            window.gameInstance = { stop: () => { running = false; } };
+            gameLoop();
+        };
+
+        window.stopTest = function() {
+            if (window.gameInstance) {
+                window.gameInstance.stop();
+            }
+        };
+
+        window.testPlayer = function() {
+            const { PlayerCharacter, ABILITY_DEFINITIONS } = window.testModules;
+            if (!PlayerCharacter) return;
+
+            const player = new PlayerCharacter('donnie', { name: 'Donnie', level: 3 });
+            console.log('Player:', player);
+            console.log('Abilities:', player.abilities);
+            alert(`角色: ${player.characterId}\n能力數: ${player.abilities?.length || 0}`);
+        };
+
+        window.testNPC = function() {
+            const { NPC } = window.testModules;
+            if (!NPC) return;
+
+            const npc = new NPC({
+                id: 'baker',
+                name: 'Pierre',
+                x: 100,
+                y: 100,
+                dialogue: [
+                    { id: 'start', text: '歡迎來到巴黎！', choices: [] }
+                ],
+                quests: ['find_croissant']
+            });
+            console.log('NPC:', npc);
+            alert(`NPC: ${npc.name}\n對話節點: ${npc.dialogue?.length || 0}\n任務: ${npc.quests?.length || 0}`);
+        };
+
+        window.testAbility = function() {
+            const { AbilitySystem, ABILITY_DEFINITIONS, PlayerCharacter } = window.testModules;
+            if (!AbilitySystem || !ABILITY_DEFINITIONS) return;
+
+            const system = new AbilitySystem();
+            const player = new PlayerCharacter('todd', { name: 'Todd', level: 2 });
+
+            console.log('Todd abilities:', ABILITY_DEFINITIONS.todd);
+            alert(`Todd 的能力:\n${ABILITY_DEFINITIONS.todd?.map(a => `- ${a.name} (${a.type})`).join('\n') || '無'}`);
+        };
+    </script>
+</body>
+</html>

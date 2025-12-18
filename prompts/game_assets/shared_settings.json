@@ -1,0 +1,155 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "description": "Super Wings Game Assets - Shared Settings for Image Generation",
+    "created": "2025-12-16",
+    "project": "super-wings-simulator"
+  },
+  "generation_parameters": {
+    "base_model": "sd_xl_base_1.0.safetensors",
+    "sampler": "dpmpp_2m_karras",
+    "scheduler": "karras",
+    "default_steps": 40,
+    "default_cfg_scale": 8.0,
+    "default_lora_weight": 0.9,
+    "seed": -1,
+    "resolutions": {
+      "portrait": {"width": 1024, "height": 1024},
+      "icon": {"width": 512, "height": 512},
+      "background": {"width": 1280, "height": 720},
+      "ui_icon": {"width": 256, "height": 256},
+      "button": {"width": 512, "height": 128}
+    }
+  },
+  "lora_paths": {
+    "jett": "/mnt/data/training/lora/super-wings/jett_identity/super-wings-jett-identity-sdxl.safetensors",
+    "jerome": "/mnt/data/training/lora/super-wings/jerome_identity/super-wings-jerome-identity-sdxl.safetensors",
+    "donnie": "/mnt/data/training/lora/super-wings/donnie_identity/super-wings-donnie-identity-sdxl.safetensors",
+    "chase": "/mnt/data/training/lora/super-wings/chase_identity/super-wings-chase-identity-sdxl.safetensors",
+    "flip": "/mnt/data/training/lora/super-wings/flip_identity/super-wings-flip-identity-sdxl.safetensors",
+    "todd": "/mnt/data/training/lora/super-wings/todd_identity/super-wings-todd-identity-sdxl.safetensors",
+    "paul": "/mnt/data/training/lora/super-wings/paul_identity/super-wings-paul-identity-sdxl.safetensors",
+    "bello": "/mnt/data/training/lora/super-wings/bello_identity/super-wings-bello-identity-sdxl.safetensors"
+  },
+  "negative_prompts": {
+    "base": "human, person, people, boy, girl, man, woman, child, humanoid, human face, human body, realistic human",
+    "multi_character": "multiple characters, two characters, three characters, group, crowd, duo, other characters",
+    "quality": "blurry, low quality, worst quality, bad quality, lowres, distorted, deformed, disfigured, mutated, malformed, ugly, amateur, draft, unfinished",
+    "anatomy": "extra eyes, three eyes, four eyes, multiple eyes, extra limbs, extra arms, extra legs, bad anatomy, bad proportions",
+    "style_exclusion": "2d, anime style, cartoon illustration, painting, drawing, photographic, photo, photograph, real life",
+    "artifacts": "jpeg artifacts, watermark, text, signature, cropped, cut off, frame, border, noise, grainy, chromatic aberration",
+    "sheet": "multiple views, character sheet, reference sheet, turnaround",
+    "color_error": "wrong colors, incorrect colors, color swap, mismatched colors"
+  },
+  "negative_prompt_combined": "human, person, people, boy, girl, man, woman, child, humanoid, human face, multiple characters, two characters, group, extra eyes, three eyes, multiple eyes, extra limbs, wrong colors, incorrect colors, blurry, low quality, worst quality, distorted, deformed, ugly, 2d, anime style, photographic, cropped, watermark, text, multiple views, character sheet",
+  "style_keywords": {
+    "base": "3d animated character, toy-like CGI, glossy enamel finish, hard-surface render, Super Wings style",
+    "lighting": "high-key daylight, soft shadows, bright reflections, clean lighting",
+    "quality": "high quality 3d render, professional quality, clean anti-aliased edges, Pixar quality"
+  },
+  "character_descriptions": {
+    "jett": {
+      "trigger": "jett",
+      "name": "Jett",
+      "name_zh": "杰特",
+      "colors": "red and white",
+      "color_detail": "red body with white accents",
+      "features": "small red jet plane with white accents, four yellow signal lights on cheeks and wings, blue eyes, stylized wing symbol on sides",
+      "unique": "four yellow signal lights (two on cheeks, two on wing edges), sporty jet silhouette",
+      "style": "enthusiastic, friendly, helpful expression, confident hero pose",
+      "eye_color": "blue",
+      "specialization": "delivery"
+    },
+    "jerome": {
+      "trigger": "jerome",
+      "name": "Jerome",
+      "name_zh": "杰羅姆",
+      "colors": "blue with yellow lightning bolt decorations",
+      "color_detail": "sleek blue body with yellow lightning decals",
+      "features": "sleek blue war jet plane, yellow lightning bolt decals on wings and ailerons, green eyes, pointed nose, confident show plane posture",
+      "unique": "yellow lightning bolts on wings, fighter jet aesthetic, slimmer agile silhouette",
+      "style": "confident, stylish, experienced expression, performance-oriented poses",
+      "eye_color": "green",
+      "specialization": "performance"
+    },
+    "donnie": {
+      "trigger": "donnie",
+      "name": "Donnie",
+      "name_zh": "多尼",
+      "colors": "yellow and blue",
+      "color_detail": "big yellow hull with blue propellers and accents",
+      "features": "bulky yellow Canadair-style cargo plane, blue propellers and engine areas, amber eyes, rounded work plane body, small wings",
+      "unique": "propeller plane, bulky Canadair body shape, construction/tool theme, stockier build",
+      "style": "practical, inventive, friendly expression, sturdy mechanic poses",
+      "eye_color": "amber",
+      "specialization": "construction"
+    },
+    "chase": {
+      "trigger": "chase",
+      "name": "Chase",
+      "name_zh": "查斯",
+      "colors": "dark blue with red stripes",
+      "color_detail": "dark blue body with three red thunder-shaped stripes",
+      "features": "dark blue spy jet plane, three red thunder-shaped stripes on body, blue eyes, sleek angular spy plane design",
+      "unique": "THREE distinctive red lightning stripes (must be exactly 3), spy theme, versatile transformation",
+      "style": "mysterious, clever, cool expression, resourceful poses",
+      "eye_color": "blue",
+      "specialization": "spy"
+    },
+    "flip": {
+      "trigger": "flip",
+      "name": "Flip",
+      "name_zh": "翻轉",
+      "colors": "red with white stripes, BLUE CAP WITH YELLOW TRIM",
+      "color_detail": "red sporty plane body with white stripes, wearing blue sports cap with yellow trim",
+      "features": "red sporty plane with white stripes, BLUE SPORTS CAP WITH YELLOW TRIM AND SYMBOL, blue eyes, compact athletic design",
+      "unique": "BLUE CAP WITH YELLOW TRIM - THIS IS THE KEY DISTINGUISHING FEATURE FROM JETT, sports theme, athletic proportions",
+      "style": "energetic, competitive, sporty expression, challenge-oriented poses",
+      "eye_color": "blue",
+      "specialization": "sports",
+      "critical_warning": "MUST include blue cap with yellow trim to distinguish from Jett. Both are red - the cap is essential!"
+    },
+    "todd": {
+      "trigger": "todd",
+      "name": "Todd",
+      "name_zh": "托德",
+      "colors": "brown and yellow",
+      "color_detail": "brown body with yellow drill nose and yellow hard hat",
+      "features": "brown construction plane, yellow drill on nose, yellow hard hat on top, tank-like treads, smaller green eyes (mole-like)",
+      "unique": "yellow drill nose, yellow hard hat always visible, tank treads, underground/digging specialist",
+      "style": "determined, hard-working, straightforward expression, sturdy poses",
+      "eye_color": "green",
+      "specialization": "digging"
+    },
+    "paul": {
+      "trigger": "paul",
+      "name": "Paul",
+      "name_zh": "保羅",
+      "colors": "blue and white",
+      "color_detail": "blue and white police colors with police markings",
+      "features": "blue and white police plane, siren on head, two lights on fore, yellow sheriff stars on forearms, blue eyes, police vehicle markings",
+      "unique": "police markings, siren on head, yellow sheriff stars on arms, law enforcement theme",
+      "style": "dutiful, responsible, fun-loving expression, authoritative poses",
+      "eye_color": "blue",
+      "specialization": "police"
+    },
+    "bello": {
+      "trigger": "bello",
+      "name": "Bello",
+      "name_zh": "貝洛",
+      "colors": "black and white stripes",
+      "color_detail": "black and white striped pattern like a zebra",
+      "features": "black and white striped safari plane with zebra pattern, propeller design, blue eyes, animal-themed decorations",
+      "unique": "distinctive zebra-like black and white stripes, animal communication ability, safari theme",
+      "style": "friendly, gentle, empathetic expression, approachable poses",
+      "eye_color": "blue",
+      "specialization": "animal_care"
+    }
+  },
+  "comfyui_settings": {
+    "workflow_type": "sdxl_lora",
+    "api_endpoint": "http://127.0.0.1:8188/prompt",
+    "output_format": "png",
+    "batch_size": 1
+  }
+}

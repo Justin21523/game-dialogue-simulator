@@ -1,0 +1,783 @@
+/**
+ * exploration.css - 探索模式畫面樣式
+ * Super Wings Simulator - 2D 橫向捲軸探索系統
+ */
+
+/* ========================================
+   主容器
+   ======================================== */
+
+.exploration-screen {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-main);
+}
+
+#exploration-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: auto;
+}
+
+/* ========================================
+   HUD - 頭部資訊欄
+   ======================================== */
+
+.exploration-hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.exploration-hud > * {
+    pointer-events: auto;
+}
+
+/* ========================================
+   任務追蹤面板
+   ======================================== */
+
+.mission-tracker {
+    background: var(--bg-panel);
+    border-radius: 12px;
+    padding: 15px;
+    min-width: 280px;
+    max-width: 350px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    font-family: var(--font-main);
+}
+
+.mission-tracker-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.mission-tracker-icon {
+    font-size: 1.2rem;
+}
+
+.mission-tracker-title {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--color-accent);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.mission-task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mission-task {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    transition: background var(--transition-fast);
+}
+
+.mission-task:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.mission-task.completed {
+    color: var(--color-success);
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.mission-task.active {
+    background: rgba(255, 215, 0, 0.15);
+    border-left: 3px solid var(--color-accent);
+}
+
+.task-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--text-muted);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px;
+}
+
+.task-checkbox.checked {
+    background: var(--color-success);
+    border-color: var(--color-success);
+    color: var(--text-light);
+}
+
+.task-hint {
+    font-size: 0.75rem;
+    color: var(--color-warning);
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* ========================================
+   右上角資訊面板
+   ======================================== */
+
+.exploration-info-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.location-badge {
+    background: var(--bg-panel);
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.location-icon {
+    font-size: 1.1rem;
+}
+
+/* ========================================
+   底部控制提示欄
+   ======================================== */
+
+.exploration-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: var(--bg-panel);
+    padding: 12px 18px;
+    border-radius: 12px;
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: none;
+    border: 1px solid var(--border-color);
+    min-width: 220px;
+    font-family: var(--font-main);
+}
+
+.controls-title {
+    font-size: 0.75rem;
+    color: var(--color-secondary);
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 6px;
+    margin-bottom: 4px;
+}
+
+.control-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+}
+
+.control-keys {
+    display: flex;
+    gap: 3px;
+}
+
+.control-key {
+    background: var(--bg-card);
+    color: var(--text-main);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    min-width: 24px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    font-size: 0.75rem;
+}
+
+.control-key.wide {
+    min-width: 60px;
+}
+
+.control-desc {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+/* ========================================
+   物品欄
+   ======================================== */
+
+.inventory-bar {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 5px;
+    background: var(--bg-panel);
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.inventory-slot {
+    width: 48px;
+    height: 48px;
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.inventory-slot:hover {
+    background: var(--bg-secondary);
+    border-color: var(--color-accent);
+}
+
+.inventory-slot.selected {
+    border-color: var(--color-success);
+    box-shadow: 0 0 10px var(--color-success);
+}
+
+.inventory-slot-number {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-weight: bold;
+}
+
+.inventory-slot-icon {
+    font-size: 1.5rem;
+}
+
+.inventory-slot-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 0.7rem;
+    color: var(--text-light);
+    background: var(--bg-dark);
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+/* ========================================
+   角色切換面板
+   ======================================== */
+
+.partner-switcher {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.partner-switcher-title {
+    font-size: 0.7rem;
+    color: #AAA;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.partner-list {
+    display: flex;
+    gap: 6px;
+}
+
+.partner-slot {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.7);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    overflow: hidden;
+}
+
+.partner-slot:hover {
+    border-color: #FFD700;
+    transform: scale(1.1);
+}
+
+.partner-slot.active {
+    border-color: #00FF00;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+}
+
+.partner-slot.unavailable {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.partner-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.partner-key-hint {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* ========================================
+   能力快捷鍵
+   ======================================== */
+
+.ability-bar {
+    position: absolute;
+    bottom: 80px;
+    right: 20px;
+    display: flex;
+    gap: 8px;
+}
+
+.ability-slot {
+    width: 56px;
+    height: 56px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.ability-slot:hover {
+    border-color: #00BFFF;
+    background: rgba(0, 0, 0, 0.9);
+}
+
+.ability-slot.on-cooldown {
+    opacity: 0.5;
+}
+
+.ability-slot.on-cooldown::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+}
+
+.ability-icon {
+    font-size: 1.5rem;
+}
+
+.ability-key {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #333;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #555;
+}
+
+.ability-cooldown {
+    position: absolute;
+    bottom: 4px;
+    font-size: 0.7rem;
+    color: #FF6B6B;
+    font-weight: bold;
+}
+
+/* ========================================
+   互動提示框
+   ======================================== */
+
+.interaction-prompt {
+    position: absolute;
+    bottom: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: 2px solid #FFD700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: promptPulse 1.5s ease-in-out infinite;
+}
+
+.interaction-key {
+    background: linear-gradient(180deg, #FFD700 0%, #FFA000 100%);
+    color: #333;
+    padding: 6px 12px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 1rem;
+    box-shadow: 0 2px 0 #B8860B;
+}
+
+.interaction-text {
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+@keyframes promptPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+    50% { box-shadow: 0 0 20px 5px rgba(255, 215, 0, 0.2); }
+}
+
+/* ========================================
+   對話框
+   ======================================== */
+
+.exploration-dialogue {
+    position: absolute;
+    bottom: 0;
+    left: 320px;  /* 給左下角物品欄留出空間 */
+    right: 320px; /* 給右下角能力欄留出空間 */
+    background: var(--bg-panel);
+    padding: 20px 30px;
+    min-height: 180px;
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    border-top: 3px solid var(--color-accent);
+    border-radius: 12px 12px 0 0;  /* 上方圓角 */
+    animation: dialogueSlideIn 0.3s ease-out;
+    box-shadow: var(--shadow-lg);
+}
+
+@keyframes dialogueSlideIn {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.dialogue-portrait {
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
+    border: 3px solid var(--color-accent);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.dialogue-portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dialogue-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dialogue-speaker {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--color-accent);
+}
+
+.dialogue-text {
+    font-size: 1rem;
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+.dialogue-continue {
+    align-self: flex-end;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    animation: blinkCursor 1s infinite;
+}
+
+@keyframes blinkCursor {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+.dialogue-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.dialogue-choice {
+    background: var(--bg-card);
+    padding: 10px 15px;
+    border-radius: 6px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: 1px solid var(--border-color);
+}
+
+.dialogue-choice:hover {
+    background: var(--bg-secondary);
+    border-color: var(--color-accent);
+}
+
+/* ========================================
+   小地圖
+   ======================================== */
+
+.mini-map {
+    width: 150px;
+    height: 100px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.mini-map-content {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.mini-map-player {
+    width: 6px;
+    height: 6px;
+    background: #00FF00;
+    border-radius: 50%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 5px #00FF00;
+}
+
+.mini-map-npc {
+    width: 4px;
+    height: 4px;
+    background: #FFD700;
+    border-radius: 50%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+}
+
+.mini-map-item {
+    width: 3px;
+    height: 3px;
+    background: #87CEEB;
+    position: absolute;
+    transform: translate(-50%, -50%);
+}
+
+/* ========================================
+   夥伴入場動畫視窗
+   ======================================== */
+
+.partner-arrival-window {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 200px;
+    height: 150px;
+    background: rgba(0, 0, 0, 0.9);
+    border: 3px solid #FFD700;
+    border-radius: 12px;
+    overflow: hidden;
+    animation: arrivalWindowIn 0.3s ease-out;
+}
+
+@keyframes arrivalWindowIn {
+    from { transform: scale(0.5) translateY(-50px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.partner-arrival-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.partner-arrival-content img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+}
+
+.partner-arrival-status {
+    position: absolute;
+    bottom: 5px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ========================================
+   載入畫面
+   ======================================== */
+
+.exploration-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    z-index: 1000;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #FFD700;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: white;
+    font-size: 1.2rem;
+}
+
+/* ========================================
+   響應式設計
+   ======================================== */
+
+@media (max-width: 768px) {
+    .mission-tracker {
+        min-width: 200px;
+        max-width: 250px;
+        padding: 10px;
+    }
+
+    .mission-task {
+        font-size: 0.8rem;
+        padding: 6px 8px;
+    }
+
+    .inventory-slot {
+        width: 40px;
+        height: 40px;
+    }
+
+    .partner-slot {
+        width: 40px;
+        height: 40px;
+    }
+
+    .ability-slot {
+        width: 48px;
+        height: 48px;
+    }
+
+    .exploration-dialogue {
+        padding: 15px 20px;
+        min-height: 150px;
+    }
+
+    .dialogue-portrait {
+        width: 70px;
+        height: 70px;
+    }
+}
+
+@media (max-width: 480px) {
+    .exploration-hud {
+        padding: 10px;
+    }
+
+    .mission-tracker {
+        display: none;
+    }
+
+    .exploration-controls {
+        bottom: 10px;
+        left: 10px;
+        padding: 8px 12px;
+        min-width: auto;
+    }
+
+    .inventory-bar {
+        padding: 5px 8px;
+    }
+
+    .inventory-slot {
+        width: 36px;
+        height: 36px;
+    }
+}

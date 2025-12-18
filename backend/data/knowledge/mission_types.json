@@ -1,0 +1,124 @@
+{
+  "mission_types": {
+    "delivery": {
+      "name": "Package Delivery",
+      "name_zh": "包裹遞送",
+      "description": "Deliver packages and special items to children around the world.",
+      "specialist": "jett",
+      "required_abilities": ["speed", "flight", "navigation"],
+      "success_factors": ["On-time delivery", "Package safety", "Friendly interaction"],
+      "difficulty": "easy",
+      "typical_phases": ["dispatch", "departure", "flying", "arrival", "delivery", "celebration", "return"]
+    },
+    "rescue": {
+      "name": "Rescue Mission",
+      "name_zh": "救援任務",
+      "description": "Help people in emergency situations - stranded, stuck, or in danger.",
+      "specialist": "chase",
+      "required_abilities": ["lifting", "rope_work", "strength"],
+      "success_factors": ["Quick response", "Safe extraction", "Calming victims"],
+      "difficulty": "medium",
+      "typical_phases": ["dispatch", "departure", "flying", "arrival", "assessment", "transformation", "rescue", "celebration", "return"]
+    },
+    "construction": {
+      "name": "Building & Fixing",
+      "name_zh": "建造維修",
+      "description": "Build structures, fix machines, and solve engineering problems.",
+      "specialist": "donnie",
+      "required_abilities": ["engineering", "tools", "problem_solving"],
+      "success_factors": ["Technical skill", "Creative solutions", "Quality work"],
+      "difficulty": "medium",
+      "typical_phases": ["dispatch", "departure", "flying", "arrival", "analysis", "transformation", "building", "testing", "celebration", "return"]
+    },
+    "performance": {
+      "name": "Show & Entertainment",
+      "name_zh": "表演娛樂",
+      "description": "Help with performances, shows, and entertainment events.",
+      "specialist": "jerome",
+      "required_abilities": ["aerial_tricks", "entertainment", "coordination"],
+      "success_factors": ["Showmanship", "Timing", "Audience engagement"],
+      "difficulty": "easy",
+      "typical_phases": ["dispatch", "departure", "flying", "arrival", "rehearsal", "transformation", "performance", "celebration", "return"]
+    },
+    "security": {
+      "name": "Safety & Security",
+      "name_zh": "安全保障",
+      "description": "Handle traffic, security, and emergency response situations.",
+      "specialist": "paul",
+      "required_abilities": ["authority", "traffic_control", "emergency_response"],
+      "success_factors": ["Quick thinking", "Clear communication", "Problem prevention"],
+      "difficulty": "medium",
+      "typical_phases": ["dispatch", "departure", "flying", "arrival", "assessment", "transformation", "resolution", "celebration", "return"]
+    },
+    "tracking": {
+      "name": "Search & Find",
+      "name_zh": "搜索追蹤",
+      "description": "Find lost items, people, or animals using tracking abilities.",
+      "specialist": "bello",
+      "required_abilities": ["tracking", "scent", "search"],
+      "success_factors": ["Keen senses", "Persistence", "Careful search"],
+      "difficulty": "medium",
+      "typical_phases": ["dispatch", "departure", "flying", "arrival", "searching", "transformation", "tracking", "finding", "celebration", "return"]
+    },
+    "underwater": {
+      "name": "Marine Mission",
+      "name_zh": "海洋任務",
+      "description": "Handle underwater rescues, marine exploration, and ocean-related problems.",
+      "specialist": "flip",
+      "required_abilities": ["diving", "swimming", "underwater_work"],
+      "success_factors": ["Diving skill", "Marine knowledge", "Water safety"],
+      "difficulty": "hard",
+      "typical_phases": ["dispatch", "departure", "flying", "arrival", "water_entry", "transformation", "underwater_action", "surfacing", "celebration", "return"]
+    },
+    "towing": {
+      "name": "Vehicle Assistance",
+      "name_zh": "車輛援助",
+      "description": "Help with stuck, broken, or stranded vehicles.",
+      "specialist": "todd",
+      "required_abilities": ["towing", "strength", "vehicle_knowledge"],
+      "success_factors": ["Proper technique", "Vehicle safety", "Quick assistance"],
+      "difficulty": "easy",
+      "typical_phases": ["dispatch", "departure", "flying", "arrival", "assessment", "transformation", "towing", "celebration", "return"]
+    },
+    "weather_emergency": {
+      "name": "Weather Emergency",
+      "name_zh": "天氣緊急",
+      "description": "Handle emergencies caused by extreme weather conditions.",
+      "specialist": "chase",
+      "required_abilities": ["rescue", "heavy_lifting", "weather_resistance"],
+      "success_factors": ["Weather awareness", "Safety priority", "Quick action"],
+      "difficulty": "hard",
+      "typical_phases": ["dispatch", "departure", "flying_through_weather", "arrival", "emergency_response", "transformation", "rescue", "shelter", "celebration", "return"]
+    },
+    "festival": {
+      "name": "Festival Help",
+      "name_zh": "節日幫助",
+      "description": "Help prepare for and ensure successful festivals and celebrations.",
+      "specialist": "jett",
+      "required_abilities": ["delivery", "coordination", "speed"],
+      "success_factors": ["Timing", "Coordination", "Festive spirit"],
+      "difficulty": "easy",
+      "typical_phases": ["dispatch", "departure", "flying", "arrival", "preparation", "transformation", "helping", "celebration", "return"]
+    },
+    "animal_rescue": {
+      "name": "Animal Rescue",
+      "name_zh": "動物救援",
+      "description": "Rescue and help animals in trouble or danger.",
+      "specialist": "bello",
+      "required_abilities": ["tracking", "gentle_handling", "animal_communication"],
+      "success_factors": ["Animal care", "Gentle approach", "Proper handling"],
+      "difficulty": "medium",
+      "typical_phases": ["dispatch", "departure", "flying", "arrival", "locating", "transformation", "gentle_rescue", "animal_care", "celebration", "return"]
+    },
+    "medical_delivery": {
+      "name": "Medical Delivery",
+      "name_zh": "醫療遞送",
+      "description": "Deliver urgent medical supplies and equipment.",
+      "specialist": "jett",
+      "required_abilities": ["speed", "careful_handling", "navigation"],
+      "success_factors": ["Speed", "Care with supplies", "Route planning"],
+      "difficulty": "hard",
+      "typical_phases": ["dispatch", "departure", "fast_flying", "arrival", "delivery", "celebration", "return"]
+    }
+  }
+}

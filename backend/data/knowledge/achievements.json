@@ -1,0 +1,529 @@
+{
+  "achievements": {
+    "first_flight": {
+      "id": "first_flight",
+      "name": "First Flight",
+      "name_zh": "首次起飛",
+      "description": "Complete your first mission",
+      "description_zh": "完成你的第一個任務",
+      "category": "milestone",
+      "condition": {
+        "type": "missions_completed",
+        "count": 1
+      },
+      "reward": {
+        "money": 100,
+        "experience": 50
+      },
+      "icon": "first_flight",
+      "rarity": "common"
+    },
+    "delivery_rookie": {
+      "id": "delivery_rookie",
+      "name": "Delivery Rookie",
+      "name_zh": "配送新手",
+      "description": "Complete 5 delivery missions",
+      "description_zh": "完成 5 個配送任務",
+      "category": "mission_type",
+      "condition": {
+        "type": "mission_type_completed",
+        "mission_type": "delivery",
+        "count": 5
+      },
+      "reward": {
+        "money": 200,
+        "experience": 100
+      },
+      "icon": "delivery_badge",
+      "rarity": "common"
+    },
+    "delivery_expert": {
+      "id": "delivery_expert",
+      "name": "Delivery Expert",
+      "name_zh": "配送專家",
+      "description": "Complete 25 delivery missions",
+      "description_zh": "完成 25 個配送任務",
+      "category": "mission_type",
+      "condition": {
+        "type": "mission_type_completed",
+        "mission_type": "delivery",
+        "count": 25
+      },
+      "reward": {
+        "money": 500,
+        "experience": 300
+      },
+      "icon": "delivery_expert",
+      "rarity": "rare"
+    },
+    "sports_fan": {
+      "id": "sports_fan",
+      "name": "Sports Fan",
+      "name_zh": "運動愛好者",
+      "description": "Complete 10 sports missions",
+      "description_zh": "完成 10 個運動任務",
+      "category": "mission_type",
+      "condition": {
+        "type": "mission_type_completed",
+        "mission_type": "sports",
+        "count": 10
+      },
+      "reward": {
+        "money": 300,
+        "experience": 150
+      },
+      "icon": "sports_badge",
+      "rarity": "uncommon"
+    },
+    "constructor": {
+      "id": "constructor",
+      "name": "Constructor",
+      "name_zh": "建築達人",
+      "description": "Complete 10 construction missions",
+      "description_zh": "完成 10 個建築任務",
+      "category": "mission_type",
+      "condition": {
+        "type": "mission_type_completed",
+        "mission_type": "construction",
+        "count": 10
+      },
+      "reward": {
+        "money": 300,
+        "experience": 150
+      },
+      "icon": "construction_badge",
+      "rarity": "uncommon"
+    },
+    "animal_friend": {
+      "id": "animal_friend",
+      "name": "Animal Friend",
+      "name_zh": "動物之友",
+      "description": "Complete 10 animal care missions",
+      "description_zh": "完成 10 個動物照護任務",
+      "category": "mission_type",
+      "condition": {
+        "type": "mission_type_completed",
+        "mission_type": "animal_care",
+        "count": 10
+      },
+      "reward": {
+        "money": 300,
+        "experience": 150
+      },
+      "icon": "animal_badge",
+      "rarity": "uncommon"
+    },
+    "world_traveler": {
+      "id": "world_traveler",
+      "name": "World Traveler",
+      "name_zh": "世界旅行家",
+      "description": "Complete missions in 5 different locations",
+      "description_zh": "在 5 個不同地點完成任務",
+      "category": "exploration",
+      "condition": {
+        "type": "unique_locations",
+        "count": 5
+      },
+      "reward": {
+        "money": 400,
+        "experience": 200
+      },
+      "icon": "world_map",
+      "rarity": "uncommon"
+    },
+    "globe_trotter": {
+      "id": "globe_trotter",
+      "name": "Globe Trotter",
+      "name_zh": "環球冒險家",
+      "description": "Complete missions in all locations",
+      "description_zh": "在所有地點都完成過任務",
+      "category": "exploration",
+      "condition": {
+        "type": "all_locations_visited",
+        "count": 12
+      },
+      "reward": {
+        "money": 1000,
+        "experience": 500
+      },
+      "icon": "globe",
+      "rarity": "legendary"
+    },
+    "team_player": {
+      "id": "team_player",
+      "name": "Team Player",
+      "name_zh": "團隊玩家",
+      "description": "Use 4 different characters",
+      "description_zh": "使用過 4 個不同的角色",
+      "category": "character",
+      "condition": {
+        "type": "unique_characters_used",
+        "count": 4
+      },
+      "reward": {
+        "money": 300,
+        "experience": 150
+      },
+      "icon": "team",
+      "rarity": "uncommon"
+    },
+    "full_squad": {
+      "id": "full_squad",
+      "name": "Full Squad",
+      "name_zh": "全員出動",
+      "description": "Use all 8 characters",
+      "description_zh": "使用過所有 8 個角色",
+      "category": "character",
+      "condition": {
+        "type": "unique_characters_used",
+        "count": 8
+      },
+      "reward": {
+        "money": 800,
+        "experience": 400
+      },
+      "icon": "full_team",
+      "rarity": "rare"
+    },
+    "jett_master": {
+      "id": "jett_master",
+      "name": "Jett Master",
+      "name_zh": "Jett 大師",
+      "description": "Complete 20 missions with Jett",
+      "description_zh": "使用 Jett 完成 20 個任務",
+      "category": "character",
+      "condition": {
+        "type": "character_missions",
+        "character_id": "jett",
+        "count": 20
+      },
+      "reward": {
+        "money": 400,
+        "experience": 200
+      },
+      "icon": "jett_master",
+      "rarity": "rare"
+    },
+    "flip_champion": {
+      "id": "flip_champion",
+      "name": "Flip Champion",
+      "name_zh": "Flip 冠軍",
+      "description": "Complete 15 sports missions with Flip",
+      "description_zh": "使用 Flip 完成 15 個運動任務",
+      "category": "character",
+      "condition": {
+        "type": "character_mission_type",
+        "character_id": "flip",
+        "mission_type": "sports",
+        "count": 15
+      },
+      "reward": {
+        "money": 500,
+        "experience": 250
+      },
+      "icon": "flip_champion",
+      "rarity": "rare"
+    },
+    "perfect_streak": {
+      "id": "perfect_streak",
+      "name": "Perfect Streak",
+      "name_zh": "完美連勝",
+      "description": "Complete 5 missions in a row successfully",
+      "description_zh": "連續成功完成 5 個任務",
+      "category": "performance",
+      "condition": {
+        "type": "success_streak",
+        "count": 5
+      },
+      "reward": {
+        "money": 300,
+        "experience": 150
+      },
+      "icon": "streak",
+      "rarity": "uncommon"
+    },
+    "unstoppable": {
+      "id": "unstoppable",
+      "name": "Unstoppable",
+      "name_zh": "勢不可擋",
+      "description": "Complete 10 missions in a row successfully",
+      "description_zh": "連續成功完成 10 個任務",
+      "category": "performance",
+      "condition": {
+        "type": "success_streak",
+        "count": 10
+      },
+      "reward": {
+        "money": 600,
+        "experience": 300
+      },
+      "icon": "unstoppable",
+      "rarity": "rare"
+    },
+    "speed_demon": {
+      "id": "speed_demon",
+      "name": "Speed Demon",
+      "name_zh": "速度惡魔",
+      "description": "Complete 10 missions faster than expected",
+      "description_zh": "比預計時間更快完成 10 個任務",
+      "category": "performance",
+      "condition": {
+        "type": "fast_completion",
+        "count": 10
+      },
+      "reward": {
+        "money": 400,
+        "experience": 200
+      },
+      "icon": "speed",
+      "rarity": "rare"
+    },
+    "level_5_character": {
+      "id": "level_5_character",
+      "name": "Growing Hero",
+      "name_zh": "成長中的英雄",
+      "description": "Level up any character to level 5",
+      "description_zh": "將任一角色升到 5 級",
+      "category": "progression",
+      "condition": {
+        "type": "character_level",
+        "level": 5
+      },
+      "reward": {
+        "money": 300,
+        "experience": 150
+      },
+      "icon": "level_up",
+      "rarity": "uncommon"
+    },
+    "level_10_character": {
+      "id": "level_10_character",
+      "name": "Veteran Hero",
+      "name_zh": "資深英雄",
+      "description": "Level up any character to level 10",
+      "description_zh": "將任一角色升到 10 級",
+      "category": "progression",
+      "condition": {
+        "type": "character_level",
+        "level": 10
+      },
+      "reward": {
+        "money": 600,
+        "experience": 300
+      },
+      "icon": "veteran",
+      "rarity": "rare"
+    },
+    "mission_50": {
+      "id": "mission_50",
+      "name": "Halfway There",
+      "name_zh": "半百任務",
+      "description": "Complete 50 missions",
+      "description_zh": "完成 50 個任務",
+      "category": "milestone",
+      "condition": {
+        "type": "missions_completed",
+        "count": 50
+      },
+      "reward": {
+        "money": 500,
+        "experience": 250
+      },
+      "icon": "milestone_50",
+      "rarity": "rare"
+    },
+    "mission_100": {
+      "id": "mission_100",
+      "name": "Century Hero",
+      "name_zh": "百戰英雄",
+      "description": "Complete 100 missions",
+      "description_zh": "完成 100 個任務",
+      "category": "milestone",
+      "condition": {
+        "type": "missions_completed",
+        "count": 100
+      },
+      "reward": {
+        "money": 1000,
+        "experience": 500
+      },
+      "icon": "milestone_100",
+      "rarity": "epic"
+    },
+    "rich_pilot": {
+      "id": "rich_pilot",
+      "name": "Rich Pilot",
+      "name_zh": "富有的飛行員",
+      "description": "Accumulate 10000 coins total",
+      "description_zh": "累積 10000 金幣",
+      "category": "economy",
+      "condition": {
+        "type": "total_money_earned",
+        "count": 10000
+      },
+      "reward": {
+        "money": 500,
+        "experience": 250
+      },
+      "icon": "rich",
+      "rarity": "rare"
+    },
+    "event_handler": {
+      "id": "event_handler",
+      "name": "Event Handler",
+      "name_zh": "事件處理者",
+      "description": "Successfully resolve 20 random events",
+      "description_zh": "成功處理 20 個隨機事件",
+      "category": "special",
+      "condition": {
+        "type": "events_resolved",
+        "count": 20
+      },
+      "reward": {
+        "money": 400,
+        "experience": 200
+      },
+      "icon": "event_master",
+      "rarity": "uncommon"
+    },
+    "helper_supreme": {
+      "id": "helper_supreme",
+      "name": "Helper Supreme",
+      "name_zh": "終極幫手",
+      "description": "Help 30 different NPCs",
+      "description_zh": "幫助 30 個不同的 NPC",
+      "category": "special",
+      "condition": {
+        "type": "unique_npcs_helped",
+        "count": 30
+      },
+      "reward": {
+        "money": 700,
+        "experience": 350
+      },
+      "icon": "helper",
+      "rarity": "epic"
+    }
+  },
+  "milestones": {
+    "beginner": {
+      "id": "beginner",
+      "name": "Rookie Dispatcher",
+      "name_zh": "新手調度員",
+      "description": "Just starting your Super Wings adventure",
+      "description_zh": "剛開始你的 Super Wings 冒險",
+      "requirement": "Complete tutorial",
+      "reward_tier": 1
+    },
+    "intermediate": {
+      "id": "intermediate",
+      "name": "Skilled Dispatcher",
+      "name_zh": "熟練調度員",
+      "description": "Mastered basic game mechanics",
+      "description_zh": "已經掌握基本遊戲機制",
+      "requirement": "Complete 20 missions and unlock 3 characters",
+      "reward_tier": 2
+    },
+    "advanced": {
+      "id": "advanced",
+      "name": "Senior Dispatcher",
+      "name_zh": "資深調度員",
+      "description": "An experienced dispatch expert",
+      "description_zh": "成為經驗豐富的調度專家",
+      "requirement": "Complete 50 missions and level any character to 5",
+      "reward_tier": 3
+    },
+    "expert": {
+      "id": "expert",
+      "name": "Expert Dispatcher",
+      "name_zh": "專家調度員",
+      "description": "Star dispatcher at World Airport",
+      "description_zh": "世界機場的明星調度員",
+      "requirement": "Complete 100 missions and visit all locations",
+      "reward_tier": 4
+    },
+    "master": {
+      "id": "master",
+      "name": "Master Dispatcher",
+      "name_zh": "大師調度員",
+      "description": "Legendary dispatch master",
+      "description_zh": "傳奇級別的調度大師",
+      "requirement": "Earn 15 achievements and level all characters to 5+",
+      "reward_tier": 5
+    }
+  },
+  "categories": {
+    "milestone": {
+      "name": "Milestones",
+      "name_zh": "里程碑",
+      "description": "Complete important game progression goals"
+    },
+    "mission_type": {
+      "name": "Mission Expert",
+      "name_zh": "任務專家",
+      "description": "Achievements for specific mission types"
+    },
+    "exploration": {
+      "name": "Exploration",
+      "name_zh": "探索",
+      "description": "Achievements for exploring the world"
+    },
+    "character": {
+      "name": "Character",
+      "name_zh": "角色",
+      "description": "Achievements related to specific characters"
+    },
+    "performance": {
+      "name": "Performance",
+      "name_zh": "表現",
+      "description": "Achievements for excellent performance"
+    },
+    "progression": {
+      "name": "Progression",
+      "name_zh": "成長",
+      "description": "Achievements related to character growth"
+    },
+    "economy": {
+      "name": "Economy",
+      "name_zh": "經濟",
+      "description": "Achievements for resource accumulation"
+    },
+    "special": {
+      "name": "Special",
+      "name_zh": "特殊",
+      "description": "Special events or rare achievements"
+    }
+  },
+  "rarity_tiers": {
+    "common": {
+      "name": "Common",
+      "name_zh": "普通",
+      "color": "#9e9e9e",
+      "points": 10
+    },
+    "uncommon": {
+      "name": "Uncommon",
+      "name_zh": "稀有",
+      "color": "#4caf50",
+      "points": 25
+    },
+    "rare": {
+      "name": "Rare",
+      "name_zh": "罕見",
+      "color": "#2196f3",
+      "points": 50
+    },
+    "epic": {
+      "name": "Epic",
+      "name_zh": "史詩",
+      "color": "#9c27b0",
+      "points": 100
+    },
+    "legendary": {
+      "name": "Legendary",
+      "name_zh": "傳奇",
+      "color": "#ff9800",
+      "points": 200
+    }
+  }
+}

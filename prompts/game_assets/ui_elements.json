@@ -1,0 +1,261 @@
+{
+  "meta": {
+    "description": "UI Element Templates - Icons, buttons, and interface elements",
+    "total_images": 30,
+    "default_resolution": "ui_icon"
+  },
+  "categories": {
+    "mission_icons": {
+      "description": "Mission type icons (6 types)",
+      "resolution": "ui_icon",
+      "output_path": "ui/icons/missions/",
+      "templates": {
+        "mission_delivery": {
+          "id": "mission_delivery",
+          "name": "Delivery Mission",
+          "name_zh": "送貨任務",
+          "prompt_template": "delivery package icon, cute cardboard box with small wings, simple flat game icon design, bright red and warm yellow colors, clean vector-like style, centered composition, solid light background, game UI icon, high contrast, crisp edges",
+          "specialist": "jett",
+          "notes": "Jett specialty - package delivery"
+        },
+        "mission_rescue": {
+          "id": "mission_rescue",
+          "name": "Rescue Mission",
+          "name_zh": "救援任務",
+          "prompt_template": "rescue emergency icon, red cross medical symbol with small wings, emergency beacon glow, simple flat game icon design, red and white colors, clean vector-like style, centered composition, solid background, game UI icon, high contrast",
+          "specialist": null,
+          "notes": "General rescue missions"
+        },
+        "mission_sports": {
+          "id": "mission_sports",
+          "name": "Sports Mission",
+          "name_zh": "運動任務",
+          "prompt_template": "sports ball icon, soccer ball with motion speed lines, athletic trophy symbol, simple flat game icon design, bright energetic colors orange and blue, clean vector-like style, centered composition, solid background, game UI icon, high contrast",
+          "specialist": "flip",
+          "notes": "Flip specialty - sports challenges"
+        },
+        "mission_construction": {
+          "id": "mission_construction",
+          "name": "Construction Mission",
+          "name_zh": "建造任務",
+          "prompt_template": "construction tools icon, wrench crossed with hammer, gear cog symbol, hard hat silhouette, simple flat game icon design, yellow and blue colors, clean vector-like style, centered composition, solid background, game UI icon, high contrast",
+          "specialist": "donnie",
+          "notes": "Donnie/Todd specialty - building and digging"
+        },
+        "mission_police": {
+          "id": "mission_police",
+          "name": "Police Mission",
+          "name_zh": "警察任務",
+          "prompt_template": "police badge icon, golden sheriff star with shield shape, security emblem, simple flat game icon design, blue and gold colors, clean vector-like style, centered composition, solid background, game UI icon, high contrast, official look",
+          "specialist": "paul",
+          "notes": "Paul specialty - law enforcement"
+        },
+        "mission_animal": {
+          "id": "mission_animal",
+          "name": "Animal Care Mission",
+          "name_zh": "動物照顧任務",
+          "prompt_template": "animal paw print icon, cute paw with heart shape, safari binoculars symbol, simple flat game icon design, green and brown natural colors, clean vector-like style, centered composition, solid background, game UI icon, high contrast, friendly",
+          "specialist": "bello",
+          "notes": "Bello specialty - animal communication"
+        }
+      }
+    },
+    "resource_icons": {
+      "description": "Resource type icons (4 types)",
+      "resolution": "ui_icon",
+      "output_path": "ui/icons/resources/",
+      "templates": {
+        "resource_money": {
+          "id": "resource_money",
+          "name": "Money/Currency",
+          "name_zh": "金幣",
+          "prompt_template": "gold coin icon, shiny circular coin with star emblem, metallic golden surface with shine, simple flat game icon design, gold and yellow colors, clean vector-like style, centered composition, solid background, game UI currency icon, high contrast, glossy metal effect",
+          "notes": "In-game currency for purchases"
+        },
+        "resource_fuel": {
+          "id": "resource_fuel",
+          "name": "Fuel",
+          "name_zh": "燃料",
+          "prompt_template": "airplane fuel icon, fuel can container with wing symbol, fuel gauge meter, simple flat game icon design, red orange and silver colors, clean vector-like style, centered composition, solid background, game UI icon, high contrast",
+          "notes": "Dispatch cost - auto refills"
+        },
+        "resource_repair": {
+          "id": "resource_repair",
+          "name": "Repair Kit",
+          "name_zh": "修理包",
+          "prompt_template": "repair toolbox icon, first aid kit style box with wrench symbol, mechanical repair theme, simple flat game icon design, red and silver metallic colors, clean vector-like style, centered composition, solid background, game UI icon, high contrast",
+          "notes": "Restore character energy"
+        },
+        "resource_boost": {
+          "id": "resource_boost",
+          "name": "Boost Pack",
+          "name_zh": "加速包",
+          "prompt_template": "speed boost rocket icon, small rocket with flame trail, lightning bolt acceleration symbol, simple flat game icon design, orange yellow and blue colors, clean vector-like style, centered composition, solid background, game UI icon, high contrast, energetic",
+          "notes": "Instant mission completion"
+        }
+      }
+    },
+    "status_icons": {
+      "description": "Character status indicators (4 types)",
+      "resolution": "ui_icon",
+      "output_path": "ui/icons/status/",
+      "templates": {
+        "status_available": {
+          "id": "status_available",
+          "name": "Available Status",
+          "name_zh": "可用狀態",
+          "prompt_template": "green checkmark icon, circular check mark symbol, ready status indicator, simple flat game icon design, bright green color on light background, clean vector-like style, centered composition, game UI status icon, high contrast, positive indicator",
+          "notes": "Character ready for mission"
+        },
+        "status_on_mission": {
+          "id": "status_on_mission",
+          "name": "On Mission Status",
+          "name_zh": "任務中",
+          "prompt_template": "airplane flying icon, small plane silhouette in motion, circular busy indicator, simple flat game icon design, blue color on light background, clean vector-like style, centered composition, game UI status icon, motion lines",
+          "notes": "Character currently on mission"
+        },
+        "status_resting": {
+          "id": "status_resting",
+          "name": "Resting Status",
+          "name_zh": "休息中",
+          "prompt_template": "sleep zzz icon, three Z letters floating, crescent moon symbol, simple flat game icon design, soft yellow and purple colors, clean vector-like style, centered composition, game UI status icon, peaceful indicator",
+          "notes": "Character needs rest/energy"
+        },
+        "status_levelup": {
+          "id": "status_levelup",
+          "name": "Level Up Indicator",
+          "name_zh": "升級指示",
+          "prompt_template": "star burst level up icon, golden star with sparkle rays, upward arrow symbol, simple flat game icon design, gold and white colors, clean vector-like style, centered composition, game UI icon, celebratory, shiny effect",
+          "notes": "Level up notification"
+        }
+      }
+    },
+    "achievement_icons": {
+      "description": "Achievement and reward icons (6 types)",
+      "resolution": "ui_icon",
+      "output_path": "ui/achievements/",
+      "templates": {
+        "trophy_gold": {
+          "id": "trophy_gold",
+          "name": "Gold Trophy",
+          "name_zh": "金獎盃",
+          "prompt_template": "golden trophy cup icon, first place award cup, shiny polished gold metal surface, laurel wreath decoration, simple game achievement icon design, gold and yellow colors, clean style, centered composition, premium quality look",
+          "notes": "Top tier achievement"
+        },
+        "trophy_silver": {
+          "id": "trophy_silver",
+          "name": "Silver Trophy",
+          "name_zh": "銀獎盃",
+          "prompt_template": "silver trophy cup icon, second place award cup, shiny polished silver metal surface, simple game achievement icon design, silver and gray colors, clean style, centered composition, quality look",
+          "notes": "Second tier achievement"
+        },
+        "trophy_bronze": {
+          "id": "trophy_bronze",
+          "name": "Bronze Trophy",
+          "name_zh": "銅獎盃",
+          "prompt_template": "bronze trophy cup icon, third place award cup, shiny polished bronze metal surface, simple game achievement icon design, bronze and brown colors, clean style, centered composition",
+          "notes": "Third tier achievement"
+        },
+        "star_filled": {
+          "id": "star_filled",
+          "name": "Filled Star",
+          "name_zh": "實心星星",
+          "prompt_template": "filled rating star icon, bright golden five-pointed star, completely filled solid, shiny metallic surface, simple flat game icon design, gold yellow color, clean vector-like style, centered composition, rating indicator",
+          "notes": "Filled rating star"
+        },
+        "star_empty": {
+          "id": "star_empty",
+          "name": "Empty Star",
+          "name_zh": "空心星星",
+          "prompt_template": "empty rating star outline icon, five-pointed star outline only, unfilled hollow star, simple flat game icon design, gray outline on light background, clean vector-like style, centered composition, rating indicator placeholder",
+          "notes": "Empty rating star"
+        },
+        "medal_special": {
+          "id": "medal_special",
+          "name": "Special Medal",
+          "name_zh": "特殊勳章",
+          "prompt_template": "special achievement medal icon, circular medal with colorful ribbon, golden center with wing emblem, simple game achievement icon design, gold red and blue colors, clean style, centered composition, prestigious award look",
+          "notes": "Special unlock achievement"
+        }
+      }
+    },
+    "button_elements": {
+      "description": "Button background elements (4 styles)",
+      "resolution": "button",
+      "output_path": "ui/buttons/",
+      "templates": {
+        "button_primary": {
+          "id": "button_primary",
+          "name": "Primary Button",
+          "name_zh": "主要按鈕",
+          "prompt_template": "game button background, rounded rectangle shape, glossy blue gradient surface, 3d raised beveled effect, clean crisp edges, game UI button element, professional quality, horizontal orientation",
+          "notes": "Main action button background"
+        },
+        "button_secondary": {
+          "id": "button_secondary",
+          "name": "Secondary Button",
+          "name_zh": "次要按鈕",
+          "prompt_template": "game button background, rounded rectangle shape, glossy gray gradient surface, 3d raised beveled effect, clean crisp edges, game UI button element, professional quality, horizontal orientation",
+          "notes": "Secondary action button"
+        },
+        "button_success": {
+          "id": "button_success",
+          "name": "Success Button",
+          "name_zh": "確認按鈕",
+          "prompt_template": "game button background, rounded rectangle shape, glossy green gradient surface, 3d raised beveled effect, clean crisp edges, game UI button element, professional quality, positive action, horizontal orientation",
+          "notes": "Confirm/success action"
+        },
+        "button_danger": {
+          "id": "button_danger",
+          "name": "Danger Button",
+          "name_zh": "危險按鈕",
+          "prompt_template": "game button background, rounded rectangle shape, glossy red gradient surface, 3d raised beveled effect, clean crisp edges, game UI button element, professional quality, warning action, horizontal orientation",
+          "notes": "Cancel/danger action"
+        }
+      }
+    },
+    "progress_elements": {
+      "description": "Progress bar and gauge elements (4 types)",
+      "resolution": "button",
+      "output_path": "ui/progress/",
+      "templates": {
+        "progress_bar_empty": {
+          "id": "progress_bar_empty",
+          "name": "Empty Progress Bar",
+          "name_zh": "空進度條",
+          "prompt_template": "empty progress bar frame, rounded rectangle horizontal bar, gray background with subtle border, clean game UI element, minimalist design, horizontal orientation, professional quality",
+          "notes": "Progress bar background/frame"
+        },
+        "progress_bar_fill_blue": {
+          "id": "progress_bar_fill_blue",
+          "name": "Blue Progress Fill",
+          "name_zh": "藍色進度填充",
+          "prompt_template": "progress bar fill segment, blue gradient glossy surface, rounded left edge, game UI element, horizontal bar segment, clean design, professional quality",
+          "notes": "General progress fill"
+        },
+        "progress_bar_fill_green": {
+          "id": "progress_bar_fill_green",
+          "name": "Green Progress Fill",
+          "name_zh": "綠色進度填充",
+          "prompt_template": "progress bar fill segment, green gradient glossy surface, rounded left edge, game UI element, horizontal bar segment, clean design, health or energy indicator, professional quality",
+          "notes": "Health/energy progress"
+        },
+        "progress_bar_fill_yellow": {
+          "id": "progress_bar_fill_yellow",
+          "name": "Yellow Progress Fill",
+          "name_zh": "黃色進度填充",
+          "prompt_template": "progress bar fill segment, golden yellow gradient glossy surface, rounded left edge, game UI element, horizontal bar segment, clean design, experience indicator, professional quality",
+          "notes": "Experience/XP progress"
+        }
+      }
+    }
+  },
+  "generation_order": [
+    "mission_icons",
+    "resource_icons",
+    "status_icons",
+    "achievement_icons",
+    "button_elements",
+    "progress_elements"
+  ]
+}

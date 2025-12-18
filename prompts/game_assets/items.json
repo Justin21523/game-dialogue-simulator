@@ -1,0 +1,329 @@
+{
+  "description": "物品資產生成提示詞配置",
+  "version": "1.0",
+  "generator": "exploration_assets",
+
+  "base_style": {
+    "art_style": "Super Wings cartoon style, colorful, child-friendly, clean vector art",
+    "quality": "high quality icon, clean edges, transparent background PNG",
+    "shading": "soft cel shading, slight highlight, gentle shadow"
+  },
+
+  "icon_config": {
+    "size": "128x128",
+    "format": "PNG with transparency",
+    "padding": "8px internal padding",
+    "glow_effect": "optional outer glow for rare items"
+  },
+
+  "item_categories": {
+    "packages": {
+      "description": "包裹和信件 - Super Wings 核心配送物品",
+      "base_prompt": "a {adjective} {item_type}, wrapped nicely, Super Wings cartoon style, clean icon",
+      "variants": [
+        {
+          "id": "package_standard",
+          "name": "標準包裹",
+          "prompt": "a cardboard delivery box with colorful tape, medium size",
+          "rarity": "common"
+        },
+        {
+          "id": "package_fragile",
+          "name": "易碎包裹",
+          "prompt": "a carefully wrapped box with FRAGILE stickers, protective padding visible",
+          "rarity": "common"
+        },
+        {
+          "id": "package_gift",
+          "name": "禮物盒",
+          "prompt": "a beautifully wrapped gift box with ribbon and bow, festive colors",
+          "rarity": "uncommon"
+        },
+        {
+          "id": "letter",
+          "name": "信件",
+          "prompt": "a sealed envelope with stamp, slightly fancy",
+          "rarity": "common"
+        },
+        {
+          "id": "postcard",
+          "name": "明信片",
+          "prompt": "a colorful postcard with scenic image, travel theme",
+          "rarity": "common"
+        }
+      ]
+    },
+
+    "collectibles": {
+      "description": "可收集的寶物和貨幣",
+      "base_prompt": "a shiny {item_type}, glowing slightly, game collectible style",
+      "variants": [
+        {
+          "id": "coin_gold",
+          "name": "金幣",
+          "prompt": "a shiny gold coin with wing emblem, sparkling",
+          "rarity": "common",
+          "value": 10
+        },
+        {
+          "id": "coin_silver",
+          "name": "銀幣",
+          "prompt": "a silver coin with airplane design, metallic shine",
+          "rarity": "common",
+          "value": 5
+        },
+        {
+          "id": "gem_ruby",
+          "name": "紅寶石",
+          "prompt": "a brilliant red ruby gem, faceted, glowing red light",
+          "rarity": "rare",
+          "value": 50
+        },
+        {
+          "id": "gem_sapphire",
+          "name": "藍寶石",
+          "prompt": "a deep blue sapphire gem, sparkling blue light",
+          "rarity": "rare",
+          "value": 50
+        },
+        {
+          "id": "gem_emerald",
+          "name": "綠寶石",
+          "prompt": "a vibrant green emerald gem, nature green glow",
+          "rarity": "rare",
+          "value": 50
+        },
+        {
+          "id": "star_token",
+          "name": "星星代幣",
+          "prompt": "a golden star-shaped token, Super Wings star design",
+          "rarity": "uncommon",
+          "value": 25
+        }
+      ]
+    },
+
+    "keys": {
+      "description": "開啟特定區域的鑰匙",
+      "base_prompt": "a {style} key, decorative, fantasy game style",
+      "variants": [
+        {
+          "id": "key_bronze",
+          "name": "銅鑰匙",
+          "prompt": "an ornate bronze key with simple design, old-fashioned",
+          "rarity": "common"
+        },
+        {
+          "id": "key_silver",
+          "name": "銀鑰匙",
+          "prompt": "an elegant silver key with wing motif, shiny",
+          "rarity": "uncommon"
+        },
+        {
+          "id": "key_golden",
+          "name": "金鑰匙",
+          "prompt": "a magnificent golden key with jewel inlay, glowing",
+          "rarity": "rare"
+        },
+        {
+          "id": "keycard",
+          "name": "門禁卡",
+          "prompt": "a modern electronic keycard with LED indicator",
+          "rarity": "common"
+        }
+      ]
+    },
+
+    "tools": {
+      "description": "角色可使用的工具",
+      "base_prompt": "a {tool_type}, cartoon style tool, clean design",
+      "variants": [
+        {
+          "id": "tool_wrench",
+          "name": "扳手",
+          "prompt": "a shiny metal wrench, Donnie's tool style",
+          "rarity": "common",
+          "associated_character": "donnie"
+        },
+        {
+          "id": "tool_flashlight",
+          "name": "手電筒",
+          "prompt": "a powerful LED flashlight, glowing beam",
+          "rarity": "common"
+        },
+        {
+          "id": "tool_rope",
+          "name": "繩索",
+          "prompt": "a coiled climbing rope, sturdy and colorful",
+          "rarity": "common"
+        },
+        {
+          "id": "tool_map",
+          "name": "地圖",
+          "prompt": "a rolled treasure map with markings, adventure style",
+          "rarity": "uncommon"
+        },
+        {
+          "id": "tool_compass",
+          "name": "指南針",
+          "prompt": "a vintage brass compass, navigation tool",
+          "rarity": "uncommon"
+        }
+      ]
+    },
+
+    "food": {
+      "description": "各地美食物品",
+      "base_prompt": "delicious {food_type}, appetizing, cartoon food illustration style",
+      "destination_variants": {
+        "paris": [
+          { "id": "food_croissant", "name": "可頌", "prompt": "a golden flaky croissant, French pastry" },
+          { "id": "food_baguette", "name": "法棍", "prompt": "a fresh French baguette, crusty bread" },
+          { "id": "food_macaron", "name": "馬卡龍", "prompt": "colorful French macarons, pastel colors" }
+        ],
+        "tokyo": [
+          { "id": "food_sushi", "name": "壽司", "prompt": "cute sushi roll, Japanese food" },
+          { "id": "food_ramen", "name": "拉麵", "prompt": "steaming bowl of ramen, noodles and toppings" },
+          { "id": "food_onigiri", "name": "飯糰", "prompt": "a triangular rice ball with nori, Japanese style" }
+        ],
+        "new_york": [
+          { "id": "food_pizza", "name": "披薩", "prompt": "a slice of New York pizza, cheesy and delicious" },
+          { "id": "food_hotdog", "name": "熱狗", "prompt": "a classic hot dog with mustard, American style" },
+          { "id": "food_pretzel", "name": "椒鹽卷餅", "prompt": "a big soft pretzel, salted, street food" }
+        ],
+        "cairo": [
+          { "id": "food_falafel", "name": "法拉費", "prompt": "golden fried falafel balls, Middle Eastern food" },
+          { "id": "food_dates", "name": "椰棗", "prompt": "sweet dried dates, desert fruit" }
+        ],
+        "beijing": [
+          { "id": "food_dumpling", "name": "餃子", "prompt": "steamed Chinese dumplings, jiaozi" },
+          { "id": "food_mooncake", "name": "月餅", "prompt": "ornate Chinese mooncake, festival pastry" }
+        ],
+        "london": [
+          { "id": "food_scone", "name": "司康", "prompt": "British scone with cream and jam, tea time" },
+          { "id": "food_fish_chips", "name": "炸魚薯條", "prompt": "fish and chips in newspaper wrap, British classic" }
+        ],
+        "sydney": [
+          { "id": "food_meat_pie", "name": "肉派", "prompt": "Australian meat pie with golden crust, savory pastry" },
+          { "id": "food_lamington", "name": "拉明頓蛋糕", "prompt": "lamington cake coated in chocolate and coconut, Australian dessert" },
+          { "id": "food_vegemite_toast", "name": "維吉麥吐司", "prompt": "toast with butter and vegemite spread, Australian breakfast" }
+        ],
+        "rio": [
+          { "id": "food_acai", "name": "巴西莓碗", "prompt": "acai bowl with granola and fruit toppings, purple Brazilian superfood" },
+          { "id": "food_brigadeiro", "name": "巧克力球", "prompt": "brigadeiro chocolate truffles with sprinkles, Brazilian sweet" },
+          { "id": "food_pao_de_queijo", "name": "起司麵包", "prompt": "pão de queijo cheese bread balls, golden Brazilian snack" }
+        ]
+      }
+    },
+
+    "quest_items": {
+      "description": "任務專用物品",
+      "base_prompt": "a special {item_type}, quest item, slightly glowing, important looking",
+      "variants": [
+        {
+          "id": "quest_recipe",
+          "name": "秘方",
+          "prompt": "an ancient recipe scroll, handwritten, aged paper",
+          "rarity": "quest"
+        },
+        {
+          "id": "quest_photo",
+          "name": "照片",
+          "prompt": "a framed photograph, precious memory, slightly worn",
+          "rarity": "quest"
+        },
+        {
+          "id": "quest_medal",
+          "name": "獎章",
+          "prompt": "a special award medal with ribbon, achievement symbol",
+          "rarity": "quest"
+        },
+        {
+          "id": "quest_toy",
+          "name": "玩具",
+          "prompt": "a beloved stuffed animal toy, well-loved, child's treasure",
+          "rarity": "quest"
+        },
+        {
+          "id": "quest_book",
+          "name": "珍貴書籍",
+          "prompt": "an antique leather-bound book, wisdom and knowledge",
+          "rarity": "quest"
+        },
+        {
+          "id": "quest_instrument",
+          "name": "樂器",
+          "prompt": "a musical instrument, artistic and valuable",
+          "rarity": "quest"
+        }
+      ]
+    },
+
+    "ability_items": {
+      "description": "與角色能力相關的物品",
+      "variants": [
+        {
+          "id": "ability_blueprint",
+          "name": "藍圖",
+          "prompt": "engineering blueprints, technical drawings, Donnie style",
+          "required_ability": "build_bridge",
+          "character": "donnie"
+        },
+        {
+          "id": "ability_drill_bit",
+          "name": "鑽頭",
+          "prompt": "a heavy duty drill bit, mining equipment",
+          "required_ability": "drill",
+          "character": "todd"
+        },
+        {
+          "id": "ability_animal_treat",
+          "name": "動物零食",
+          "prompt": "special animal treats in a bag, pet food",
+          "required_ability": "animal_talk",
+          "character": "bello"
+        },
+        {
+          "id": "ability_traffic_cone",
+          "name": "交通錐",
+          "prompt": "orange traffic cone, road safety equipment",
+          "required_ability": "traffic_control",
+          "character": "paul"
+        }
+      ]
+    }
+  },
+
+  "rarity_config": {
+    "common": {
+      "glow": "none",
+      "sparkle": false,
+      "drop_rate": 0.6
+    },
+    "uncommon": {
+      "glow": "subtle white",
+      "sparkle": true,
+      "drop_rate": 0.25
+    },
+    "rare": {
+      "glow": "colored matching item",
+      "sparkle": true,
+      "drop_rate": 0.1
+    },
+    "quest": {
+      "glow": "golden",
+      "sparkle": true,
+      "drop_rate": 0
+    }
+  },
+
+  "output_paths": {
+    "icons": "assets/images/items/{category}/{item_id}.png",
+    "sprites": "assets/images/items/{category}/{item_id}_sprite.png"
+  },
+
+  "batch_config": {
+    "priority_categories": ["packages", "collectibles", "quest_items"],
+    "items_per_batch": 20
+  }
+}
