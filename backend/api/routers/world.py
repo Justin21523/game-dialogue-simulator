@@ -72,7 +72,7 @@ def generate_npc_position(existing_positions: list, min_distance: float = 150) -
 @router.post("/generate", response_model=WorldGenerationResponse)
 async def generate_world(request: WorldGenerationRequest):
     """
-    生成動態世界
+    生成動態世界（使用 LLM AI）
 
     Args:
         request: 世界生成請求
@@ -83,7 +83,51 @@ async def generate_world(request: WorldGenerationRequest):
     start_time = time.time()
 
     try:
-        print(f"[WorldAPI] Generating world for {request.destination} (trace: {request.trace_id})")
+        print(f"[WorldAPI] 🤖 Generating AI world for {request.destination} (trace: {request.trace_id})")
+
+        # ===== 使用 AI 生成 =====
+        from backend.core.agents.content_generator import get_content_generator
+
+        try:
+            content_gen = get_content_generator()
+            world_data = await content_gen.generate_world_spec(
+                destination=request.destination,
+                mission_type=request.mission_type,
+                difficulty=request.difficulty
+            )
+
+            # 轉換為 WorldSpec
+            world_spec = WorldSpec(
+                destination=world_data["destination"],
+                theme=world_data["theme"],
+                background_key=world_data["background_key"],
+                time_of_day=world_data["time_of_day"],
+                weather=world_data["weather"],
+                npcs=[NPCSpec(**npc) for npc in world_data["npcs"]],
+                buildings=[BuildingSpec(**b) for b in world_data["buildings"]],
+                items=[ItemSpec(**item) for item in world_data["items"]],
+                pois=[],
+                trace_id=request.trace_id,
+                generation_time=time.time() - start_time
+            )
+
+            generation_time = time.time() - start_time
+
+            print(f"[WorldAPI] ✅ AI generated world: {len(world_spec.npcs)} NPCs, {len(world_spec.buildings)} buildings, {len(world_spec.items)} items ({generation_time:.2f}s)")
+
+            return WorldGenerationResponse(
+                success=True,
+                world_spec=world_spec,
+                generation_time=generation_time
+            )
+
+        except Exception as ai_error:
+            print(f"[WorldAPI] ⚠️ AI generation failed: {ai_error}, falling back to procedural")
+            # Fallback to procedural generation if AI fails
+            pass
+
+        # ===== Fallback: 程序化生成 =====
+        print(f"[WorldAPI] 🎲 Using procedural generation fallback")
 
         # ===== 1. 選擇背景 =====
         backgrounds = AVAILABLE_BACKGROUNDS.get(request.destination, AVAILABLE_BACKGROUNDS.get("paris", []))
