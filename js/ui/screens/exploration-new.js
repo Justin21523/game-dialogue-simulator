@@ -12,7 +12,7 @@ import { getNPCService } from '../../services/npc-service.js';
 import { ThreeRenderer } from '../../game/exploration/three-renderer.js';
 import { assetRegistry } from '../../core/asset-registry.js';
 import { worldGenerator } from '../../game/exploration/world-generator.js';
-import { questSystem } from '../../systems/quest-system.js';  // Checkpoint 2
+import { missionManager } from '../../managers/mission-manager.js';  // Phase 1: central mission manager
 
 export class ExplorationScreen {
     constructor(containerId, missionData) {
@@ -881,24 +881,23 @@ export class ExplorationScreen {
     }
 
     /**
-     * ===== Checkpoint 2: Initialize Quest System =====
+     * Initialize mission manager (Phase 1 foundation)
      */
     initQuestSystem() {
-        console.log('[ExplorationScreen] 🎯 Initializing Quest System...');
+        console.log('[ExplorationScreen] 🎯 Initializing Mission Manager...');
 
-        // Initialize QuestSystem (it's a singleton, just call initialize)
-        questSystem.initialize({
-            debug: true,
-            autoSave: true,
-            autoSaveInterval: 30000  // Auto-save every 30 seconds
+        missionManager.initialize({
+            mainCharacter: this.player?.characterId || 'jett'
         });
 
-        console.log('[ExplorationScreen] ✅ Quest System initialized');
+        // Mission UI panel
+        this.initMissionPanel();
+        this.updateMissionPanel();
 
-        // Listen for quest events
+        // Listen for mission/quest lifecycle events
         eventBus.on('QUEST_ACCEPTED', (data) => {
             console.log('[ExplorationScreen] 📋 Quest accepted:', data.questId);
-            // TODO Checkpoint 4: Update quest tracker UI
+            this.updateMissionPanel();
         });
 
         eventBus.on('QUEST_DECLINED', (data) => {
@@ -907,12 +906,156 @@ export class ExplorationScreen {
 
         eventBus.on('QUEST_COMPLETED', (data) => {
             console.log('[ExplorationScreen] ✅ Quest completed:', data.questId);
-            // TODO Checkpoint 7: Show completion rewards
+            this.updateMissionPanel();
         });
 
         eventBus.on('QUEST_ABANDONED', (data) => {
             console.log('[ExplorationScreen] 🚫 Quest abandoned:', data.questId);
+            this.updateMissionPanel();
         });
+
+        eventBus.on('MISSION_STATE_CHANGED', () => {
+            this.updateMissionPanel();
+        });
+
+        eventBus.on('OBJECTIVE_PROGRESS_UPDATED', () => {
+            this.updateMissionPanel();
+        });
+
+        eventBus.on('MISSION_STATE_CHANGED', (data) => {
+            console.log('[ExplorationScreen] 📒 Mission state changed:', data);
+            // hook UI refresh here
+        });
+
+        console.log('[ExplorationScreen] ✅ Mission Manager initialized');
+    }
+
+    /**
+     * Mission panel (UI-only, data comes from MissionManager)
+     */
+    initMissionPanel() {
+        if (!this.container) return;
+        this.missionPanel = document.createElement('div');
+        this.missionPanel.id = 'mission-panel';
+        this.missionPanel.style.position = 'absolute';
+        this.missionPanel.style.top = '20px';
+        this.missionPanel.style.left = '20px';
+        this.missionPanel.style.width = '320px';
+        this.missionPanel.style.background = 'rgba(0,0,0,0.55)';
+        this.missionPanel.style.color = '#fff';
+        this.missionPanel.style.padding = '12px';
+        this.missionPanel.style.borderRadius = '8px';
+        this.missionPanel.style.fontSize = '14px';
+        this.missionPanel.style.backdropFilter = 'blur(6px)';
+        this.missionPanel.style.pointerEvents = 'auto';
+        this.missionPanel.style.maxHeight = '70vh';
+        this.missionPanel.style.overflowY = 'auto';
+        this.container.appendChild(this.missionPanel);
+
+        // Backend toggle button
+        this.backendToggleBtn = document.createElement('button');
+        this.backendToggleBtn.id = 'backend-toggle-btn';
+        this.backendToggleBtn.textContent = 'Backend: ON';
+        this.backendToggleBtn.style.marginBottom = '8px';
+        this.backendToggleBtn.style.width = '100%';
+        this.backendToggleBtn.addEventListener('click', () => this.toggleBackend());
+        this.missionPanel.appendChild(this.backendToggleBtn);
+    }
+
+    /**
+     * Render mission panel from MissionManager summaries
+     */
+    updateMissionPanel() {
+        if (!this.missionPanel) return;
+
+        const quests = missionManager.getActiveQuests();
+        if (!quests || quests.length === 0) {
+            this.missionPanel.innerHTML = `<div class="mission-panel-empty">暫無進行中的任務</div>`;
+            return;
+        }
+
+        const questBlocks = quests.map((quest) => {
+            const seenObjectives = new Set();
+            const objectiveList = (quest.objectives || [])
+                .filter((obj) => {
+                    if (seenObjectives.has(obj.id)) return false;
+                    seenObjectives.add(obj.id);
+                    return true;
+                })
+                .map((obj) => {
+                    const statusIcon = obj.status === 'completed' ? '✅' : obj.status === 'active' ? '⏳' : '⬜';
+                    const progressText = obj.getProgressText ? obj.getProgressText() :
+                        (obj.requiredCount ? `${obj.currentCount}/${obj.requiredCount}` : `${Math.round((obj.progress || 0) * 100)}%`);
+                    return `<li class="objective ${obj.status}">
+                        <span class="obj-icon">${statusIcon}</span>
+                        <span class="obj-title">${obj.title || obj.description || '目標'}</span>
+                        <span class="obj-progress">${progressText}</span>
+                        ${obj.optional ? '<span class="obj-optional">選用</span>' : ''}
+                        ${obj.aiGenerated ? '<span class="obj-ai">AI</span>' : ''}
+                    </li>`;
+                })
+                .join('');
+
+            const requiredObjectives = (quest.objectives || []).filter(o => !o.optional);
+            const completedRequired = requiredObjectives.filter(o => o.status === 'completed').length;
+            const progress = requiredObjectives.length > 0 ? Math.round((completedRequired / requiredObjectives.length) * 100) : 0;
+            const traceId = quest.aiContext?.traceId || quest.aiContext?.ragSessionId;
+
+            return `
+                <div class="quest-block">
+                    <div class="quest-header">
+                        <div class="quest-title">${quest.title || '未命名任務'}</div>
+                        <div class="quest-meta">
+                            <span class="quest-type">${quest.type === 'main' ? '主線' : '支線'}</span>
+                            <span class="quest-status">${quest.status}</span>
+                            ${traceId ? `<span class="quest-trace">trace:${String(traceId).slice(0,8)}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="quest-progress-bar">
+                        <div class="quest-progress-fill" style="width:${progress}%"></div>
+                    </div>
+                    <div class="quest-progress-text">${progress}% (${completedRequired}/${requiredObjectives.length || 0})</div>
+                    <ul class="objective-list">${objectiveList || '<li class="objective empty">尚無目標</li>'}</ul>
+                </div>
+            `;
+        }).join('');
+
+        const logs = (missionManager.stateLog || []).slice(-6).reverse().map((log) => {
+            const ts = new Date(log.timestamp || Date.now());
+            const hh = String(ts.getHours()).padStart(2, '0');
+            const mm = String(ts.getMinutes()).padStart(2, '0');
+            const label = log.type;
+            const detail = log.detail;
+            const labelText = typeof label === 'string' ? label : 'log';
+            const desc = JSON.stringify(detail || {});
+            return `<div class="mission-log-row"><span class="log-time">${hh}:${mm}</span><span class="log-type">${labelText}</span><span class="log-detail">${desc}</span></div>`;
+        }).join('');
+
+        this.missionPanel.innerHTML = `
+            <div class="mission-panel-title">Mission Tracker</div>
+            <div class="mission-panel-backend">Backend: ${this.backendForcedOffline ? 'OFF (fallback)' : 'ON'}</div>
+            ${questBlocks}
+            <div class="mission-log-section">
+                <div class="mission-log-title">State Log / Agent</div>
+                ${logs || '<div class="mission-log-empty">No logs</div>'}
+            </div>
+        `;
+    }
+
+    toggleBackend() {
+        const { aiService } = require('../../core/ai-service.js');
+        this.backendForcedOffline = !this.backendForcedOffline;
+        aiService.setForcedOffline(this.backendForcedOffline);
+        missionManager.pushStateLog('backend_toggle', { forcedOffline: this.backendForcedOffline });
+        eventBus.emit('SHOW_TOAST', {
+            message: this.backendForcedOffline ? '⚠️ Backend OFF, using fallback' : '✅ Backend ON',
+            type: this.backendForcedOffline ? 'warning' : 'success',
+            duration: 2500
+        });
+        if (this.backendToggleBtn) {
+            this.backendToggleBtn.textContent = `Backend: ${this.backendForcedOffline ? 'OFF' : 'ON'}`;
+        }
+        this.updateMissionPanel();
     }
 
     /**

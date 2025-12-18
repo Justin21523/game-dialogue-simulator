@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 from ..llm import get_llm, GenerationConfig
 from ..rag import get_knowledge_base
+from ..asset_manifest import get_asset_manifest
 
 logger = logging.getLogger(__name__)
 
@@ -460,8 +461,8 @@ Generate for {destination.title()}. Output ONLY JSON:"""
             weather = "clear"
             cultural_elements = []
 
-        # 3. Generate NPCs using LLM
-        npc_count = random.randint(10, 12)
+        # 3. Generate NPCs using LLM (10-15 個，使用均勻分布算法)
+        npc_count = random.randint(10, 15)  # Phase 4: 使用改良的分散算法
         npcs_data = await self._generate_npcs_batch(
             destination, npc_count, cultural_elements, mission_type
         )
@@ -470,73 +471,61 @@ Generate for {destination.title()}. Output ONLY JSON:"""
         # Buildings and items use procedural generation for now
         from backend.api.routers.world import generate_npc_position, BUILDING_TYPES
 
-        # Generate NPC positions with proper spacing
+        # Generate NPC positions with proper spacing (使用網格分布算法)
         npc_positions = []
         npcs = []
         for i, npc_data in enumerate(npcs_data):
-            x, y = generate_npc_position(npc_positions, min_distance=150)
+            x, y = generate_npc_position(npc_positions, min_distance=200, total_npcs=npc_count)
             npc_positions.append((x, y))
+
+            # ===== Phase 3: 根據 NPC 類型分配行為 =====
+            npc_type = npc_data.get("type", "resident")
+            behavior, patrol_path, wander_radius = self._assign_npc_behavior(npc_type, x, y)
 
             npcs.append({
                 "id": f"npc_{destination}_{i+1:03d}",
                 "name": npc_data["name"],
-                "type": npc_data["type"],
+                "type": npc_type,
                 "archetype": npc_data.get("archetype", "resident"),
                 "x": x,
                 "y": y,
                 "dialogue": npc_data["dialogue"],
                 "personality": npc_data.get("personality", "friendly"),
                 "has_quest": npc_data.get("has_quest", False),
+
+                # Phase 3: 行為資訊
+                "behavior": behavior,
+                "patrol_path": patrol_path,
+                "wander_radius": wander_radius
             })
 
-        # Generate buildings (procedural)
-        building_count = random.randint(3, 5)
-        buildings = []
-        building_positions = []
+        # Generate buildings (使用 AI + 程序化混合)
+        building_count = random.randint(5, 8)
+        buildings = await self._generate_buildings_ai(
+            destination, building_count, cultural_elements, BUILDING_TYPES
+        )
 
-        for i in range(building_count):
-            x = random.uniform(300, 1700)
-            y = 400
+        # Generate items (程序化生成，增加到 8-12 個)
+        item_count = random.randint(8, 12)
+        items = self._generate_items_procedural(destination, item_count)
 
-            while any(abs(x - bx) < 300 for bx, _ in building_positions):
-                x = random.uniform(300, 1700)
+        # Select background using AssetManifest
+        manifest = get_asset_manifest()
+        available_backgrounds = manifest.get_available_backgrounds(destination)
 
-            building_positions.append((x, y))
-            building_type = random.choice(BUILDING_TYPES)
+        if available_backgrounds:
+            background_key = random.choice(available_backgrounds)
+            logger.info(f"✅ Selected background: {background_key} (from {len(available_backgrounds)} options)")
+        else:
+            # Fallback: 從所有背景中隨機選擇
+            logger.warning(f"⚠️ No backgrounds found for {destination}, using fallback")
+            all_backgrounds = manifest.get_available_backgrounds()
+            background_key = random.choice(all_backgrounds) if all_backgrounds else f"{destination}_afternoon_clear"
 
-            buildings.append({
-                "id": f"building_{building_type}_{i+1:03d}",
-                "name": f"{building_type.title()} #{i+1}",
-                "type": building_type,
-                "x": x,
-                "y": y,
-                "width": random.uniform(120, 180),
-                "height": random.uniform(150, 250),
-                "can_enter": building_type in ["shop", "cafe", "restaurant"]
-            })
-
-        # Generate items (procedural)
-        item_count = random.randint(5, 8)
-        items = []
-
-        for i in range(item_count):
-            item_type = random.choice(["coin", "coin", "coin", "package", "collectible"])
-            items.append({
-                "id": f"item_{item_type}_{i+1:03d}",
-                "name": item_type.title(),
-                "type": item_type,
-                "x": random.uniform(200, 1800),
-                "y": 500,
-                "value": random.randint(5, 20) if item_type == "coin" else random.randint(50, 100)
-            })
-
-        # Select background
-        backgrounds = {
-            "paris": ["paris_sunset_clear", "paris_afternoon_clear", "paris_evening_cloudy"],
-            "tokyo": ["tokyo_night_clear", "tokyo_afternoon_clear"],
-            "london": ["london_afternoon_cloudy", "london_evening_rainy"],
-        }
-        background_key = random.choice(backgrounds.get(destination, [f"{destination}_afternoon_clear"]))
+        # Validate background_key
+        if not manifest.validate_asset_key(background_key, "backgrounds"):
+            logger.warning(f"⚠️ Background key '{background_key}' not found in manifest, using fallback")
+            background_key = manifest.get_random_background(destination) or f"{destination}_afternoon_clear"
 
         return {
             "destination": destination,
@@ -557,111 +546,169 @@ Generate for {destination.title()}. Output ONLY JSON:"""
         cultural_elements: List[str],
         mission_type: Optional[str] = None
     ) -> List[Dict[str, Any]]:
-        """Generate multiple NPCs using LLM."""
+        """Generate multiple NPCs using LLM (分批生成，更可靠)."""
+        # 分批生成：每次 4 個 NPC，避免 JSON 截斷
+        batch_size = 4
+        batches = (count + batch_size - 1) // batch_size  # 向上取整
+        all_npcs = []
+
+        logger.info(f"Generating {count} NPCs in {batches} batches of {batch_size}")
+
+        for batch_num in range(batches):
+            current_batch_size = min(batch_size, count - len(all_npcs))
+            if current_batch_size <= 0:
+                break
+
+            try:
+                batch_npcs = await self._generate_npc_batch_single(
+                    destination, current_batch_size, cultural_elements, batch_num
+                )
+                all_npcs.extend(batch_npcs)
+                logger.info(f"Batch {batch_num+1}/{batches}: Generated {len(batch_npcs)} NPCs (total: {len(all_npcs)})")
+            except Exception as e:
+                logger.error(f"Batch {batch_num+1} failed: {e}, using fallback for remaining")
+                # 用 fallback 填充剩餘部分
+                remaining = count - len(all_npcs)
+                if remaining > 0:
+                    fallback_npcs = self._fallback_npcs(destination, remaining, start_index=len(all_npcs))
+                    all_npcs.extend(fallback_npcs)
+                break
+
+        return all_npcs[:count]
+
+    async def _generate_npc_batch_single(
+        self,
+        destination: str,
+        count: int,
+        cultural_elements: List[str],
+        batch_num: int = 0
+    ) -> List[Dict[str, Any]]:
+        """Generate a single batch of NPCs using LLM."""
         llm = await self._get_llm()
 
+        # 文化適應的名字提示
+        name_hints = self._get_cultural_name_hints(destination)
         cultural_note = ""
         if cultural_elements:
-            cultural_note = f"\nCultural elements to consider: {', '.join(cultural_elements)}"
+            cultural_note = f"\nCultural elements: {', '.join(cultural_elements[:3])}"  # 限制 3 個元素
 
-        prompt = f"""You are creating NPCs for Super Wings in {destination.title()}.{cultural_note}
+        # 優化的 Prompt（更明確的指示）
+        prompt = f"""Generate ONLY a JSON array. No explanation or extra text.
 
-Generate {count} diverse NPCs with appropriate names for {destination}. Include residents, shopkeepers, travelers, children, and elderly.
+Location: {destination.title()}{cultural_note}
+{name_hints}
 
-Output ONLY a valid JSON array:
+Output format (EXACTLY {count} NPCs):
 [
-  {{
-    "name": "Culturally appropriate name",
-    "type": "resident/shopkeeper/traveler/child/elder",
-    "archetype": "{destination}_[role]",
-    "personality": "friendly/curious/busy/relaxed/shy",
-    "dialogue": ["greeting", "helpful comment", "farewell"],
-    "has_quest": true/false
-  }}
+  {{"name":"Name","type":"resident","personality":"friendly","dialogue":["Hi!","Help?","Bye!"],"quest":false}},
+  {{"name":"Name2","type":"shopkeeper","personality":"curious","dialogue":["Welcome!","Can I help?","Goodbye!"],"quest":false}}
 ]
 
-Example for Paris (3 NPCs):
-[
-  {{
-    "name": "Sophie",
-    "type": "shopkeeper",
-    "archetype": "paris_baker",
-    "personality": "friendly",
-    "dialogue": ["Bonjour! Welcome to my bakery!", "Would you like to try our croissants?", "Au revoir, have a wonderful day!"],
-    "has_quest": true
-  }},
-  {{
-    "name": "Pierre",
-    "type": "resident",
-    "archetype": "paris_artist",
-    "personality": "creative",
-    "dialogue": ["Ah, bonjour mon ami!", "I'm painting the Eiffel Tower today.", "Art is life, non?"],
-    "has_quest": false
-  }},
-  {{
-    "name": "Marie",
-    "type": "child",
-    "archetype": "paris_student",
-    "personality": "curious",
-    "dialogue": ["Hello! Are you a robot plane?", "Can you fly me to school?", "Wow, so cool!"],
-    "has_quest": true
-  }}
-]
+Types: resident, shopkeeper, traveler, child, elder
+Personalities: friendly, curious, busy, relaxed, shy
 
-Generate {count} diverse NPCs for {destination.title()}. Output ONLY the JSON array:"""
+JSON array with {count} NPCs:"""
 
         try:
-            config = GenerationConfig(max_new_tokens=2048, temperature=0.9)  # Increased for batch NPC generation
+            config = GenerationConfig(max_new_tokens=1200, temperature=0.9)  # 增加到 1200 tokens
             response = await llm.generate(prompt, config)
             response_text = response.content if hasattr(response, 'content') else str(response)
 
-            # Parse JSON array
-            try:
-                npcs_data = self._parse_json_response(response_text)
-            except Exception as parse_error:
-                logger.warning(f"Could not parse JSON from response: {response_text[:200]}")
-                logger.error(f"Parse error: {parse_error}")
-                raise
+            # Parse JSON
+            npcs_data = self._parse_json_response(response_text)
 
             # Ensure it's a list
             if isinstance(npcs_data, dict):
                 npcs_data = [npcs_data]
             elif not isinstance(npcs_data, list):
-                logger.error(f"NPC response is not a list or dict: {type(npcs_data)}")
-                raise ValueError("Invalid NPC data format")
+                logger.warning(f"NPC response is not a list: {type(npcs_data)}, wrapping in list")
+                npcs_data = []
 
-            logger.info(f"Generated {len(npcs_data)} NPCs for {destination}")
+            # 標準化格式
+            standardized_npcs = []
+            for npc in npcs_data:
+                if not isinstance(npc, dict):
+                    continue
 
-            # Fill with fallback if not enough NPCs
-            if len(npcs_data) < count:
-                logger.warning(f"Only got {len(npcs_data)} NPCs, filling rest with fallback")
-                fallback_npcs = self._fallback_npcs(destination, count - len(npcs_data))
-                npcs_data.extend(fallback_npcs)
+                standardized_npcs.append({
+                    "name": npc.get("name", f"NPC {batch_num*4 + len(standardized_npcs)+1}"),
+                    "type": npc.get("type", "resident"),
+                    "archetype": f"{destination}_{npc.get('type', 'resident')}",
+                    "personality": npc.get("personality", "friendly"),
+                    "dialogue": npc.get("dialogue", ["Hello!", "How can I help?", "Goodbye!"]),
+                    "has_quest": npc.get("quest", npc.get("has_quest", False))
+                })
 
-            return npcs_data[:count]  # Limit to requested count
+            if len(standardized_npcs) < count:
+                logger.warning(f"LLM only generated {len(standardized_npcs)}/{count} NPCs, filling rest")
+                remaining = count - len(standardized_npcs)
+                fallback = self._fallback_npcs(destination, remaining, start_index=batch_num*4 + len(standardized_npcs))
+                standardized_npcs.extend(fallback)
+
+            return standardized_npcs[:count]
 
         except Exception as e:
-            logger.error(f"NPC generation failed: {e}, using fallback")
-            return self._fallback_npcs(destination, count)
+            logger.error(f"Single batch NPC generation failed: {e}")
+            return self._fallback_npcs(destination, count, start_index=batch_num*4)
 
-    def _fallback_npcs(self, destination: str, count: int) -> List[Dict[str, Any]]:
-        """Fallback NPC generation if LLM fails."""
-        npc_names = ["Alex", "Sophie", "Charlie", "Emma", "Oliver", "Mia", "Lucas", "Lily"]
+    def _get_cultural_name_hints(self, destination: str) -> str:
+        """Get culturally appropriate name hints for each destination."""
+        name_pools = {
+            "paris": "French names: Sophie, Pierre, Marie, Jean, Claire, Antoine, Camille, Lucas",
+            "tokyo": "Japanese names: Yuki, Haruto, Sakura, Kenji, Aiko, Takeshi, Hana, Ryu",
+            "london": "British names: Oliver, Emma, George, Charlotte, William, Sophie, James, Emily",
+            "new_york": "American names: Michael, Sarah, David, Jessica, Chris, Emily, Alex, Olivia",
+            "sydney": "Australian names: Jack, Olivia, William, Charlotte, Noah, Mia, Ethan, Ava",
+            "rio": "Brazilian names: Lucas, Ana, Gabriel, Maria, Pedro, Julia, Miguel, Sofia",
+            "moscow": "Russian names: Ivan, Natasha, Dmitri, Elena, Boris, Svetlana, Alexei, Olga",
+            "dubai": "Arabic names: Ahmed, Fatima, Omar, Aisha, Hassan, Layla, Khalid, Noor"
+        }
+        return name_pools.get(destination, "Use names appropriate for the location.")
+
+    def _fallback_npcs(self, destination: str, count: int, start_index: int = 0) -> List[Dict[str, Any]]:
+        """Fallback NPC generation if LLM fails (with cultural names)."""
+        # 文化適應的名字池
+        cultural_names = {
+            "paris": ["Sophie", "Pierre", "Marie", "Jean", "Claire", "Antoine", "Camille", "Lucas"],
+            "tokyo": ["Yuki", "Haruto", "Sakura", "Kenji", "Aiko", "Takeshi", "Hana", "Ryu"],
+            "london": ["Oliver", "Emma", "George", "Charlotte", "William", "Sophie", "James", "Emily"],
+            "new_york": ["Michael", "Sarah", "David", "Jessica", "Chris", "Emily", "Alex", "Olivia"],
+            "sydney": ["Jack", "Olivia", "William", "Charlotte", "Noah", "Mia", "Ethan", "Ava"],
+            "rio": ["Lucas", "Ana", "Gabriel", "Maria", "Pedro", "Julia", "Miguel", "Sofia"],
+            "moscow": ["Ivan", "Natasha", "Dmitri", "Elena", "Boris", "Svetlana", "Alexei", "Olga"],
+            "dubai": ["Ahmed", "Fatima", "Omar", "Aisha", "Hassan", "Layla", "Khalid", "Noor"]
+        }
+
+        names = cultural_names.get(destination, ["Alex", "Sophie", "Charlie", "Emma", "Oliver", "Mia", "Lucas", "Lily"])
         types = ["resident", "shopkeeper", "traveler", "child"]
         personalities = ["friendly", "curious", "busy", "relaxed"]
 
+        # 文化適應的對話
+        greetings = {
+            "paris": "Bonjour!",
+            "tokyo": "Konnichiwa!",
+            "london": "Hello there!",
+            "new_york": "Hey!",
+            "sydney": "G'day!",
+            "rio": "Olá!",
+            "moscow": "Privet!",
+            "dubai": "Marhaba!"
+        }
+        greeting = greetings.get(destination, "Hello!")
+
         npcs = []
         for i in range(count):
-            name = random.choice(npc_names)
-            npc_type = random.choice(types)
+            name_index = (start_index + i) % len(names)
+            name = names[name_index]
+            npc_type = types[i % len(types)]
 
             npcs.append({
-                "name": f"{name} {i+1}" if i > 0 else name,
+                "name": name,
                 "type": npc_type,
                 "archetype": f"{destination}_{npc_type}",
-                "personality": random.choice(personalities),
+                "personality": personalities[i % len(personalities)],
                 "dialogue": [
-                    f"Hello! Welcome to {destination.title()}!",
+                    f"{greeting} Welcome to {destination.title()}!",
                     "How can I help you?",
                     "Have a great day!"
                 ],
@@ -670,8 +717,288 @@ Generate {count} diverse NPCs for {destination.title()}. Output ONLY the JSON ar
 
         return npcs
 
-    def _parse_json_response(self, response: str) -> dict:
-        """Parse JSON from LLM response."""
+    async def _generate_buildings_ai(
+        self,
+        destination: str,
+        count: int,
+        cultural_elements: List[str],
+        building_types: List[str]
+    ) -> List[Dict[str, Any]]:
+        """Generate buildings using AI with cultural adaptation."""
+        llm = await self._get_llm()
+
+        # 構建 prompt
+        cultural_context = ", ".join(cultural_elements) if cultural_elements else f"typical {destination} architecture"
+        types_list = ", ".join(building_types)
+
+        prompt = f"""Generate {count} buildings for {destination.title()} that reflect {cultural_context}.
+
+Available building types: {types_list}
+
+Output ONLY a valid JSON array of {count} buildings:
+[
+  {{
+    "name": "Building name (e.g., 'Le Petit Café', 'Tokyo Ramen House')",
+    "type": "one of: {types_list}",
+    "description": "Brief description",
+    "can_enter": true/false
+  }},
+  ...
+]
+
+Make building names culturally appropriate for {destination.title()}.
+Output ONLY the JSON array:"""
+
+        try:
+            config = GenerationConfig(max_new_tokens=512, temperature=0.8)
+            response = await llm.generate(prompt, config)
+            content = response.content if hasattr(response, 'content') else str(response)
+            buildings_data = self._parse_json_response(content)
+
+            if not isinstance(buildings_data, list):
+                logger.warning("Buildings response not a list, using fallback")
+                return self._fallback_buildings(destination, count, building_types)
+
+            # 標準化並添加位置
+            buildings = []
+            building_positions = []
+
+            for i, building_data in enumerate(buildings_data[:count]):
+                # 生成位置（確保不重疊）
+                x = random.uniform(300, 1700)
+                y = 400
+
+                attempts = 0
+                while any(abs(x - bx) < 300 for bx, _ in building_positions) and attempts < 50:
+                    x = random.uniform(300, 1700)
+                    attempts += 1
+
+                building_positions.append((x, y))
+
+                building_type = building_data.get("type", random.choice(building_types))
+                if building_type not in building_types:
+                    building_type = random.choice(building_types)
+
+                buildings.append({
+                    "id": f"building_{building_type}_{i+1:03d}",
+                    "name": building_data.get("name", f"{building_type.title()} #{i+1}"),
+                    "type": building_type,
+                    "description": building_data.get("description", ""),
+                    "x": x,
+                    "y": y,
+                    "width": random.uniform(120, 180),
+                    "height": random.uniform(150, 250),
+                    "can_enter": building_data.get("can_enter", building_type in ["shop", "cafe", "restaurant"])
+                })
+
+            # 如果生成不足，用 fallback 填充
+            if len(buildings) < count:
+                remaining = count - len(buildings)
+                fallback = self._fallback_buildings(destination, remaining, building_types, start_index=len(buildings))
+                # 確保 fallback 建築的位置也不重疊
+                for building in fallback:
+                    x = random.uniform(300, 1700)
+                    attempts = 0
+                    while any(abs(x - bx) < 300 for bx, _ in building_positions) and attempts < 50:
+                        x = random.uniform(300, 1700)
+                        attempts += 1
+                    building_positions.append((x, 400))
+                    building["x"] = x
+                    building["y"] = 400
+                buildings.extend(fallback)
+
+            logger.info(f"Generated {len(buildings)} buildings for {destination} (AI)")
+            return buildings
+
+        except Exception as e:
+            logger.error(f"Building AI generation failed: {e}, using fallback")
+            return self._fallback_buildings(destination, count, building_types)
+
+    def _fallback_buildings(
+        self,
+        destination: str,
+        count: int,
+        building_types: List[str],
+        start_index: int = 0
+    ) -> List[Dict[str, Any]]:
+        """Fallback building generation if AI fails."""
+        # 文化適應的建築名稱
+        building_names = {
+            "paris": {
+                "cafe": ["Le Petit Café", "Café de la Paix", "Brasserie Belle"],
+                "shop": ["Boutique Élégance", "La Maison du Pain", "Fleuriste de Paris"],
+                "restaurant": ["Le Gourmet", "Bistro Français", "Restaurant du Coin"],
+                "landmark": ["Tour Eiffel Miniature", "Arc de Triomphe Model", "Notre Dame Replica"]
+            },
+            "tokyo": {
+                "cafe": ["Tokyo Café", "Sakura Tea House", "Matcha Corner"],
+                "shop": ["Tokyo Mart", "Anime Store", "Kimono Shop"],
+                "restaurant": ["Ramen House", "Sushi Bar", "Tempura Kitchen"],
+                "landmark": ["Tokyo Tower Mini", "Temple Gate", "Pagoda"]
+            },
+            "london": {
+                "cafe": ["The Tea Room", "British Café", "Hyde Park Bistro"],
+                "shop": ["London Shop", "Westminster Store", "Thames Market"],
+                "restaurant": ["Fish & Chips", "The Pub", "Royal Restaurant"],
+                "landmark": ["Big Ben Model", "Tower Bridge Replica", "Palace Gate"]
+            }
+        }
+
+        default_names = {
+            "cafe": "Café",
+            "shop": "Shop",
+            "restaurant": "Restaurant",
+            "landmark": "Landmark",
+            "house": "House",
+            "office": "Office"
+        }
+
+        buildings = []
+        dest_names = building_names.get(destination, {})
+
+        for i in range(count):
+            building_type = building_types[(start_index + i) % len(building_types)]
+            type_names = dest_names.get(building_type, [])
+
+            if type_names:
+                name = type_names[i % len(type_names)]
+            else:
+                name = f"{default_names.get(building_type, building_type.title())} #{start_index + i + 1}"
+
+            buildings.append({
+                "id": f"building_{building_type}_{start_index + i + 1:03d}",
+                "name": name,
+                "type": building_type,
+                "description": f"A {building_type} in {destination.title()}",
+                "x": 0,  # Will be set by caller
+                "y": 0,
+                "width": random.uniform(120, 180),
+                "height": random.uniform(150, 250),
+                "can_enter": building_type in ["shop", "cafe", "restaurant"]
+            })
+
+        return buildings
+
+    def _generate_items_procedural(
+        self,
+        destination: str,
+        count: int
+    ) -> List[Dict[str, Any]]:
+        """Generate items using procedural generation (fast and reliable)."""
+        items = []
+
+        # 物品類型權重（更多金幣，較少包裹）
+        item_types = ["coin"] * 5 + ["package"] * 2 + ["collectible"] * 1
+
+        for i in range(count):
+            item_type = random.choice(item_types)
+
+            # 根據物品類型設定不同的價值
+            if item_type == "coin":
+                value = random.randint(5, 20)
+                name = "Gold Coin"
+            elif item_type == "package":
+                value = random.randint(50, 100)
+                name = "Special Package"
+            else:  # collectible
+                value = random.randint(30, 60)
+                # 文化適應的收藏品名稱
+                collectible_names = {
+                    "paris": ["Eiffel Tower Model", "Baguette", "French Flag"],
+                    "tokyo": ["Lucky Cat", "Origami Crane", "Cherry Blossom"],
+                    "london": ["Crown Jewel", "Tea Cup", "Union Jack"],
+                    "new_york": ["Statue of Liberty", "Yellow Cab", "Hot Dog"],
+                    "sydney": ["Boomerang", "Kangaroo Plush", "Opera House Model"]
+                }
+                dest_collectibles = collectible_names.get(destination, ["Souvenir", "Treasure", "Artifact"])
+                name = random.choice(dest_collectibles)
+
+            items.append({
+                "id": f"item_{item_type}_{i+1:03d}",
+                "name": name,
+                "type": item_type,
+                "x": random.uniform(200, 1800),
+                "y": 500,
+                "value": value
+            })
+
+        logger.info(f"Generated {len(items)} items for {destination} (procedural)")
+        return items
+
+    def _assign_npc_behavior(
+        self,
+        npc_type: str,
+        x: float,
+        y: float
+    ) -> tuple[str, List[Dict[str, float]], int]:
+        """
+        根據 NPC 類型分配行為。
+
+        Returns:
+            (behavior, patrol_path, wander_radius)
+        """
+        # Guard/Shopkeeper → Patrol (巡邏)
+        if npc_type in ["guard", "shopkeeper", "security"]:
+            patrol_path = self._generate_patrol_path(x, y)
+            return ("patrol", patrol_path, 0)
+
+        # Child → Wander (小範圍漫遊)
+        elif npc_type in ["child", "kid"]:
+            wander_radius = random.randint(150, 250)
+            return ("wander", [], wander_radius)
+
+        # Traveler/Explorer → Wander (大範圍漫遊)
+        elif npc_type in ["traveler", "explorer", "tourist"]:
+            wander_radius = random.randint(250, 400)
+            return ("wander", [], wander_radius)
+
+        # Resident → 隨機 Idle 或 Wander
+        else:
+            rand = random.random()
+            if rand < 0.4:
+                # 40% Idle
+                return ("idle", [], 0)
+            else:
+                # 60% Wander
+                wander_radius = random.randint(150, 300)
+                return ("wander", [], wander_radius)
+
+    def _generate_patrol_path(
+        self,
+        start_x: float,
+        start_y: float
+    ) -> List[Dict[str, float]]:
+        """
+        為 NPC 生成巡邏路徑（3-5 個點）。
+
+        Args:
+            start_x: NPC 起始 X 座標
+            start_y: NPC 起始 Y 座標
+
+        Returns:
+            巡邏路徑點列表 [{"x": float, "y": float}, ...]
+        """
+        num_points = random.randint(3, 5)
+        patrol_path = []
+
+        # 第一個點是起始位置
+        patrol_path.append({"x": start_x, "y": start_y})
+
+        # 生成剩餘的點（在起始位置周圍 300px 範圍內）
+        for i in range(1, num_points):
+            offset_x = random.uniform(-300, 300)
+            new_x = start_x + offset_x
+
+            # 確保在世界邊界內
+            new_x = max(200, min(1800, new_x))
+
+            patrol_path.append({"x": new_x, "y": start_y})
+
+        logger.debug(f"Generated patrol path with {num_points} points starting at ({start_x:.0f}, {start_y:.0f})")
+        return patrol_path
+
+    def _parse_json_response(self, response: str):
+        """Parse JSON from LLM response (supports both objects and arrays)."""
         # Try to find JSON in the response
         response = response.strip()
 
@@ -683,36 +1010,48 @@ Generate {count} diverse NPCs for {destination.title()}. Output ONLY the JSON ar
         if response.endswith("```"):
             response = response[:-3]
 
+        response = response.strip()
+
+        # Try direct parse first
         try:
-            return json.loads(response.strip())
+            return json.loads(response)
         except json.JSONDecodeError as e:
             logger.debug(f"Initial JSON parse failed: {e}")
 
-            # Try to find JSON object in response
-            start = response.find("{")
-            end = response.rfind("}") + 1
-            if start != -1 and end > start:
-                try:
-                    return json.loads(response[start:end])
-                except json.JSONDecodeError:
-                    pass
+        # Try to find JSON array first (for NPC batches)
+        array_start = response.find("[")
+        array_end = response.rfind("]") + 1
+        if array_start != -1 and array_end > array_start:
+            try:
+                return json.loads(response[array_start:array_end])
+            except json.JSONDecodeError:
+                # Try to fix truncated array
+                json_str = response[array_start:array_end]
+                # Find last complete object in array
+                last_brace = json_str.rfind("}")
+                if last_brace > 0:
+                    truncated = json_str[:last_brace+1].rstrip(',').rstrip()
+                    if not truncated.endswith(']'):
+                        truncated += ']'
+                    try:
+                        return json.loads(truncated)
+                    except json.JSONDecodeError:
+                        pass
 
-            # Try to fix truncated JSON by finding the last complete field
-            if start != -1:
-                json_str = response[start:]
-                # Find the last complete string value
+        # Try to find JSON object (for atmosphere)
+        obj_start = response.find("{")
+        obj_end = response.rfind("}") + 1
+        if obj_start != -1 and obj_end > obj_start:
+            try:
+                return json.loads(response[obj_start:obj_end])
+            except json.JSONDecodeError:
+                # Try to fix truncated object
+                json_str = response[obj_start:obj_end]
                 last_quote = json_str.rfind('"')
                 if last_quote > 0:
-                    # Check if this is the end of a value or a key
                     before_quote = json_str[:last_quote].rstrip()
-                    if before_quote.endswith(':'):
-                        # It's a value start, find the matching quote
-                        pass
-                    else:
-                        # Try to close after the last complete value
-                        truncated = json_str[:last_quote+1]
-                        # Remove trailing incomplete parts
-                        truncated = truncated.rstrip(',').rstrip()
+                    if not before_quote.endswith(':'):
+                        truncated = json_str[:last_quote+1].rstrip(',').rstrip()
                         if not truncated.endswith('}'):
                             truncated += '}'
                         try:
@@ -720,8 +1059,8 @@ Generate {count} diverse NPCs for {destination.title()}. Output ONLY the JSON ar
                         except json.JSONDecodeError:
                             pass
 
-            logger.warning(f"Could not parse JSON from response: {response[:200]}...")
-            return {}
+        logger.warning(f"Could not parse JSON from response: {response[:200]}...")
+        return {} if obj_start != -1 else []  # Return empty array if looking for array
 
     def _fallback_mission(
         self,

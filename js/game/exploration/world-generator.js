@@ -3,11 +3,15 @@
  * 調用後端 API 生成動態探索世界
  */
 
+import { assetRegistry } from '../../core/asset-registry.js';
+import { getTestingVillageSpec } from './world-spec.js';
+
 export class WorldGenerator {
     constructor() {
         this.apiBase = 'http://localhost:8001/api/v1';
         this.cache = new Map();
         this.cacheTimeout = 10 * 60 * 1000; // 10 分鐘緩存
+        this.manifestLoadAttempted = false;
     }
 
     /**
@@ -27,6 +31,12 @@ export class WorldGenerator {
         const traceId = `world_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
         console.log(`[WorldGenerator] 🌍 Generating world for ${destination} (trace: ${traceId})`);
+
+        // 確保 asset manifest 已載入（只嘗試一次）
+        if (!this.manifestLoadAttempted) {
+            this.manifestLoadAttempted = true;
+            await assetRegistry.loadManifestFromAPI();
+        }
 
         // 檢查緩存
         const cacheKey = `${destination}_${missionType}_${difficulty}`;
@@ -97,6 +107,11 @@ export class WorldGenerator {
      * 當 AI API 失敗時使用
      */
     generateProcedural(destination, options = {}) {
+        if (destination === 'testing_village') {
+            console.log('[WorldGenerator] 🧪 Using testing-village preset');
+            return getTestingVillageSpec();
+        }
+
         console.log(`[WorldGenerator] 🎲 Generating procedural world for ${destination}`);
 
         const npcs = [];

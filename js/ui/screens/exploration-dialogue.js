@@ -6,6 +6,7 @@
 import { eventBus } from '../../core/event-bus.js';
 import { aiService } from '../../core/ai-service.js';
 import { aiAssetManager } from '../../core/ai-asset-manager.js';
+import { missionManager } from '../../managers/mission-manager.js';
 
 export class ExplorationDialogue {
     constructor(container) {
@@ -21,6 +22,12 @@ export class ExplorationDialogue {
         this.audioCache = new Map();
         this.currentAudio = null;
         this.portraitCache = new Map();
+
+        // 任務上下文 (Checkpoint 2)
+        this.questContext = null;
+        this.currentOfferedQuest = null;
+        this.currentDialogueTrace = null;
+        this.cachedPlan = null;
 
         // 打字機效果
         this.typewriterSpeed = 30;  // 毫秒/字
@@ -156,6 +163,10 @@ export class ExplorationDialogue {
         // ===== Stage 3: Store mission context =====
         this.missionContext = data.missionContext || null;
         this.canRegisterMission = data.canRegisterMission || false;
+
+        // ===== Checkpoint 2: Store quest context =====
+        this.questContext = data.questContext || null;
+        this.canOfferQuest = data.canOfferQuest || false;
 
         // 設定 NPC 資訊
         this.updateNPCDisplay();
@@ -462,6 +473,17 @@ export class ExplorationDialogue {
             this.pendingOptions.unshift(registerOption);
         }
 
+        // ===== Checkpoint 2: Add "Offer Quest" option if applicable =====
+        if (this.canOfferQuest && this.questContext) {
+            const questOption = {
+                text: '❓ 詢問他們的困難',
+                action: 'OFFER_QUEST',
+                style: 'highlight'
+            };
+            // Add at the beginning
+            this.pendingOptions.unshift(questOption);
+        }
+
         if (this.pendingOptions.length === 0) {
             // 對話結束
             this.continueButton.textContent = '結束對話';
@@ -536,22 +558,25 @@ export class ExplorationDialogue {
                 this.registerMission();
                 break;
 
-            case 'OPEN_ITEM_SELECTOR':
-                this.openItemSelector(data.requireItem);
+            // ===== Checkpoint 2: Quest offer/accept/decline =====
+            case 'OFFER_QUEST':
+                this.offerQuest();
                 break;
 
             case 'ACCEPT_QUEST':
-                eventBus.emit('QUEST_ACCEPTED', {
-                    questId: data.questId,
-                    npc: this.currentNPC
-                });
-                this.currentNPC.startQuest(data.questId);
-                this.showQuestAcceptedMessage(data.questId);
+                this.acceptQuest(data.questId);
                 break;
 
             case 'DECLINE_QUEST':
-                eventBus.emit('QUEST_DECLINED', { npc: this.currentNPC });
-                this.close();
+                this.declineQuest(data.questId);
+                break;
+
+            case 'VIEW_QUEST_DETAILS':
+                this.viewQuestDetails(data.questId);
+                break;
+
+            case 'OPEN_ITEM_SELECTOR':
+                this.openItemSelector(data.requireItem);
                 break;
 
             case 'GIVE_ITEM':
@@ -615,6 +640,208 @@ export class ExplorationDialogue {
             message: '✅ Mission registered to mission log',
             type: 'success',
             duration: 3000
+        });
+    }
+
+    /**
+     * Offer quest (Checkpoint 2 + 3)
+     * Show quest introduction and ask if player wants to accept
+     */
+    async offerQuest() {
+        if (!this.currentNPC || !this.questContext) return;
+
+        console.log('[ExplorationDialogue] 🎯 Offering quest from NPC:', this.currentNPC.npcId);
+
+        // Dialogue agent to produce intro + options
+        this.showNode({
+            text: `讓我想想我該怎麼說...`,
+            emotion: 'thinking',
+            options: []
+        });
+
+        try {
+            const dlg = await missionManager.generateQuestDialogue(this.currentNPC, this.questContext);
+            this.currentDialogueTrace = dlg.trace_id;
+
+            const mappedOptions = (dlg.options || []).map(opt => {
+                if (opt.id === 'accept') return { text: opt.text, action: 'ACCEPT_QUEST' };
+                if (opt.id === 'decline') return { text: opt.text, action: 'DECLINE_QUEST' };
+                return { text: opt.text || '繼續', action: 'CONTINUE' };
+            });
+
+            const nodePayload = {
+                text: dlg.intro || `我遇到了一些困難，你能幫我嗎？`,
+                emotion: 'worried',
+                options: mappedOptions.length > 0
+                    ? mappedOptions
+                    : [
+                        { text: '✅ 接受任務', action: 'ACCEPT_QUEST' },
+                        { text: '❌ 拒絕', action: 'DECLINE_QUEST' }
+                    ]
+            };
+
+            // 若有提示，透過 toast 呈現
+            if (dlg.hint) {
+                eventBus.emit('SHOW_TOAST', {
+                    message: `💡 ${dlg.hint}`,
+                    type: 'info',
+                    duration: 4000
+                });
+            }
+
+            this.showNode(nodePayload);
+        } catch (err) {
+            console.error('[ExplorationDialogue] Dialogue agent failed, using fallback', err);
+            this.showNode({
+                text: `我需要幫助，願意接下任務嗎？`,
+                emotion: 'worried',
+                options: [
+                    { text: '✅ 接受任務', action: 'ACCEPT_QUEST' },
+                    { text: '❌ 拒絕', action: 'DECLINE_QUEST' }
+                ]
+            });
+        }
+    }
+
+    /**
+     * Accept quest (Checkpoint 2)
+     */
+    async acceptQuest(questId) {
+        console.log('[ExplorationDialogue] ✅ Accepting quest:', questId || '(agent-plan)');
+
+        try {
+            // If we don't have a prepared quest, generate plan now (main + sub)
+            if (!this.currentOfferedQuest) {
+                const plan = await missionManager.generateQuestPlan(this.currentNPC, {
+                    ...this.questContext,
+                    traceId: this.currentDialogueTrace,
+                });
+                this.cachedPlan = plan;
+
+                // Offer and accept main quest
+                missionManager.offerQuest(plan.mainQuest, { type: 'main' });
+                await missionManager.acceptQuest(plan.mainQuest.questId, {
+                    type: 'main',
+                    actorId: this.questContext?.currentPlayer || this.questContext?.playerId
+                });
+
+                // Offer + accept a sub quest if present
+                if (plan.subQuests && plan.subQuests.length > 0) {
+                    plan.subQuests.forEach((sub) => missionManager.offerQuest(sub, { type: 'sub' }));
+                    for (const sub of plan.subQuests) {
+                        await missionManager.acceptQuest(sub.questId, {
+                            type: 'sub',
+                            actorId: this.questContext?.currentPlayer || this.questContext?.playerId
+                        });
+                    }
+                }
+
+                this.currentOfferedQuest = plan.mainQuest;
+            } else {
+                const quest = missionManager.getQuest(questId);
+                if (!quest) {
+                    console.error('[ExplorationDialogue] Quest not found:', questId);
+                    return;
+                }
+                await missionManager.acceptQuest(questId, {
+                    type: quest?.type || 'sub',
+                    actorId: this.questContext?.currentPlayer || this.questContext?.playerId
+                });
+            }
+
+            // Show acceptance confirmation
+            this.showNode({
+                text: `太好了！我相信你一定能完成這個任務。`,
+                emotion: 'happy',
+                options: [{ text: '繼續', action: 'CLOSE' }]
+            });
+
+            const quest = this.currentOfferedQuest || missionManager.getQuest(questId);
+            if (quest) {
+                // Emit event
+                eventBus.emit('QUEST_ACCEPTED', {
+                    questId: quest.questId,
+                    npc: this.currentNPC,
+                    quest: quest
+                });
+            }
+
+            // Show toast notification
+            eventBus.emit('SHOW_TOAST', {
+                message: `✅ 已接受任務：${(this.currentOfferedQuest || {}).title || '任務'}`,
+                type: 'success',
+                duration: 3000
+            });
+
+        } catch (error) {
+            console.error('[ExplorationDialogue] Failed to accept quest:', error);
+            this.showNode({
+                text: '抱歉，出了點問題...',
+                emotion: 'sad',
+                options: [{ text: '關閉', action: 'CLOSE' }]
+            });
+        }
+    }
+
+    /**
+     * Decline quest (Checkpoint 2)
+     */
+    declineQuest(questId) {
+        console.log('[ExplorationDialogue] ❌ Declining quest:', questId);
+
+        // Use MissionManager to decline the quest
+        missionManager.declineQuest(questId);
+
+        // Show decline message
+        this.showNode({
+            text: '好吧...如果你改變主意，隨時來找我。',
+            emotion: 'sad',
+            options: [{ text: '關閉', action: 'CLOSE' }]
+        });
+
+        // Emit event
+        eventBus.emit('QUEST_DECLINED', {
+            questId: questId,
+            npc: this.currentNPC
+        });
+    }
+
+    /**
+     * View quest details (Checkpoint 2)
+     */
+    viewQuestDetails(questId) {
+        console.log('[ExplorationDialogue] 📋 Viewing quest details:', questId);
+
+        const quest = missionManager.getQuest(questId);
+        if (!quest) {
+            console.error('[ExplorationDialogue] Quest not found:', questId);
+            return;
+        }
+
+        // Build detailed description
+        let detailsText = `**${quest.title}**\n\n${quest.description}\n\n`;
+
+        if (quest.objectives && quest.objectives.length > 0) {
+            detailsText += '**目標：**\n';
+            quest.objectives.forEach((obj, i) => {
+                detailsText += `${i + 1}. ${obj.description}\n`;
+            });
+            detailsText += '\n';
+        }
+
+        if (quest.rewards) {
+            detailsText += '**獎勵：**\n';
+            if (quest.rewards.exp) detailsText += `- 經驗值：${quest.rewards.exp}\n`;
+            if (quest.rewards.money) detailsText += `- 金幣：${quest.rewards.money}\n`;
+        }
+
+        this.showNode({
+            text: detailsText,
+            emotion: 'neutral',
+            options: [
+                { text: '✅ 接受任務', action: 'ACCEPT_QUEST', questId: quest.questId },
+                { text: '❌ 拒絕', action: 'DECLINE_QUEST', questId: quest.questId }
+            ]
         });
     }
 
@@ -821,6 +1048,11 @@ export class ExplorationDialogue {
         this.currentDialogue = null;
         this.currentNode = null;
         this.pendingOptions = [];
+
+        // Checkpoint 2: Reset quest state
+        this.questContext = null;
+        this.currentOfferedQuest = null;
+        this.canOfferQuest = false;
 
         // 通知遊戲恢復
         eventBus.emit('DIALOGUE_END');

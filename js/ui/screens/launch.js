@@ -355,26 +355,8 @@ export class LaunchScreen {
     }
 
     async loadAnimationPlan() {
-        try {
-            const plan = await aiService.planAnimation('launch_sequence', {
-                characterId: this.char?.id || 'jett',  // ← 添加必填參數
-                durationMs: 5000,
-                context: { character: this.char.id, mission: this.mission?.id }
-            });
-            if (plan?.phases) {
-                const accel = plan.phases.find(p => p.name === 'accelerating');
-                const liftoff = plan.phases.find(p => p.name === 'liftoff');
-                if (accel?.duration_ms) {
-                    // Roughly tie progress to duration so longer accel requires more progress
-                    this.liftoffProgressTarget = 150 + (accel.duration_ms / 1000) * 120;
-                }
-                if (liftoff?.duration_ms) {
-                    this.liftoffDelay = liftoff.duration_ms;
-                }
-            }
-        } catch (e) {
-            // Use defaults on failure
-        }
+        // AI 動畫規劃已被移除 - 使用固定配置
+        // 使用默認值即可
     }
 
     /**

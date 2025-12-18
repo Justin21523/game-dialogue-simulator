@@ -10,6 +10,9 @@ import { ParallaxBackground, SCENE_PRESETS } from '../parallax-background.js';
 import { audioManager } from '../../core/audio-manager.js';
 import { gameState } from '../../core/game-state.js';
 import { CONFIG } from '../../config.js';
+import { getTestingVillageSpec } from './world-spec.js';
+import { missionManager } from '../../managers/mission-manager.js';
+import { Quest, ObjectiveType, QuestStatus } from '../../models/quest.js';
 
 export class ExplorationEngine {
     constructor(canvas, mission, characterId, options = {}) {
@@ -67,6 +70,12 @@ export class ExplorationEngine {
         // 除錯模式
         this.debugMode = options.debug || false;
 
+        // 作為 world 供 InteractionSystem 使用
+        this.world = this;
+
+        // world-level state for collected items
+        this.collectedItems = new Set();
+
         // 初始化
         this._init(characterId);
     }
@@ -75,6 +84,8 @@ export class ExplorationEngine {
      * 初始化引擎
      */
     async _init(characterId) {
+        await missionManager.initialize({ mainCharacter: characterId || 'jett' });
+
         // 載入背景
         await this._loadBackground();
 
@@ -87,6 +98,10 @@ export class ExplorationEngine {
         // 從任務載入實體
         if (this.mission) {
             this._loadMissionEntities();
+        } else {
+            // 沒任務時載入固定 testing-village 以便驗收
+            this._loadTestingVillage();
+            this._ensureTestingVillageQuest();
         }
     }
 
@@ -182,6 +197,137 @@ export class ExplorationEngine {
                 // TODO: 創建建築入口
             }
         }
+    }
+
+    /**
+     * 固定測試場景：testing-village
+     */
+    _loadTestingVillage() {
+        const spec = getTestingVillageSpec();
+        this.destination = spec.destination || 'testing_village';
+
+        // 背景用 preset
+        this.background.loadDestinationScene(this.destination).catch(() => {});
+
+        // NPC
+        spec.npcs.forEach((npc) => {
+            const entity = {
+                npcId: npc.id,
+                name: npc.name,
+                x: npc.x,
+                y: npc.y,
+                width: 60,
+                height: 120,
+                entityType: 'npc',
+                type: npc.role,
+                dialogue: npc.dialogue || [`Hi, I'm ${npc.name}`],
+                canInteract() { return true; },
+                startInteraction() { return npc.dialogue || [`Hi, I'm ${npc.name}`]; }
+            };
+            this.npcs.set(npc.id, entity);
+        });
+
+        // Items
+        spec.items.forEach((item) => {
+            const entity = {
+                itemId: item.id,
+                name: item.name,
+                type: item.type,
+                x: item.x,
+                y: item.y,
+                width: 40,
+                height: 40,
+                entityType: 'item',
+                isCollected: false,
+                pickup: (player) => {
+                    if (entity.isCollected) return { success: false, reason: '已被撿走' };
+                    entity.isCollected = true;
+                    return { success: true, item: { id: item.id, type: item.type, name: item.name } };
+                }
+            };
+            this.items.set(item.id, entity);
+        });
+
+        // Buildings
+        spec.buildings.forEach((b) => {
+            const entity = {
+                buildingId: b.id,
+                name: b.name,
+                x: b.x,
+                y: b.y,
+                width: b.width || 160,
+                height: b.height || 200,
+                entityType: 'building',
+                entrance: { x: b.x, y: b.y, width: b.width || 160, height: b.height || 200 },
+                type: b.type
+            };
+            this.buildings.set(b.id, entity);
+        });
+
+        console.log('[ExplorationEngine] Testing village loaded with entities:', {
+            npcs: this.npcs.size,
+            items: this.items.size,
+            buildings: this.buildings.size
+        });
+
+        // 收集紀錄（用於交付判斷）
+        this.collectedItems = new Set();
+    }
+
+    /**
+     * Create and offer the fixed test quest (talk -> collect -> deliver)
+     */
+    _ensureTestingVillageQuest() {
+        const existing = missionManager.getQuest('testing_main');
+        if (existing) return;
+
+        const quest = new Quest({
+            questId: 'testing_main',
+            title: 'Help the Quest Giver',
+            description: 'Talk to the quest giver, pick up the parcel, and return it.',
+            type: 'main',
+            relatedNPCs: ['npc_quest'],
+            questGiverNPC: 'npc_quest',
+            status: QuestStatus.PENDING,
+            objectives: [
+                {
+                    id: 'obj_talk',
+                    type: ObjectiveType.TALK,
+                    title: 'Talk to Quest Giver',
+                    description: 'Introduce yourself to the quest giver.',
+                    requiredCount: 1,
+                    conditions: [{ npc_id: 'npc_quest' }]
+                },
+                {
+                    id: 'obj_partner_collect',
+                    type: ObjectiveType.COLLECT,
+                    title: 'Have Dizzy pick up the spare parts',
+                    description: 'Switch to Dizzy and collect the spare parts.',
+                    requiredCount: 1,
+                    conditions: [{ item_id: 'bonus_item' }],
+                    assignedCharacter: 'dizzy'
+                },
+                {
+                    id: 'obj_collect',
+                    type: ObjectiveType.COLLECT,
+                    title: 'Pick up the parcel',
+                    description: 'Find and pick up the mission parcel.',
+                    requiredCount: 1,
+                    conditions: [{ item_id: 'mission_item' }]
+                },
+                {
+                    id: 'obj_deliver',
+                    type: ObjectiveType.DELIVER,
+                    title: 'Deliver the parcel',
+                    description: 'Return the parcel to the quest giver or the delivery hub.',
+                    requiredCount: 1,
+                    conditions: [{ item_id: 'mission_item', npc_id: 'npc_quest' }]
+                }
+            ],
+            rewards: { money: 100, exp: 50 }
+        });
+
+        missionManager.offerQuest(quest, { type: 'main' });
     }
 
     /**

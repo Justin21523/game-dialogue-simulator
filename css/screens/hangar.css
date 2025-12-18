@@ -262,6 +262,29 @@
     padding: 20px;
 }
 
+/* 動畫控制按鈕 */
+.animation-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.animation-controls .btn {
+    width: 100%;
+    max-width: 300px;
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.animation-controls .btn:hover {
+    transform: scale(1.05);
+}
+
 @media (max-width: 900px) {
     .hangar-body {
         grid-template-columns: 1fr;

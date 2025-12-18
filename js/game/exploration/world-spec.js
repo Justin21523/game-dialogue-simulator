@@ -212,3 +212,70 @@ export function printWorldSpecSummary(worldSpec) {
     }
     console.log('=========================');
 }
+
+/**
+ * 固定測試場景：testing-village
+ * 保證可重現的 NPC / 物件 / 建築，用於任務閉環驗收
+ */
+export function getTestingVillageSpec() {
+    return {
+        theme: 'testing_village',
+        backgroundKey: 'generic_sky',
+        destination: 'testing_village',
+        timeOfDay: 'day',
+        weather: 'clear',
+        npcs: [
+            {
+                id: 'npc_quest',
+                name: 'Quest Giver',
+                archetype: 'quest_giver',
+                role: 'questgiver',
+                x: 200,
+                y: 500,
+                personality: 'friendly',
+                dialogue: ['Hello, I have a job for you.']
+            },
+            {
+                id: 'npc_side',
+                name: 'Helper NPC',
+                archetype: 'villager_helper',
+                role: 'villager',
+                x: 400,
+                y: 500,
+                personality: 'curious',
+                dialogue: ['I might know a clue...']
+            }
+        ],
+        buildings: [
+            {
+                id: 'delivery_hub',
+                name: 'Delivery Hub',
+                assetKey: 'generic_building',
+                x: 800,
+                y: 400,
+                width: 160,
+                height: 200,
+                type: 'hub'
+            },
+            {
+                id: 'vehicle_portal',
+                name: 'Vehicle Portal',
+                assetKey: 'portal',
+                x: 980,
+                y: 380,
+                width: 120,
+                height: 180,
+                type: 'portal'
+            }
+        ],
+        items: [
+            { id: 'mission_item', name: 'Mission Parcel', assetKey: 'package', x: 600, y: 500, type: 'package' },
+            { id: 'bonus_item', name: 'Spare Parts', assetKey: 'gear', x: 650, y: 500, type: 'bonus' }
+        ],
+        poi: [],
+        metadata: {
+            generatedAt: new Date().toISOString(),
+            version: 'testing-village'
+        }
+    };
+}

@@ -10,6 +10,7 @@ class AIService {
     constructor() {
         this.healthChecked = false;
         this.offlineNotified = false;
+        this.forcedOffline = false;
 
         // ===== Stage 7: AI Request Queue =====
         this.requestQueue = getAIRequestQueue();
@@ -22,11 +23,26 @@ class AIService {
     }
 
     async ensureBackend() {
+        if (this.forcedOffline) return false;
         if (!this.healthChecked) {
             await apiClient.checkHealth();
             this.healthChecked = true;
         }
         return apiClient.isBackendAvailable;
+    }
+
+    /**
+     * Force backend on/off (for testing fallback/degrade)
+     * @param {boolean} offline
+     */
+    setForcedOffline(offline) {
+        this.forcedOffline = !!offline;
+        if (offline) {
+            this._notifyOfflineOnce();
+        } else {
+            this.offlineNotified = false;
+        }
+        return this.forcedOffline;
     }
 
     async _withBackend(fn, fallback, options = {}) {
@@ -110,6 +126,139 @@ class AIService {
         if (this.offlineNotified) return;
         this.offlineNotified = true;
         this.notifyOffline('AI backend');
+    }
+
+    /**
+     * Quest Planner: generate mission graph (main + sub) with trace fields.
+     */
+    async generateMissionGraph(payload, opts = {}) {
+        const requestId = opts.requestId || `quest-plan-${Date.now()}`;
+        const body = {
+            ...payload,
+            trace_id: payload.trace_id || requestId,
+            quest_id: payload.quest_id,
+            objective_id: payload.objective_id,
+        };
+
+        return this._withBackend(
+            async () => {
+                const res = await apiClient.axiosInstance.post('/missions/generate-graph', body);
+                return res.data;
+            },
+            () => this._mockMissionGraph(body),
+            { requestId }
+        );
+    }
+
+    _mockMissionGraph(payload) {
+        return {
+            title: `Help ${payload.npc_name || 'NPC'}`,
+            description: `${payload.npc_name || 'NPC'} in ${payload.destination || 'Unknown'} needs assistance`,
+            nodes: [
+                { id: 'talk_npc', type: 'talk', target: 'npc_quest', title: 'Talk to the quest giver', description: 'Get the details' },
+                { id: 'collect_item', type: 'fetch', target: 'mission_item', title: 'Pick up the parcel', description: 'Find and collect the parcel', prerequisites: ['talk_npc'], alternatives: ['ask_side_npc'] },
+                { id: 'deliver', type: 'deliver', target: 'npc_quest', title: 'Return the parcel', description: 'Bring the parcel back to the quest giver or hub', prerequisites: ['collect_item'], alternatives: ['deliver_hub'] },
+                { id: 'ask_side_npc', type: 'talk', target: 'npc_side', title: 'Ask the helper NPC', description: 'Optional hint or side path', prerequisites: ['talk_npc'], optional: true },
+                { id: 'deliver_hub', type: 'deliver', target: 'delivery_hub', title: 'Drop at delivery hub', description: 'Alternative delivery point', optional: true }
+            ],
+            entry_points: ['talk_npc'],
+            rewards: { money: 150, exp: 80 },
+        };
+    }
+
+    /**
+     * Dialogue agent: generate choices/intros for NPC interaction.
+     */
+    async generateDialogueOptions(payload, opts = {}) {
+        const requestId = opts.requestId || `dialogue-${Date.now()}`;
+        const body = {
+            ...payload,
+            trace_id: payload.trace_id || requestId,
+            quest_id: payload.quest_id,
+        };
+
+        return this._withBackend(
+            async () => {
+                const res = await apiClient.axiosInstance.post('/dialogue/generate', {
+                    character_id: body.player_id || body.character_id || 'jett',
+                    dialogue_type: body.dialogue_type || 'conversation',
+                    situation: body.situation || `與 ${body.npc_name || 'NPC'} 交談`,
+                    mission_phase: body.mission_phase || null,
+                    emotion: body.emotion || 'neutral',
+                    speaking_to: 'player',
+                    dialogue_history: body.dialogue_history || [],
+                    location: body.location,
+                    problem: body.problem || body.mission_brief,
+                });
+                const text = res.data?.dialogue || res.data?.greeting || '你好，需要幫忙嗎？';
+                return {
+                    trace_id: body.trace_id,
+                    intro: text,
+                    hint: res.data?.hint || res.data?.tip,
+                    options: [
+                        { id: 'accept', text: '✅ 接受任務' },
+                        { id: 'ask_more', text: '❓ 再多說一些' },
+                        { id: 'decline', text: '❌ 下次吧' },
+                    ],
+                };
+            },
+            () => ({
+                trace_id: body.trace_id,
+                intro: `嗨，我是 ${body.npc_name || '朋友'}，可以幫個忙嗎？`,
+                hint: null,
+                options: [
+                    { id: 'accept', text: '✅ 接受任務' },
+                    { id: 'decline', text: '❌ 下次吧' },
+                ],
+            }),
+            { requestId }
+        );
+    }
+
+    /**
+     * Task Evaluator: 判斷任務/目標進度，可能返回完成/更新/提示。
+     */
+    async evaluateMissionProgress(payload, opts = {}) {
+        const requestId = opts.requestId || `eval-${Date.now()}`;
+        const body = {
+            ...payload,
+            trace_id: payload.trace_id || requestId,
+        };
+
+        return this._withBackend(
+            async () => {
+                const res = await apiClient.axiosInstance.post('/missions/evaluate-progress', body);
+                return res.data;
+            },
+            () => ({
+                trace_id: body.trace_id,
+                hint: null,
+                completed_objectives: [],
+                updated_objectives: [],
+                degraded: true,
+            }),
+            { requestId }
+        );
+    }
+
+    /**
+     * Context Agent: 存取玩家/任務記憶（簡化，後端可選）。
+     */
+    async updateQuestContext(payload, opts = {}) {
+        const requestId = opts.requestId || `ctx-${Date.now()}`;
+        const body = {
+            ...payload,
+            trace_id: payload.trace_id || requestId,
+        };
+
+        return this._withBackend(
+            async () => {
+                const res = await apiClient.axiosInstance.post('/progress/context', body);
+                return res.data;
+            },
+            () => ({ saved: false, offline: true }),
+            { requestId }
+        );
     }
 
     /**

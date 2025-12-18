@@ -291,6 +291,62 @@ export class ThreeRenderer {
         }
     }
 
+    // ===== Phase 4: NPC 專用方法 =====
+
+    /**
+     * 添加或更新 NPC 3D 模型
+     * @param {string} npcId - NPC ID
+     * @param {Object} npc - NPC 物件（含 x, y, width, height, facingRight 等）
+     * @param {THREE.Mesh} model - 3D 模型（可選，沒有則用 placeholder）
+     */
+    addNPCModel(npcId, npc, model = null) {
+        // 標記為 NPC 類型
+        const npcData = { ...npc, type: 'npc' };
+        this.addOrUpdateCharacter(npcId, npcData, model);
+    }
+
+    /**
+     * 更新 NPC 位置
+     * @param {string} npcId - NPC ID
+     * @param {number} x - X 座標
+     * @param {number} y - Y 座標
+     * @param {boolean} facingRight - 朝向（true = 右, false = 左）
+     */
+    updateNPCPosition(npcId, x, y, facingRight = true) {
+        const mesh = this.characterMeshes.get(npcId);
+        if (!mesh) {
+            return;
+        }
+
+        // 更新位置
+        const npcData = {
+            x,
+            y,
+            width: 80,   // 預設寬度
+            height: 130  // 預設高度
+        };
+        this._updateMeshPosition(mesh, npcData);
+
+        // 更新朝向（翻轉 mesh）
+        if (facingRight) {
+            mesh.rotation.y = 0;
+        } else {
+            mesh.rotation.y = Math.PI;
+        }
+    }
+
+    /**
+     * 批量更新所有 NPC 位置
+     * @param {Array} npcs - NPC 陣列
+     */
+    updateAllNPCs(npcs) {
+        npcs.forEach(npc => {
+            if (npc.id) {
+                this.updateNPCPosition(npc.id, npc.x, npc.y, npc.facingRight);
+            }
+        });
+    }
+
     /**
      * 渲染 3D 場景
      */
@@ -299,7 +355,38 @@ export class ThreeRenderer {
             return;
         }
 
+        // ===== Phase 4: 深度排序（按 Y 座標）=====
+        // 根據角色的 Y 座標排序，越下面越前面顯示
+        this._sortCharactersByDepth();
+
         this.renderer.render(this.scene, this.camera);
+    }
+
+    /**
+     * Phase 4: 按 Y 座標深度排序角色
+     * 越下面（Y 值越大）的角色 renderOrder 越大，顯示在越前面
+     */
+    _sortCharactersByDepth() {
+        const meshesWithY = [];
+
+        // 收集所有 mesh 及其 Y 座標
+        this.characterMeshes.forEach((mesh, id) => {
+            // 從 mesh.position.y 反推原始 2D Y 座標
+            // mesh.position.y = -(character.y - this.height / 2 + height / 2)
+            // 簡化：直接使用 mesh.position.y，越小表示原始 Y 越大
+            meshesWithY.push({
+                mesh,
+                sortKey: -mesh.position.y  // 使用負值，這樣越下面（原始 Y 越大）sortKey 越大
+            });
+        });
+
+        // 排序
+        meshesWithY.sort((a, b) => a.sortKey - b.sortKey);
+
+        // 分配 renderOrder
+        meshesWithY.forEach((item, index) => {
+            item.mesh.renderOrder = index;
+        });
     }
 
     /**

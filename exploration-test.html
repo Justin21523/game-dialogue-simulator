@@ -2,822 +2,89 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Wings - 探索系統測試</title>
+    <title>Exploration Test</title>
     <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/screens/exploration-hud.css">
+    <link rel="stylesheet" href="css/screens/exploration.css">
+    
+    <!-- axios（api-client.js 需要）-->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <!-- THREE.js -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #1a1a2e;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-        }
-
-        #game-container {
-            width: 100vw;
-            height: 100vh;
-        }
-
-        .exploration-screen {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-
-        #exploration-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
-        }
-
-        .exploration-hud {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        .exploration-hud > * {
-            pointer-events: auto;
-        }
-
-        .hud-top-left {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-        }
-
-        .hud-top-right {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-        }
-
-        .hud-bottom-center {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .hud-bottom-right {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-        }
-
-        .interaction-hint {
-            position: absolute;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px 20px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .hint-key {
-            background: #FFD700;
-            color: #000;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .pause-menu {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .pause-content {
-            background: #2a2a4a;
-            padding: 40px;
-            border-radius: 16px;
-            text-align: center;
-        }
-
-        .pause-content h2 {
-            margin-bottom: 20px;
-        }
-
-        .pause-content button {
-            display: block;
-            width: 200px;
-            margin: 10px auto;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .btn-primary {
-            background: #4CAF50;
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #666;
-            color: white;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* 測試控制面板 */
-        .test-controls {
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.9);
-            padding: 10px 20px;
-            border-radius: 8px;
-            z-index: 2000;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .test-controls button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .test-controls .test-info {
-            color: #aaa;
-            font-size: 12px;
-        }
-
-        /* 載入畫面 */
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #1a1a2e;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 3000;
-        }
-
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid #333;
-            border-top-color: #FFD700;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            margin-top: 20px;
-            font-size: 18px;
-        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+        #game-container { width: 100vw; height: 100vh; }
     </style>
 </head>
 <body>
-    <!-- 載入畫面 -->
-    <div class="loading-screen" id="loading-screen">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">載入探索系統...</div>
+    <div id="game-container">
+        <div id="ui-layer"></div>
     </div>
-
-    <!-- 測試控制面板 -->
-    <div class="test-controls" id="test-controls" style="display: none;">
-        <span class="test-info">探索系統測試</span>
-        <button onclick="testAddNPC()">+ NPC</button>
-        <button onclick="testAddItem()">+ 物品</button>
-        <button onclick="testCallPartner()">呼叫夥伴</button>
-        <button onclick="testUseAbility()">使用能力</button>
-        <button onclick="testShowDialogue()">測試對話</button>
-        <button onclick="testCompleteMission()">完成任務</button>
-    </div>
-
-    <!-- 遊戲容器 -->
-    <div id="game-container"></div>
-
-    <!-- 核心腳本 -->
     <script type="module">
-        // 簡化的 eventBus
-        window.eventBus = {
-            listeners: {},
-            on(event, callback) {
-                if (!this.listeners[event]) this.listeners[event] = [];
-                this.listeners[event].push(callback);
-            },
-            off(event, callback) {
-                if (this.listeners[event]) {
-                    this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
-                }
-            },
-            emit(event, data) {
-                console.log(`[Event] ${event}`, data);
-                if (this.listeners[event]) {
-                    this.listeners[event].forEach(cb => cb(data));
-                }
-            }
-        };
-
-        // 簡化的 gameState
-        window.gameState = {
-            money: 1000,
-            characters: {
-                jett: { id: 'jett', name: 'Jett', isAvailable: true, level: 5 },
-                donnie: { id: 'donnie', name: 'Donnie', isAvailable: true, level: 3 },
-                todd: { id: 'todd', name: 'Todd', isAvailable: true, level: 2 },
-                chase: { id: 'chase', name: 'Chase', isAvailable: true, level: 4 },
-                bello: { id: 'bello', name: 'Bello', isAvailable: true, level: 2 },
-                paul: { id: 'paul', name: 'Paul', isAvailable: true, level: 3 },
-                flip: { id: 'flip', name: 'Flip', isAvailable: true, level: 2 },
-                jerome: { id: 'jerome', name: 'Jerome', isAvailable: true, level: 3 }
-            },
-            getCharacter(id) {
-                return this.characters[id] || this.characters.jett;
-            },
-            addMoney(amount) {
-                this.money += amount;
-                console.log(`Money: ${this.money}`);
-            },
-            addExp(amount) {
-                console.log(`Added ${amount} EXP`);
-            }
-        };
-
-        // 簡化的 CONFIG
-        window.CONFIG = {
-            PATHS: {
-                CHARACTERS: 'assets/images/characters',
-                NPCS: 'assets/images/npcs',
-                ITEMS: 'assets/images/items',
-                BACKGROUNDS: 'assets/images/backgrounds'
-            }
-        };
-
-        // 測試用的探索系統
-        class TestExplorationSystem {
-            constructor(container) {
-                this.container = container;
-                this.canvas = null;
-                this.ctx = null;
-                this.entities = [];
-                this.player = null;
-                this.isRunning = false;
-                this.keys = {};
-
-                // 遊戲狀態
-                this.cameraX = 0;
-                this.groundY = 500;
-            }
-
-            init() {
-                this.createDOM();
-                this.setupInput();
-                this.createPlayer();
-                this.createTestEntities();
-                this.start();
-            }
-
-            createDOM() {
-                this.container.innerHTML = `
-                    <div class="exploration-screen">
-                        <canvas id="exploration-canvas"></canvas>
-
-                        <div class="exploration-hud">
-                            <div class="hud-top-left" id="mission-tracker-container">
-                                <div class="mission-tracker">
-                                    <div class="tracker-header">
-                                        <span>📋 任務目標</span>
-                                    </div>
-                                    <div class="tracker-body">
-                                        <h3>歡迎來到巴黎！</h3>
-                                        <div class="task-list">
-                                            <div class="task-item active">
-                                                <span>🔵</span> 與 Maria 對話
-                                            </div>
-                                            <div class="task-item pending">
-                                                <span>⚪</span> 找到烘焙材料
-                                            </div>
-                                            <div class="task-item pending">
-                                                <span>⚪</span> 探索咖啡廳
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="hud-top-right" id="partner-switcher-container">
-                                <div class="partner-switcher">
-                                    <div class="active-partners">
-                                        <div class="partner-slot active" title="Jett (你)">
-                                            <div class="partner-avatar">✈️</div>
-                                            <span>Jett</span>
-                                        </div>
-                                    </div>
-                                    <button class="call-partner-btn" onclick="testCallPartner()">
-                                        📞 呼叫夥伴
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="hud-bottom-center" id="inventory-bar-container">
-                                <div class="inventory-bar">
-                                    ${[1,2,3,4,5,6,7,8,9,0].map(i => `
-                                        <div class="inventory-slot" data-slot="${i}">
-                                            <span class="slot-number">${i}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-
-                            <div class="hud-bottom-right" id="ability-bar-container">
-                                <div class="ability-bar">
-                                    <div class="ability-slot" data-key="Q">
-                                        <span class="ability-icon">⚡</span>
-                                        <span class="ability-key">Q</span>
-                                        <span class="ability-name">超速配送</span>
-                                    </div>
-                                    <div class="ability-slot" data-key="W">
-                                        <span class="ability-icon">📞</span>
-                                        <span class="ability-key">W</span>
-                                        <span class="ability-name">召喚夥伴</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="interaction-hint hidden" id="interaction-hint">
-                                <span class="hint-key">E</span>
-                                <span class="hint-text">互動</span>
-                            </div>
-                        </div>
-
-                        <div class="pause-menu hidden" id="pause-menu">
-                            <div class="pause-content">
-                                <h2>暫停</h2>
-                                <button class="btn-primary" onclick="window.testSystem.resume()">繼續</button>
-                                <button class="btn-secondary" onclick="location.reload()">重新開始</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                this.canvas = document.getElementById('exploration-canvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.fitCanvas();
-                window.addEventListener('resize', () => this.fitCanvas());
-            }
-
-            fitCanvas() {
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = window.innerHeight;
-                this.groundY = this.canvas.height - 150;
-            }
-
-            setupInput() {
-                document.addEventListener('keydown', (e) => {
-                    this.keys[e.key.toLowerCase()] = true;
-                    if (e.key === 'Escape') this.togglePause();
-                    if (e.key === 'e' || e.key === 'E') this.tryInteract();
-                    if (e.key === 'q' || e.key === 'Q') this.useAbility(0);
-                    if (e.key === 'w' || e.key === 'W') this.useAbility(1);
-                });
-                document.addEventListener('keyup', (e) => {
-                    this.keys[e.key.toLowerCase()] = false;
-                });
-            }
-
-            createPlayer() {
-                this.player = {
-                    x: 200,
-                    y: this.groundY,
-                    width: 80,
-                    height: 120,
-                    vx: 0,
-                    vy: 0,
-                    speed: 300,
-                    isFlying: false,
-                    facingRight: true,
-                    color: '#FF6B6B'
-                };
-            }
-
-            createTestEntities() {
-                // 測試 NPC
-                this.entities.push({
-                    type: 'npc',
-                    id: 'maria',
-                    name: 'Maria',
-                    x: 500,
-                    y: this.groundY,
-                    width: 60,
-                    height: 100,
-                    color: '#9B59B6',
-                    canInteract: true,
-                    dialogue: '你好！歡迎來到巴黎！'
-                });
-
-                // 測試物品
-                this.entities.push({
-                    type: 'item',
-                    id: 'croissant',
-                    name: '可頌麵包',
-                    x: 800,
-                    y: this.groundY + 40,
-                    width: 40,
-                    height: 40,
-                    color: '#F39C12',
-                    canPickup: true
-                });
-
-                // 測試建築入口
-                this.entities.push({
-                    type: 'building',
-                    id: 'cafe',
-                    name: '咖啡廳',
-                    x: 1200,
-                    y: this.groundY - 150,
-                    width: 200,
-                    height: 200,
-                    color: '#8B4513',
-                    canEnter: true
-                });
-            }
-
-            start() {
-                this.isRunning = true;
-                this.lastTime = performance.now();
-                this.gameLoop();
-            }
-
-            gameLoop() {
-                if (!this.isRunning) return;
-
-                const now = performance.now();
-                const dt = (now - this.lastTime) / 1000;
-                this.lastTime = now;
-
-                if (!this.isPaused) {
-                    this.update(dt);
-                    this.render();
-                }
-
-                requestAnimationFrame(() => this.gameLoop());
-            }
-
-            update(dt) {
-                // 玩家移動
-                let moveX = 0;
-                let moveY = 0;
-
-                if (this.keys['a'] || this.keys['arrowleft']) moveX = -1;
-                if (this.keys['d'] || this.keys['arrowright']) moveX = 1;
-                if (this.keys['w'] || this.keys['arrowup']) moveY = -1;
-                if (this.keys['s'] || this.keys['arrowdown']) moveY = 1;
-
-                // 飛行模式 (按住 Space)
-                if (this.keys[' ']) {
-                    this.player.isFlying = true;
-                } else if (this.player.y >= this.groundY) {
-                    this.player.isFlying = false;
-                }
-
-                // 速度
-                const speed = this.player.isFlying ? 400 : 300;
-                this.player.vx = moveX * speed;
-
-                if (this.player.isFlying) {
-                    this.player.vy = moveY * speed;
-                } else {
-                    // 重力
-                    this.player.vy += 800 * dt;
-                }
-
-                // 位置更新
-                this.player.x += this.player.vx * dt;
-                this.player.y += this.player.vy * dt;
-
-                // 地面碰撞
-                if (this.player.y > this.groundY) {
-                    this.player.y = this.groundY;
-                    this.player.vy = 0;
-                }
-
-                // 天花板
-                if (this.player.y < 50) {
-                    this.player.y = 50;
-                }
-
-                // 朝向
-                if (moveX > 0) this.player.facingRight = true;
-                if (moveX < 0) this.player.facingRight = false;
-
-                // 攝影機跟隨
-                this.cameraX = this.player.x - this.canvas.width / 2;
-
-                // 檢查互動
-                this.checkInteraction();
-            }
-
-            render() {
-                const ctx = this.ctx;
-                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-                // 背景
-                const gradient = ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-                gradient.addColorStop(0, '#87CEEB');
-                gradient.addColorStop(1, '#E0F6FF');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-                // 背景建築（視差）
-                ctx.fillStyle = '#DDD';
-                for (let i = 0; i < 10; i++) {
-                    const x = (i * 300 - this.cameraX * 0.3) % (this.canvas.width + 300) - 150;
-                    const h = 100 + Math.sin(i) * 50;
-                    ctx.fillRect(x, this.groundY - h, 80, h);
-                }
-
-                // 地面
-                ctx.fillStyle = '#7CB342';
-                ctx.fillRect(0, this.groundY + 50, this.canvas.width, 100);
-
-                // 路面
-                ctx.fillStyle = '#8D6E63';
-                ctx.fillRect(0, this.groundY + 50, this.canvas.width, 30);
-
-                // 實體
-                ctx.save();
-                ctx.translate(-this.cameraX, 0);
-
-                // 渲染建築
-                this.entities.filter(e => e.type === 'building').forEach(e => {
-                    ctx.fillStyle = e.color;
-                    ctx.fillRect(e.x, e.y, e.width, e.height);
-                    // 門
-                    ctx.fillStyle = '#5D4037';
-                    ctx.fillRect(e.x + e.width/2 - 20, e.y + e.height - 60, 40, 60);
-                    // 標籤
-                    ctx.fillStyle = '#FFF';
-                    ctx.font = '14px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(e.name, e.x + e.width/2, e.y - 10);
-                });
-
-                // 渲染 NPC
-                this.entities.filter(e => e.type === 'npc').forEach(e => {
-                    // 身體
-                    ctx.fillStyle = e.color;
-                    ctx.fillRect(e.x - e.width/2, e.y - e.height, e.width, e.height);
-                    // 頭
-                    ctx.beginPath();
-                    ctx.arc(e.x, e.y - e.height - 20, 25, 0, Math.PI * 2);
-                    ctx.fill();
-                    // 名字
-                    ctx.fillStyle = '#FFF';
-                    ctx.font = 'bold 14px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(e.name, e.x, e.y - e.height - 55);
-
-                    // 互動提示
-                    if (e.isNearPlayer) {
-                        ctx.fillStyle = '#FFD700';
-                        ctx.font = '24px Arial';
-                        ctx.fillText('!', e.x, e.y - e.height - 80);
-                    }
-                });
-
-                // 渲染物品
-                this.entities.filter(e => e.type === 'item').forEach(e => {
-                    ctx.fillStyle = e.color;
-                    ctx.beginPath();
-                    ctx.arc(e.x, e.y, e.width/2, 0, Math.PI * 2);
-                    ctx.fill();
-                    // 發光效果
-                    ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
-                    ctx.lineWidth = 3;
-                    ctx.stroke();
-                });
-
-                // 渲染玩家
-                ctx.fillStyle = this.player.color;
-                const px = this.player.x - this.player.width/2;
-                const py = this.player.y - this.player.height;
-                ctx.fillRect(px, py, this.player.width, this.player.height);
-
-                // 玩家頭
-                ctx.beginPath();
-                ctx.arc(this.player.x, py - 20, 30, 0, Math.PI * 2);
-                ctx.fill();
-
-                // 飛行時的翅膀效果
-                if (this.player.isFlying) {
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-                    ctx.beginPath();
-                    ctx.ellipse(this.player.x - 50, py + 30, 30, 15, -0.3, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.ellipse(this.player.x + 50, py + 30, 30, 15, 0.3, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-
-                // 名字
-                ctx.fillStyle = '#FFF';
-                ctx.font = 'bold 16px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Jett', this.player.x, py - 60);
-
-                ctx.restore();
-
-                // 控制提示
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(10, this.canvas.height - 80, 300, 70);
-                ctx.fillStyle = '#FFF';
-                ctx.font = '14px Arial';
-                ctx.textAlign = 'left';
-                ctx.fillText('WASD/方向鍵: 移動', 20, this.canvas.height - 55);
-                ctx.fillText('Space (按住): 飛行', 20, this.canvas.height - 35);
-                ctx.fillText('E: 互動 | Q/W: 能力 | ESC: 暫停', 20, this.canvas.height - 15);
-            }
-
-            checkInteraction() {
-                const hint = document.getElementById('interaction-hint');
-                const hintText = hint.querySelector('.hint-text');
-                let foundTarget = false;
-
-                this.entities.forEach(e => {
-                    const dist = Math.abs(this.player.x - e.x);
-                    e.isNearPlayer = dist < 100;
-
-                    if (e.isNearPlayer && (e.canInteract || e.canPickup || e.canEnter)) {
-                        foundTarget = true;
-                        if (e.type === 'npc') {
-                            hintText.textContent = `與 ${e.name} 對話`;
-                        } else if (e.type === 'item') {
-                            hintText.textContent = `撿取 ${e.name}`;
-                        } else if (e.type === 'building') {
-                            hintText.textContent = `進入 ${e.name}`;
-                        }
-                        this.currentTarget = e;
-                    }
-                });
-
-                if (foundTarget) {
-                    hint.classList.remove('hidden');
-                } else {
-                    hint.classList.add('hidden');
-                    this.currentTarget = null;
-                }
-            }
-
-            tryInteract() {
-                if (!this.currentTarget) return;
-
-                const e = this.currentTarget;
-                if (e.type === 'npc') {
-                    alert(`${e.name}: ${e.dialogue}`);
-                } else if (e.type === 'item') {
-                    alert(`獲得: ${e.name}！`);
-                    // 添加到物品欄
-                    const slots = document.querySelectorAll('.inventory-slot');
-                    for (let slot of slots) {
-                        if (!slot.querySelector('.item-icon')) {
-                            slot.innerHTML += `<span class="item-icon" style="font-size:24px;">🥐</span>`;
-                            break;
-                        }
-                    }
-                    // 移除物品
-                    this.entities = this.entities.filter(en => en !== e);
-                } else if (e.type === 'building') {
-                    alert(`進入 ${e.name}...（場景切換功能待實作）`);
-                }
-            }
-
-            useAbility(index) {
-                const abilities = ['超速配送', '召喚夥伴'];
-                alert(`使用能力: ${abilities[index]}`);
-            }
-
-            togglePause() {
-                this.isPaused = !this.isPaused;
-                const menu = document.getElementById('pause-menu');
-                if (this.isPaused) {
-                    menu.classList.remove('hidden');
-                } else {
-                    menu.classList.add('hidden');
-                }
-            }
-
-            resume() {
-                this.isPaused = false;
-                document.getElementById('pause-menu').classList.add('hidden');
-            }
-        }
-
-        // 測試函數
-        window.testAddNPC = function() {
-            const npc = {
-                type: 'npc',
-                id: 'test_npc_' + Date.now(),
-                name: '測試 NPC',
-                x: window.testSystem.player.x + 200,
-                y: window.testSystem.groundY,
-                width: 60,
-                height: 100,
-                color: '#3498DB',
-                canInteract: true,
-                dialogue: '我是新加入的 NPC！'
-            };
-            window.testSystem.entities.push(npc);
-            console.log('Added NPC:', npc);
-        };
-
-        window.testAddItem = function() {
-            const item = {
-                type: 'item',
-                id: 'test_item_' + Date.now(),
-                name: '測試物品',
-                x: window.testSystem.player.x + 150,
-                y: window.testSystem.groundY + 40,
-                width: 40,
-                height: 40,
-                color: '#2ECC71',
-                canPickup: true
-            };
-            window.testSystem.entities.push(item);
-            console.log('Added Item:', item);
-        };
-
-        window.testCallPartner = function() {
-            const partners = ['Donnie', 'Todd', 'Chase', 'Bello', 'Paul', 'Flip', 'Jerome'];
-            const partner = partners[Math.floor(Math.random() * partners.length)];
-            alert(`呼叫 ${partner} 加入！\n（夥伴系統待整合完整）`);
-
-            // 添加到夥伴列表
-            const container = document.querySelector('.active-partners');
-            const slot = document.createElement('div');
-            slot.className = 'partner-slot';
-            slot.innerHTML = `<div class="partner-avatar">✈️</div><span>${partner}</span>`;
-            container.appendChild(slot);
-        };
-
-        window.testUseAbility = function() {
-            alert('使用能力！\n效果: 速度提升 50%');
-        };
-
-        window.testShowDialogue = function() {
-            alert('對話系統測試:\n\nMaria: 你好！歡迎來到巴黎！\n我需要你幫我找一些烘焙材料。\n\n[接受任務] [稍後再說]');
-        };
-
-        window.testCompleteMission = function() {
-            alert('🎉 任務完成！\n\n獲得獎勵:\n💰 金幣 +500\n⭐ 經驗值 +200\n📦 特殊物品 x1');
-        };
-
-        // 初始化
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                const container = document.getElementById('game-container');
-                window.testSystem = new TestExplorationSystem(container);
-                window.testSystem.init();
-
-                // 隱藏載入畫面
-                document.getElementById('loading-screen').style.display = 'none';
-                document.getElementById('test-controls').style.display = 'flex';
-            }, 500);
+        import { gameState } from './js/core/game-state.js';
+        import { ExplorationScreen } from './js/ui/screens/exploration-new.js';
+        
+        console.log('========================================');
+        console.log('🚀 探索模式測試');
+        console.log('========================================\n');
+        
+        console.log('[Test] 初始化 gameState...');
+        gameState.init();
+        
+        const dest = new URLSearchParams(location.search).get('destination') || 'paris';
+        console.log('[Test] 目的地:', dest);
+        
+        console.log('[Test] 創建 ExplorationScreen...');
+        const screen = new ExplorationScreen('ui-layer', {
+            destination: dest,
+            difficulty: 'normal',
+            characterId: 'jett',
+            missionType: 'delivery'
         });
+        
+        console.log('[Test] 渲染中...');
+        await screen.render();
+        
+        window.currentScreen = screen;
+        console.log('[Test] ✅ window.currentScreen 已設置\n');
+        
+        // 延遲 2 秒後檢查 ThreeRenderer
+        setTimeout(() => {
+            console.log('========================================');
+            console.log('🔍 ThreeRenderer 診斷');
+            console.log('========================================\n');
+            
+            if (!screen.threeRenderer) {
+                console.error('❌ ThreeRenderer 未初始化！');
+                console.log('請往上滾動 Console，搜尋 "ThreeRenderer" 或 "THREE" 查看錯誤');
+            } else {
+                console.log('✅ ThreeRenderer 已初始化');
+                
+                const stats = screen.threeRenderer.getStats();
+                console.log('統計資訊:', stats);
+                
+                if (stats.characters === 0) {
+                    console.warn('⚠️ 沒有 3D 模型，手動創建...');
+                    screen.npcs.forEach(npc => {
+                        screen.threeRenderer.addNPCModel(npc.id, npc);
+                    });
+                    console.log('✅ 已創建', screen.npcs.length, '個 NPC 3D 模型');
+                } else {
+                    console.log('✅ 3D 模型已存在，應該能看到藍色膠囊！');
+                }
+                
+                // 檢查 Canvas 3D
+                if (screen.threeRenderer.canvas3D) {
+                    console.log('Canvas 3D 資訊:');
+                    console.log('  尺寸:', screen.threeRenderer.canvas3D.width, 'x', screen.threeRenderer.canvas3D.height);
+                    console.log('  Z-index:', screen.threeRenderer.canvas3D.style.zIndex);
+                    console.log('  Position:', screen.threeRenderer.canvas3D.style.position);
+                }
+            }
+            
+            console.log('\n========================================');
+        }, 2000);
     </script>
 </body>
 </html>

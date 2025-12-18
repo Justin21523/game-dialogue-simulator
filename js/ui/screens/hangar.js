@@ -11,6 +11,13 @@ export class HangarScreen {
         this.carouselIndex = 0;
         this.profileCache = new Map();
         this.profileVariants = ['heroic', 'ready', 'flying', 'smile'];
+
+        // 動畫播放相關
+        this.animationMode = false;
+        this.animationFrames = [];
+        this.animationIndex = 0;
+        this.animationTimer = null;
+        this.animationCache = new Map();
     }
 
     render() {
@@ -120,9 +127,15 @@ export class HangarScreen {
                         <div class="detail-carousel">
                             <button id="char-img-prev" class="carousel-btn">⟵</button>
                             <div class="carousel-img">
-                                <img src="${imgSrc}" data-role="detail-portrait" data-char-id="${char.id}" data-variant="${variant}" alt="${char.name}">
+                                <img id="detail-portrait-img" src="${imgSrc}" data-role="detail-portrait" data-char-id="${char.id}" data-variant="${variant}" alt="${char.name}">
                             </div>
                             <button id="char-img-next" class="carousel-btn">⟶</button>
+                        </div>
+
+                        <div class="animation-controls">
+                            <button id="btn-toggle-animation" class="btn btn-secondary">
+                                ${this.animationMode ? '⏸️ 靜態圖片' : '▶️ 播放變身動畫'}
+                            </button>
                         </div>
 
                     <div class="detail-stats">
@@ -183,10 +196,21 @@ export class HangarScreen {
         if (btnPrev) btnPrev.addEventListener('click', () => this.stepCarousel(-1));
         if (btnNext) btnNext.addEventListener('click', () => this.stepCarousel(1));
 
+        // Animation toggle
+        const btnToggleAnim = this.container.querySelector('#btn-toggle-animation');
+        if (btnToggleAnim) {
+            btnToggleAnim.addEventListener('click', () => this.toggleAnimation());
+        }
+
         // AI 圖片補載
         const characters = gameState.getAllCharacters();
         this.loadGridPortraits(characters);
         this.loadDetailPortrait();
+
+        // 如果之前在動畫模式,重新啟動動畫
+        if (this.animationMode && this.selectedId) {
+            this.startAnimation();
+        }
     }
 
     getCurrentVariant() {
@@ -243,5 +267,129 @@ export class HangarScreen {
             if (img.dataset.role === 'detail-portrait' && img.dataset.variant !== variant) return;
             img.src = src;
         });
+    }
+
+    /**
+     * 切換動畫播放模式
+     */
+    async toggleAnimation() {
+        this.animationMode = !this.animationMode;
+
+        if (this.animationMode) {
+            // 啟動動畫播放
+            await this.startAnimation();
+        } else {
+            // 停止動畫
+            this.stopAnimation();
+            this.render();
+        }
+    }
+
+    /**
+     * 啟動動畫播放
+     */
+    async startAnimation() {
+        if (!this.selectedId) return;
+
+        // 停止之前的動畫
+        this.stopAnimation();
+
+        // 檢查緩存
+        const cached = this.animationCache.get(this.selectedId);
+        if (cached) {
+            this.animationFrames = cached;
+            this.playAnimation();
+            return;
+        }
+
+        // 載入動畫幀
+        console.log(`[Hangar] Loading animation frames for ${this.selectedId}...`);
+        const btnToggle = this.container.querySelector('#btn-toggle-animation');
+        if (btnToggle) btnToggle.textContent = '⏳ 載入中...';
+
+        try {
+            const { frames, cache } = await aiAssetManager.getTransformFrames(this.selectedId, {
+                useInterpolated: true,
+                reverse: false
+            });
+
+            console.log(`[Hangar] ========================================`);
+            console.log(`[Hangar] Frame paths returned: ${frames.length}`);
+            console.log(`[Hangar] First frame path: ${frames[0]}`);
+            console.log(`[Hangar] Last frame path: ${frames[frames.length - 1]}`);
+            console.log(`[Hangar] Cache size: ${Object.keys(cache).length}`);
+            console.log(`[Hangar] ========================================`);
+
+            // 將緩存的圖片存儲到數組中
+            this.animationFrames = frames.map(path => cache[path]).filter(img => img);
+
+            console.log(`[Hangar] Successfully loaded images: ${this.animationFrames.length}/${frames.length}`);
+
+            if (this.animationFrames.length > 0) {
+                this.animationCache.set(this.selectedId, this.animationFrames);
+                console.log(`[Hangar] Starting playback with ${this.animationFrames.length} frames @ 30fps`);
+                console.log(`[Hangar] Expected duration: ${(this.animationFrames.length / 30).toFixed(2)}s`);
+                this.playAnimation();
+            } else {
+                console.warn('[Hangar] No frames loaded');
+                this.animationMode = false;
+                this.render();
+            }
+        } catch (e) {
+            console.error('[Hangar] Failed to load animation:', e);
+            this.animationMode = false;
+            this.render();
+        }
+    }
+
+    /**
+     * 播放動畫循環 (12fps 慢速播放，讓變身過程更清晰)
+     */
+    playAnimation() {
+        if (!this.animationFrames.length) return;
+
+        this.animationIndex = 0;
+        const img = this.container.querySelector('#detail-portrait-img');
+        if (!img) return;
+
+        // 30 fps 播放速度 (與變身畫面一致)
+        const fps = 30;
+        const frameInterval = 1000 / fps;  // ~33.33ms
+
+        const updateFrame = () => {
+            if (!this.animationMode || !this.animationFrames.length) {
+                this.stopAnimation();
+                return;
+            }
+
+            // 顯示當前幀
+            const frameToShow = this.animationIndex % this.animationFrames.length;
+            const frame = this.animationFrames[frameToShow];
+
+            if (frame && img) {
+                img.src = frame.src;
+            }
+
+            this.animationIndex++;
+
+            // 循環播放
+            if (this.animationIndex >= this.animationFrames.length) {
+                this.animationIndex = 0;
+            }
+
+            this.animationTimer = setTimeout(updateFrame, frameInterval);
+        };
+
+        updateFrame();
+    }
+
+    /**
+     * 停止動畫播放
+     */
+    stopAnimation() {
+        if (this.animationTimer) {
+            clearTimeout(this.animationTimer);
+            this.animationTimer = null;
+        }
     }
 }

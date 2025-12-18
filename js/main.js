@@ -53,7 +53,20 @@ class GameApp {
         new DebugOverlay();
         initDebugPanel(); // 初始化調試面板
         await this.loadResources();
-        this.renderMainMenu();
+
+        // ===== 🆕 Phase 4: 檢查 URL 參數，支援直接進入特定畫面 =====
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetScreen = urlParams.get('screen');
+        const destination = urlParams.get('destination');
+
+        if (targetScreen === 'exploration' && destination) {
+            console.log(`[GameApp] 📍 URL 參數檢測：直接進入探索模式 (${destination})`);
+            // 直接進入探索模式，跳過主選單
+            this.startExplorationDirect(destination);
+        } else {
+            // 正常流程：顯示主選單
+            this.renderMainMenu();
+        }
     }
 
     async loadResources() {
@@ -381,6 +394,37 @@ class GameApp {
         });
 
         await exploration.render();
+    }
+
+    /**
+     * 🆕 Phase 4: 直接從 URL 進入探索模式（用於測試和開發）
+     * @param {string} destination - 目的地名稱（例如 'paris', 'tokyo'）
+     */
+    async startExplorationDirect(destination) {
+        console.log(`[GameApp] 🚀 直接啟動探索模式: ${destination}`);
+
+        // 清理之前的 UI
+        this.cleanupAllScreens();
+
+        // 切换背景音乐
+        audioManager.crossfadeBGM('exploration');
+
+        // 構造探索模式所需的 missionData
+        const missionData = {
+            destination: destination,
+            difficulty: 'normal',
+            characterId: 'jett',  // 預設使用 Jett
+            missionType: 'delivery',
+            generated: false  // 讓探索畫面生成新的 ExplorationMission
+        };
+
+        console.log('[GameApp] 📦 Mission Data:', missionData);
+
+        // 創建探索畫面
+        this.currentExplorationScreen = new ExplorationScreen('ui-layer', missionData);
+        await this.currentExplorationScreen.render();
+
+        console.log('[GameApp] ✅ 探索模式已啟動');
     }
 
     /**

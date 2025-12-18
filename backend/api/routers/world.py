@@ -44,15 +44,46 @@ NPC_ARCHETYPES = {
 BUILDING_TYPES = ["shop", "cafe", "restaurant", "house", "landmark", "park"]
 
 
-def generate_npc_position(existing_positions: list, min_distance: float = 150) -> tuple:
+def generate_npc_position(existing_positions: list, min_distance: float = 200, total_npcs: int = 10) -> tuple:
     """
-    程序化生成 NPC 位置（簡單的 Poisson Disk Sampling）
-    確保 NPC 之間不會太近
+    程序化生成 NPC 位置（改良版 Poisson Disk Sampling）
+    確保 NPC 之間不會太近，並均勻分布在整個世界
+
+    Args:
+        existing_positions: 已有的 NPC 位置列表
+        min_distance: 最小間距（像素）
+        total_npcs: 預期總 NPC 數量，用於計算理想間距
     """
-    max_attempts = 30
+    world_width = 1600  # 200-1800
+    world_start = 200
+    world_end = 1800
+
+    # 如果是第一個 NPC，使用網格分布策略
+    if len(existing_positions) < total_npcs:
+        # 計算理想間距
+        ideal_spacing = world_width / total_npcs
+        # 當前 NPC 索引
+        index = len(existing_positions)
+        # 計算理想 X 位置（加上隨機偏移）
+        ideal_x = world_start + (index + 0.5) * ideal_spacing
+        offset = random.uniform(-ideal_spacing * 0.3, ideal_spacing * 0.3)
+        x = max(world_start, min(world_end, ideal_x + offset))
+        y = 500
+
+        # 確保與現有位置不會太近
+        too_close = any(
+            ((x - ex) ** 2 + (y - ey) ** 2) ** 0.5 < min_distance
+            for ex, ey in existing_positions
+        )
+
+        if not too_close:
+            return x, y
+
+    # Fallback: 隨機搜尋
+    max_attempts = 50
     for _ in range(max_attempts):
-        x = random.uniform(200, 1800)
-        y = 500  # 固定在地面
+        x = random.uniform(world_start, world_end)
+        y = 500
 
         # 檢查與現有位置的距離
         too_close = False
@@ -65,8 +96,8 @@ def generate_npc_position(existing_positions: list, min_distance: float = 150) -
         if not too_close:
             return x, y
 
-    # 如果找不到合適位置，返回隨機位置
-    return random.uniform(200, 1800), 500
+    # 如果找不到合適位置，返回隨機位置（降低最小間距要求）
+    return random.uniform(world_start, world_end), 500
 
 
 @router.post("/generate", response_model=WorldGenerationResponse)
