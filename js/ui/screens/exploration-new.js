@@ -11,6 +11,7 @@ import { aiAssetManager } from '../../core/ai-asset-manager.js';
 import { getNPCService } from '../../services/npc-service.js';
 import { ThreeRenderer } from '../../game/exploration/three-renderer.js';
 import { assetRegistry } from '../../core/asset-registry.js';
+import { worldGenerator } from '../../game/exploration/world-generator.js';
 
 export class ExplorationScreen {
     constructor(containerId, missionData) {
@@ -99,6 +100,10 @@ export class ExplorationScreen {
         this.items = [];  // 場景中的物品
         this.nearbyItem = null;  // 附近可拾取的物品
         this.collectedItems = {};  // 已收集的物品 { itemType: count }
+
+        // ===== Phase 2: 建築物系統 =====
+        this.buildings = [];  // 場景中的建築物
+        this.worldSpec = null;  // 世界規格（WorldSpec）
 
         // ===== Phase 5: 夥伴系統 =====
         this.partners = [];  // 場景中的夥伴角色
@@ -347,83 +352,104 @@ export class ExplorationScreen {
      * 使用 AI 生成 NPCs，如果失敗則使用預設 NPCs
      */
     async spawnNPCs() {
-        console.log('[ExplorationScreen] 🤖 Starting AI NPC generation...');
+        console.log('[ExplorationScreen] 🌍 Starting World Generation (Phase 2)...');
 
-        // 獲取 NPC Service
-        const npcService = getNPCService();
-
-        // 獲取目的地（用於生成適合地點的 NPCs）
-        const destination = this.missionData?.destination || 'paris';
+        // 獲取目的地
+        const destination = this.missionData?.destination || 'Paris';
         const locationMap = {
             'Paris': 'paris',
             'Tokyo': 'tokyo',
             'London': 'london',
-            'New York': 'default',
-            'Sydney': 'default'
+            'New York': 'new_york',
+            'Sydney': 'sydney',
+            'Rio': 'rio',
+            'Moscow': 'moscow',
+            'Dubai': 'dubai'
         };
         const location = locationMap[destination] || 'paris';
+        const missionType = this.missionData?.type || null;
 
         try {
-            console.log('[ExplorationScreen] 調用 batchGenerateNPCs API...');
+            // ===== Phase 2: 使用 WorldGenerator 生成完整世界 =====
+            console.log(`[ExplorationScreen] 調用 WorldGenerator.generateFromAI("${location}")...`);
 
-            // 批量生成不同類型的 NPCs（加上 5 秒超時）
-            const aiNPCsPromise = npcService.batchGenerateNPCs(location, {
-                'outdoor': 5,  // 5 個戶外 NPCs
-                'shop': 1,     // 1 個商店 NPC
-                'cafe': 1      // 1 個咖啡廳 NPC
+            const worldSpec = await worldGenerator.generateFromAI(location, {
+                missionType,
+                difficulty: 'normal',
+                useCache: false
             });
 
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('NPC generation timeout (3s)')), 3000);
+            console.log(`[ExplorationScreen] ✅ World generated:`, {
+                theme: worldSpec.theme,
+                background: worldSpec.background_key,
+                npcs: worldSpec.npcs.length,
+                buildings: worldSpec.buildings.length,
+                items: worldSpec.items.length
             });
 
-            const aiNPCs = await Promise.race([aiNPCsPromise, timeoutPromise]);
+            // ===== 1. 載入 NPCs =====
+            worldSpec.npcs.forEach((npcSpec, index) => {
+                const gameNPC = {
+                    id: npcSpec.id,
+                    name: npcSpec.name,
+                    type: npcSpec.type,
+                    x: npcSpec.x,
+                    y: npcSpec.y,
+                    width: 80,
+                    height: 130,
+                    dialogue: npcSpec.dialogue || ['Hello!'],
+                    currentDialogueIndex: 0,
+                    facingRight: true,
 
-            console.log(`[ExplorationScreen] ✅ Generated ${aiNPCs.length} AI NPCs`);
+                    // Quest 相關
+                    quest: npcSpec.has_quest ? this.createQuestFromNPC(npcSpec, index) : null,
+                    questGiven: false,
+                    hasQuest: npcSpec.has_quest,
 
-            // 將 AI NPCs 轉換為遊戲 NPC 物件
-            aiNPCs.forEach((apiNPC, index) => {
-                // 計算 X 位置（分散放置）
-                const baseX = 400;
-                const spacing = 250;
-                const positionX = baseX + (index * spacing);
+                    // 外觀
+                    appearance: npcSpec.appearance,
+                    personality: npcSpec.personality,
 
-                // 使用 NPCService 的轉換方法
-                const gameNPC = npcService.convertToGameNPC(apiNPC, {
-                    x: positionX,
-                    y: this.groundY - 80
-                });
-
-                // 添加遊戲特定屬性
-                gameNPC.id = gameNPC.npcId;
-                gameNPC.y = this.groundY - 130;
-                gameNPC.width = 80;
-                gameNPC.height = 130;
-                gameNPC.currentDialogueIndex = 0;
-
-                // ===== 如果 NPC 有任務，創建 quest 物件 =====
-                if (gameNPC.hasQuest && gameNPC.questHint) {
-                    gameNPC.quest = this.createQuestFromNPC(gameNPC, index);
-                    gameNPC.questGiven = false;
-                } else {
-                    gameNPC.quest = null;
-                    gameNPC.questGiven = false;
-                }
-
-                // 將對話轉換為陣列格式（保持與原系統相容）
-                gameNPC.dialogue = [
-                    gameNPC.dialogue,
-                    this.generateFollowUpDialogue(gameNPC),
-                    this.generateFarewellDialogue(gameNPC)
-                ];
+                    // AI 資訊
+                    archetype: npcSpec.archetype,
+                    aiGenerated: false  // procedural 生成
+                };
 
                 this.npcs.push(gameNPC);
             });
 
-            console.log(`[ExplorationScreen] ✅ Loaded ${this.npcs.length} AI NPCs into scene`);
+            console.log(`[ExplorationScreen] ✅ Loaded ${this.npcs.length} NPCs from WorldSpec`);
+
+            // ===== 2. 載入建築物（暫存，稍後會用 BuildingManager）=====
+            this.buildings = worldSpec.buildings || [];
+            console.log(`[ExplorationScreen] ✅ Loaded ${this.buildings.length} buildings`);
+
+            // ===== 3. 載入物品 =====
+            worldSpec.items.forEach(itemSpec => {
+                const gameItem = {
+                    id: itemSpec.id,
+                    name: itemSpec.name,
+                    type: itemSpec.type,
+                    x: itemSpec.x,
+                    y: itemSpec.y,
+                    width: 40,
+                    height: 40,
+                    value: itemSpec.value,
+                    collected: false
+                };
+
+                this.items.push(gameItem);
+            });
+
+            console.log(`[ExplorationScreen] ✅ Loaded ${this.items.length} items from WorldSpec`);
+
+            // ===== 4. 記錄 WorldSpec 元數據 =====
+            this.worldSpec = worldSpec;
+            console.log(`[ExplorationScreen] 🌍 World loaded (trace: ${worldSpec.trace_id})`);
 
         } catch (error) {
-            console.warn('[ExplorationScreen] ⚠️ AI NPC generation failed, using fallback NPCs:', error);
+            console.error('[ExplorationScreen] ❌ World generation failed:', error);
+            console.warn('[ExplorationScreen] ⚠️ Using basic fallback NPCs');
             this.spawnFallbackNPCs();
         }
 
