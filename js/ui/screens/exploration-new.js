@@ -441,11 +441,15 @@ export class ExplorationScreen {
                     name: itemSpec.name,
                     type: itemSpec.type,
                     x: itemSpec.x,
-                    y: itemSpec.y,
+                    y: this.groundY - 40,  // 🔧 修正 Y 座標（在地面上）
                     width: 40,
                     height: 40,
                     value: itemSpec.value,
-                    collected: false
+                    collected: false,
+
+                    // 🔧 添加視覺屬性
+                    icon: this.getItemIcon(itemSpec.type),
+                    color: this.getItemColor(itemSpec.type)
                 };
 
                 this.items.push(gameItem);
@@ -568,6 +572,32 @@ export class ExplorationScreen {
             'elder': '#9013fe',       // 紫色
             'child': '#ff6b9d',       // 粉紅色
             'default': '#d0d0d0'      // 灰色
+        };
+        return colorMap[type] || colorMap['default'];
+    }
+
+    /**
+     * 根據物品類型取得圖示
+     */
+    getItemIcon(type) {
+        const iconMap = {
+            'coin': '💰',
+            'package': '📦',
+            'collectible': '✨',
+            'default': '📦'
+        };
+        return iconMap[type] || iconMap['default'];
+    }
+
+    /**
+     * 根據物品類型取得顏色
+     */
+    getItemColor(type) {
+        const colorMap = {
+            'coin': '#FFD700',        // 金色
+            'package': '#8B4513',     // 棕色
+            'collectible': '#FF69B4', // 粉紅色
+            'default': '#CCCCCC'      // 灰色
         };
         return colorMap[type] || colorMap['default'];
     }

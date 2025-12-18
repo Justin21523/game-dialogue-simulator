@@ -106,7 +106,7 @@ export class WorldGenerator {
                           'Friendly Stranger', 'Curious Child', 'Elderly Resident',
                           'Park Visitor', 'Cafe Owner', 'Museum Guide'];
 
-        // 生成 NPC（確保位置不重疊）
+        // 生成 NPC（確保位置不重疊，最小間距 200px）
         const positions = [];
         for (let i = 0; i < npcCount; i++) {
             let x, y, attempts = 0;
@@ -114,7 +114,7 @@ export class WorldGenerator {
                 x = Math.random() * 1600 + 200;
                 y = 500;
                 attempts++;
-            } while (attempts < 30 && positions.some(p => Math.abs(p.x - x) < 150));
+            } while (attempts < 30 && positions.some(p => Math.abs(p.x - x) < 200));  // 🔧 增加最小間距到 200px
 
             positions.push({ x, y });
 
