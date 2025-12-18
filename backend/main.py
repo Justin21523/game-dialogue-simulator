@@ -28,6 +28,7 @@ from .api.routers import (
     assets,
     campaign,
     npc,
+    world,
 )
 
 # Configure logging
@@ -113,6 +114,7 @@ def create_app() -> FastAPI:
     app.include_router(assets.router, prefix=f"{api_prefix}/assets", tags=["Asset Packaging"])
     app.include_router(campaign.router, prefix=f"{api_prefix}/campaign", tags=["Campaigns"])
     app.include_router(npc.router, prefix=f"{api_prefix}/npc", tags=["NPC Generation"])
+    app.include_router(world.router, prefix=f"{api_prefix}", tags=["World Generation"])
     # Additional content/image utility routers
     try:
         from .api.routers import images, content

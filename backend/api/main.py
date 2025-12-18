@@ -36,6 +36,8 @@ from .routers import (
     rag,
     # ===== NPC 生成系統 =====
     npc,
+    # ===== 世界生成系統 =====
+    world,
 )
 
 logger = logging.getLogger(__name__)
