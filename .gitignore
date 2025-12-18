@@ -60,6 +60,9 @@ assets/images/
 assets/audio/
 assets/videos/
 assets/models/
+
+# External tools with their own git repos
+tools/rife/
 *.png
 *.jpg
 *.jpeg
