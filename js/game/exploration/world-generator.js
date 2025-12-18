@@ -106,15 +106,24 @@ export class WorldGenerator {
                           'Friendly Stranger', 'Curious Child', 'Elderly Resident',
                           'Park Visitor', 'Cafe Owner', 'Museum Guide'];
 
-        // 生成 NPC（確保位置不重疊，最小間距 200px）
+        // 生成 NPC（確保位置不重疊，最小間距 300px）
         const positions = [];
+
+        // 🔧 確保前 3 個 NPC 在初始視野內（0-800px）
+        const initialViewportNPCs = 3;
+
         for (let i = 0; i < npcCount; i++) {
             let x, y, attempts = 0;
             do {
-                x = Math.random() * 1600 + 200;
+                // 前 3 個 NPC 生成在視野內，其餘分散在整個世界
+                if (i < initialViewportNPCs) {
+                    x = Math.random() * 600 + 200;  // 200-800px（初始視野）
+                } else {
+                    x = Math.random() * 2200 + 200;  // 200-2400px（整個世界）
+                }
                 y = 500;
                 attempts++;
-            } while (attempts < 30 && positions.some(p => Math.abs(p.x - x) < 200));  // 🔧 增加最小間距到 200px
+            } while (attempts < 50 && positions.some(p => Math.abs(p.x - x) < 300));  // 🔧 增加最小間距到 300px
 
             positions.push({ x, y });
 
