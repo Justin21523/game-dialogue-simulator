@@ -2475,12 +2475,18 @@ export class ExplorationScreen {
 
             console.log('[ExplorationScreen] Requesting AI dialogue for NPC:', npc.id, requestData);
 
-            // 調用 AI API
-            const response = await fetch('http://localhost:8001/api/v1/dialogue/npc/generate', {
+            // 調用 AI API（帶 3 秒 timeout）
+            const fetchPromise = fetch('http://localhost:8001/api/v1/dialogue/npc/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestData)
             });
+
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('AI dialogue API timeout (3s)')), 3000);
+            });
+
+            const response = await Promise.race([fetchPromise, timeoutPromise]);
 
             if (!response.ok) {
                 throw new Error(`AI dialogue API returned ${response.status}`);
