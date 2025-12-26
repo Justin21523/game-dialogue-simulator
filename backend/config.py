@@ -101,7 +101,7 @@ class APIConfig(BaseSettings):
     """API server configuration."""
 
     host: str = Field(default="0.0.0.0", description="API host")
-    port: int = Field(default=8001, description="API port")  # 使用 8001 避免與前端衝突
+    port: int = Field(default=8001, description="API port")  # Use 8001 to avoid frontend port conflicts.
     debug: bool = Field(default=False, description="Debug mode")
     dev_mode: bool = Field(
         default=True,
@@ -311,7 +311,7 @@ class Settings(BaseSettings):
     agent: AgentConfig = Field(default_factory=AgentConfig)
     game: GameConfig = Field(default_factory=GameConfig)
 
-    # Phase B: 圖像生成與多媒體配置
+    # Phase B: image generation and media
     comfyui: ComfyUIConfig = Field(default_factory=ComfyUIConfig)
     image: ImageGenerationConfig = Field(default_factory=ImageGenerationConfig)
     tts: TTSConfig = Field(default_factory=TTSConfig)

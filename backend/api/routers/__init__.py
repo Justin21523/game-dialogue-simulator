@@ -24,6 +24,7 @@ from . import content
 from . import rag
 from . import npc
 from . import world
+from . import character_appearance
 
 __all__ = [
     "health",
@@ -48,4 +49,5 @@ __all__ = [
     "rag",
     "npc",
     "world",
+    "character_appearance",
 ]
