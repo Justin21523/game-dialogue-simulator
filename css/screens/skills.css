@@ -1,0 +1,50 @@
+/**
+ * skills.css
+ * Exploration skills / upgrades UI.
+ */
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.skills-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.skills-card.unlocked {
+    border-color: rgba(78, 205, 196, 0.55);
+    box-shadow: 0 0 18px rgba(78, 205, 196, 0.15);
+}
+
+.skills-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.skills-name {
+    font-weight: 900;
+    letter-spacing: 0.3px;
+}
+
+.skills-desc {
+    line-height: 1.35;
+}
+
+.skills-panel__hint {
+    margin-top: 0;
+}
+
+.skills-panel__footer-hint {
+    margin-top: 12px;
+}
+

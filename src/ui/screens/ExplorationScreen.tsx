@@ -4,6 +4,7 @@ import { DialogueBox } from '../DialogueBox';
 import { CompanionPanel } from '../CompanionPanel';
 import { QuestJournal } from '../QuestJournal';
 import { QuestTracker } from '../QuestTracker';
+import { SkillsPanel } from '../SkillsPanel';
 import { getLocation } from '../../shared/data/gameData';
 import { eventBus } from '../../shared/eventBus';
 import { EVENTS } from '../../shared/eventNames';
@@ -24,6 +25,7 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
     const [locationId, setLocationId] = React.useState<string>('base_airport');
     const [companionOpen, setCompanionOpen] = React.useState(false);
     const [journalOpen, setJournalOpen] = React.useState(false);
+    const [skillsOpen, setSkillsOpen] = React.useState(false);
 
     React.useEffect(() => {
         void missionManager.initialize({ mainCharacter: actorId });
@@ -56,6 +58,10 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
                 e.preventDefault();
                 setJournalOpen((v) => !v);
             }
+            if (e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                setSkillsOpen((v) => !v);
+            }
         };
         window.addEventListener('keydown', onKeyDown);
         return () => {
@@ -80,6 +86,9 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
                 <button className="btn btn-outline" type="button" onClick={() => setJournalOpen(true)}>
                     📖 Journal (J)
                 </button>
+                <button className="btn btn-outline" type="button" onClick={() => setSkillsOpen(true)}>
+                    🧩 Skills (K)
+                </button>
                 <button className="btn btn-secondary" type="button" onClick={onBackToHangar}>
                     ◀ Back to Hangar
                 </button>
@@ -87,6 +96,7 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
 
             <CompanionPanel open={companionOpen} actorId={actorId} onClose={() => setCompanionOpen(false)} />
             <QuestJournal open={journalOpen} onClose={() => setJournalOpen(false)} />
+            <SkillsPanel open={skillsOpen} onClose={() => setSkillsOpen(false)} />
             <DialogueBox />
 
             <Modal
