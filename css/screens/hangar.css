@@ -143,6 +143,18 @@
     margin-top: 4px;
 }
 
+.progress-bar .fill {
+    height: 100%;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
 .char-status {
     margin-top: 10px;
     font-size: 0.8rem;
@@ -262,7 +274,7 @@
     padding: 20px;
 }
 
-/* 動畫控制按鈕 */
+/* Animation control button */
 .animation-controls {
     display: flex;
     justify-content: center;
