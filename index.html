@@ -1,41 +1,16 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Wings Simulator</title>
-    <link rel="stylesheet" href="css/components.css?v=20251217">
-    <link rel="stylesheet" href="css/main.css?v=20251217">
-    <link rel="stylesheet" href="css/animations.css?v=20251217">
-    <!-- Screen Specific Styles -->
-    <link rel="stylesheet" href="css/screens/main-menu.css">
-    <link rel="stylesheet" href="css/screens/hangar.css">
-    <link rel="stylesheet" href="css/screens/mission-board.css">
-    <link rel="stylesheet" href="css/screens/launch.css">
-    <link rel="stylesheet" href="css/screens/in-flight.css">
-    <link rel="stylesheet" href="css/screens/transformation.css">
-    <link rel="stylesheet" href="css/screens/dialogue.css">
-    <link rel="stylesheet" href="css/screens/task.css">
-    <link rel="stylesheet" href="css/screens/exploration.css">
-    <link rel="stylesheet" href="css/screens/exploration-hud.css">
-    <link rel="stylesheet" href="css/screens/results.css">
-    <link rel="stylesheet" href="css/screens/return-base.css">
-    <link rel="stylesheet" href="css/screens/landing.css">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23e31d2b'/%3E%3Cpath d='M12 36l10-16 10 16 10-16 10 16' fill='none' stroke='%23fff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-
-    <!-- THREE.js for 3D rendering (r149 - last version with legacy script support) -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/examples/js/loaders/GLTFLoader.js"></script>
-</head>
-<body>
-    <div id="game-container">
-        <!-- Dynamic Content Will Be Loaded Here -->
-        <div id="ui-layer"></div>
-        <div id="overlay-layer"></div>
-    </div>
-
-    <!-- Application Entry -->
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script type="module" src="js/main.js?v=20251218-6"></script>
-</body>
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Super Wings Simulator</title>
+        <link
+            rel="icon"
+            href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23e31d2b'/%3E%3Cpath d='M12 36l10-16 10 16 10-16 10 16' fill='none' stroke='%23fff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+        />
+    </head>
+    <body>
+        <div id="root"></div>
+        <script type="module" src="/src/main.tsx"></script>
+    </body>
 </html>

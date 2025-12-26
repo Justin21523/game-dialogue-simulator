@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "strict": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "outDir": "dist-node",
+        "rootDir": "src"
+    },
+    "include": [
+        "src/shared/eventBus.ts",
+        "src/shared/quests/explorationMission.ts",
+        "src/shared/quests/objective.ts",
+        "src/shared/quests/quest.ts",
+        "src/shared/quests/questStateMachine.ts",
+        "src/shared/quests/missionManager.ts"
+    ]
+}
