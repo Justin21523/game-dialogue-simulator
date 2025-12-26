@@ -99,17 +99,9 @@ body {
 }
 
 /* ========================================
-   Global text colors (CSS variables)
+   Global text color
    ======================================== */
-p, span, div, label, a, li, td, th,
-h1, h2, h3, h4, h5, h6 {
-    color: var(--text-main);
-}
-
-/* Buttons keep white text */
-button, .btn {
-    color: var(--text-light);
-}
+/* Use inheritance so overlays (e.g. mission tracker) can opt into light text safely. */
 
 /* Utility text colors */
 .text-secondary {
