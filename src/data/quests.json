@@ -46,7 +46,39 @@
                 "required_world_flags": [],
                 "completed_quest_templates": []
             }
+        },
+        {
+            "template_id": "qt_repair_relay_field",
+            "title": "Field Repair: Signal Relay",
+            "description": "You made it to the site. Call Engineering support and repair the broken signal relay, then return to base.",
+            "type": "main",
+            "destination_location_id": "warehouse_district",
+            "repeatable": true,
+            "steps": [
+                {
+                    "id": "fix_relay",
+                    "type": "fix_build",
+                    "title": "Repair the relay (requires Engineering)",
+                    "required_count": 1,
+                    "conditions": [{ "target_id": "relay_001", "required_ability": "ENGINEERING" }]
+                },
+                {
+                    "id": "return_base",
+                    "type": "go_to_location",
+                    "title": "Return to the Airport Base",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "base_airport" }]
+                }
+            ],
+            "rewards": {
+                "currency": 0,
+                "exp": 0,
+                "unlock_locations": ["warehouse_district"]
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": []
+            }
         }
     ]
 }
-
