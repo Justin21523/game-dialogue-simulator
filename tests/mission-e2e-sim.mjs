@@ -11,18 +11,10 @@ function createLocalStorageStub(store) {
   };
 }
 global.localStorage = createLocalStorageStub(sharedStore);
-global.axios = {
-  create: () => ({
-    defaults: { baseURL: '', headers: { common: {} } },
-    interceptors: { response: { use: () => {} } },
-    get: async () => ({ status: 200, data: {} }),
-    post: async () => ({ status: 200, data: {} }),
-    delete: async () => ({ status: 200, data: {} }),
-  }),
-};
 
-const { missionManager } = await import('../js/managers/mission-manager.js');
-const { Quest, ObjectiveType, QuestStatus } = await import('../js/models/quest.js');
+const { missionManager } = await import('../dist-node/shared/quests/missionManager.js');
+const { Quest, QuestStatus } = await import('../dist-node/shared/quests/quest.js');
+const { ObjectiveType } = await import('../dist-node/shared/quests/objective.js');
 
 function resetManager() {
   missionManager.initialized = false;

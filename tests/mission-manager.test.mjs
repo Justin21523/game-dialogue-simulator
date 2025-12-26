@@ -11,25 +11,11 @@ function createLocalStorageStub() {
   };
 }
 
-// Minimal axios stub to satisfy api-client imports
-function createAxiosStub() {
-  const instance = {
-    defaults: { baseURL: '', headers: { common: {} } },
-    interceptors: { response: { use: () => {} } },
-    get: async () => ({ status: 200, data: {} }),
-    post: async () => ({ status: 200, data: {} }),
-    delete: async () => ({ status: 200, data: {} }),
-  };
-  return {
-    create: () => instance,
-  };
-}
-
 global.localStorage = createLocalStorageStub();
-global.axios = createAxiosStub();
 
-const { missionManager } = await import('../js/managers/mission-manager.js');
-const { Quest, QuestStatus, ObjectiveType } = await import('../js/models/quest.js');
+const { missionManager } = await import('../dist-node/shared/quests/missionManager.js');
+const { Quest, QuestStatus } = await import('../dist-node/shared/quests/quest.js');
+const { ObjectiveType } = await import('../dist-node/shared/quests/objective.js');
 
 // Reset MissionManager internal state between runs (singleton)
 function resetMissionManager() {
@@ -57,7 +43,7 @@ async function run() {
       {
         id: 'o_talk',
         type: ObjectiveType.TALK,
-        title: '與 npc1 對話',
+        title: 'Talk to npc1',
         requiredCount: 1,
         conditions: [{ npc_id: 'npc1' }],
       },
@@ -65,32 +51,32 @@ async function run() {
   });
 
   missionManager.offerQuest(quest, { type: 'main' });
-  assert.strictEqual(quest.status, QuestStatus.OFFERED, '任務應為提供狀態');
+  assert.strictEqual(quest.status, QuestStatus.OFFERED, 'Quest should be offered');
 
   await missionManager.acceptQuest(quest.questId, { type: 'main', actorId: 'jett' });
-  assert.strictEqual(quest.status, QuestStatus.ACTIVE, '接受後應為進行中');
-  assert.strictEqual(missionManager.activeMain, quest.questId, '主線應設為此任務');
+  assert.strictEqual(quest.status, QuestStatus.ACTIVE, 'Quest should be active after accept');
+  assert.strictEqual(missionManager.activeMain, quest.questId, 'Active main quest should be set');
 
-  // 模擬 NPC 對話完成目標
+  // Simulate a dialogue completion event
   missionManager.routeProgressEvent('NPC_INTERACTION', {
     npc: { npcId: 'npc1' },
     character: 'jett',
   });
 
-  assert.strictEqual(quest.objectives[0].status, 'completed', '目標應標記完成');
-  assert.strictEqual(quest.status, QuestStatus.COMPLETED, '任務應完成');
-  assert.ok(missionManager.completed.has(quest.questId), '管理器應記錄完成');
-  assert.strictEqual(missionManager.activeMain, null, '完成後主線應清空');
+  assert.strictEqual(quest.objectives[0].status, 'completed', 'Objective should be completed');
+  assert.strictEqual(quest.status, QuestStatus.COMPLETED, 'Quest should be completed');
+  assert.ok(missionManager.completed.has(quest.questId), 'Manager should record quest completion');
+  assert.strictEqual(missionManager.activeMain, null, 'Active main quest should be cleared after completion');
 
-  // 驗證持久化
+  // Verify persistence
   const saved = JSON.parse(global.localStorage.getItem(missionManager.storageKey));
-  assert.ok(saved.completed.includes(quest.questId), '完成任務應寫入存檔');
+  assert.ok(saved.completed.includes(quest.questId), 'Completed quest should be persisted');
 
-  console.log('✅ mission-manager.test.mjs 通過');
+  console.log('✅ mission-manager.test.mjs passed');
   process.exit(0);
 }
 
 run().catch((err) => {
-  console.error('❌ mission-manager.test.mjs 失敗', err);
+  console.error('❌ mission-manager.test.mjs failed', err);
   process.exit(1);
 });
