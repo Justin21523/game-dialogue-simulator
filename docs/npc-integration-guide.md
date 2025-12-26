@@ -329,28 +329,26 @@ console.log('Generated NPCs:', npcs);
 ### 2. 使用瀏覽器控制台測試
 
 ```javascript
-// 開啟 http://localhost:8000
-// 按 F12 打開開發者工具
+// 開啟前端（例如：npm run dev 後的 http://localhost:5173）
+// 按 F12 打開開發者工具 Console
 
-// 導入 NPC Service
-const module = await import('./js/services/npc-service.js');
-const npcService = module.getNPCService();
-
-// 測試生成
-const npcs = await npcService.generateNPCs({
-    location: 'tokyo',
-    locationType: 'outdoor',
-    count: 3
+// 直接呼叫後端 API（預設後端 base: http://localhost:8001/api/v1）
+const API_BASE = 'http://localhost:8001/api/v1';
+const res = await fetch(`${API_BASE}/npc/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ location: 'tokyo', location_type: 'outdoor', count: 3 })
 });
-console.log(npcs);
+const data = await res.json();
+console.log(data);
 ```
 
 ## 下一步
 
 1. ✅ 後端 NPC Generator Agent 已完成
 2. ✅ 後端 NPC API 路由已完成
-3. ✅ 前端 NPC Service 已完成
-4. ⏳ 整合到 exploration-new.js
+3. ⏳ 前端（`src/`）補齊 NPC service wrapper
+4. ⏳ 整合到 `src/game/phaser/scenes/ExplorationScene.ts`
 5. ⏳ 實現 AI 對話系統
 6. ⏳ 實現 AI 背景生成
 7. ⏳ 實現 AI 室內場景生成

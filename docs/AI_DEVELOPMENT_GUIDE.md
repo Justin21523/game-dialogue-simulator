@@ -6,6 +6,15 @@ This document provides comprehensive context and guidelines for AI assistants to
 
 ---
 
+## ⚠️ Note (2025-12)
+
+The legacy `js/` frontend has been removed. The playable frontend now lives under:
+
+- `src/` (React + TypeScript + Phaser 3)
+- `index.html` boots `src/main.tsx`
+
+Some older sections in this guide may still reference legacy file paths; treat them as historical and prefer `docs/LEGACY_TO_SRC_MIGRATION.md` as the source of truth for current mappings.
+
 ## 🎯 Project Context
 
 ### What is This Project?
@@ -16,15 +25,15 @@ A web-based simulation game based on the Super Wings animated series, where play
 - Unlock and upgrade characters
 
 ### Technology Stack
-- **Frontend**: Pure HTML5/CSS3/JavaScript (ES6+)
-- **Storage**: LocalStorage for game saves
+- **Frontend**: Vite + React + TypeScript + Phaser 3
+- **Storage**: LocalStorage for save snapshots (React reducer)
 - **Graphics**: Pre-generated images using SDXL LoRA models
-- **Deployment**: GitHub Pages (static site)
+- **Backend**: FastAPI (`backend/`) for AI content and mission APIs
+- **Deployment**: Static hosting for `dist/` + optional backend service
 
 ### Project Status
-- **Current Phase**: Phase 2 - Image Asset Generation
-- **Completed**: Phase 1 - Character Data Organization & Verification ✅
-- **Next Phase**: Phase 3 - Web Game Development
+- **Current Phase**: Playable React + Phaser loop in `src/`
+- **Next**: Expand exploration/quest/partner systems and content depth
 
 ---
 
@@ -32,7 +41,7 @@ A web-based simulation game based on the Super Wings animated series, where play
 
 ```
 ~/web-projects/super-wings-simulator/
-├── index.html                 # Game entry point (to be created)
+├── index.html                 # Game entry point
 ├── README.md                  # Project overview
 ├── docs/
 │   ├── IMPLEMENTATION_PLAN.md # Complete 8-week implementation plan
@@ -42,26 +51,12 @@ A web-based simulation game based on the Super Wings animated series, where play
 │   ├── components.css        # Reusable components (to be created)
 │   ├── animations.css        # Animation effects (to be created)
 │   └── screens/              # Screen-specific styles
-├── js/
-│   ├── main.js               # Application entry (to be created)
-│   ├── config.js             # Game configuration (to be created)
-│   ├── core/                 # Core systems
-│   │   ├── game-state.js    # Central state management
-│   │   ├── event-bus.js     # Event system
-│   │   └── save-load.js     # LocalStorage save/load
-│   ├── models/               # Data models
-│   │   ├── character.js     # Character class
-│   │   ├── mission.js       # Mission class
-│   │   └── resource.js      # Resource manager
-│   ├── systems/              # Game systems
-│   │   ├── dispatch.js      # Dispatch logic
-│   │   └── rewards.js       # Reward calculation
-│   └── ui/screens/           # UI screens
-│       ├── main-menu.js
-│       ├── hangar.js
-│       ├── mission-board.js
-│       ├── in-flight.js
-│       └── results.js
+├── src/                       # Frontend app (React + TS + Phaser)
+│   ├── main.tsx              # React entry
+│   ├── ui/                   # React screens/overlays
+│   ├── game/phaser/          # Phaser scenes/entities/systems
+│   └── shared/               # Shared logic (API, types, progress, quests)
+├── backend/                   # FastAPI backend (/api/v1)
 ├── assets/images/             # Generated assets (Phase 2)
 │   ├── characters/           # Character portraits/states/expressions
 │   ├── backgrounds/          # World locations
