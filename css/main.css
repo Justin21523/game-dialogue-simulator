@@ -15,9 +15,9 @@
     --bg-overlay: rgba(0, 0, 0, 0.5);
     --bg-dark: #1a1a2e;
 
-    --text-main: #1a1a1a;      /* 深色改善對比 */
-    --text-secondary: #3a3a3a; /* 深色改善對比 */
-    --text-muted: #5a5a5a;     /* 深色改善對比 */
+    --text-main: #1a1a1a;      /* Improved contrast */
+    --text-secondary: #3a3a3a; /* Improved contrast */
+    --text-muted: #5a5a5a;     /* Improved contrast */
     --text-light: #ffffff;
     --text-on-primary: #ffffff;
 
@@ -93,20 +93,25 @@ body {
     align-items: center;
 }
 
+#root {
+    width: 100%;
+    height: 100%;
+}
+
 /* ========================================
-   全局文字顏色（使用 CSS 變數）
+   Global text colors (CSS variables)
    ======================================== */
 p, span, div, label, a, li, td, th,
 h1, h2, h3, h4, h5, h6 {
     color: var(--text-main);
 }
 
-/* 按鈕保持白色文字 */
+/* Buttons keep white text */
 button, .btn {
     color: var(--text-light);
 }
 
-/* 特定類別的文字顏色 */
+/* Utility text colors */
 .text-secondary {
     color: var(--text-secondary);
 }
@@ -115,7 +120,7 @@ button, .btn {
     color: var(--text-muted);
 }
 
-/* 警告、錯誤等保持原色 */
+/* Warning/error colors keep their original palette */
 .text-warning, .warning {
     color: var(--color-warning);
 }
@@ -141,6 +146,15 @@ button, .btn {
     flex-direction: column;
 }
 
+#phaser-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
 #ui-layer {
     position: absolute;
     top: 0;
@@ -151,6 +165,20 @@ button, .btn {
     overflow-y: auto; /* Enable vertical scrolling for UI screens */
     -webkit-overflow-scrolling: touch; /* Smooth scroll on mobile */
     pointer-events: auto; /* Ensure events pass through */
+}
+
+#overlay-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 20;
+    pointer-events: none;
+}
+
+canvas {
+    display: block;
 }
 
 /* Common Utility Classes */
@@ -167,10 +195,10 @@ button, .btn {
 }
 
 /* ========================================
-   響應式設計 (Responsive Design)
+   Responsive Design
    ======================================== */
 
-/* 平板 (Tablet) */
+/* Tablet */
 @media (max-width: 1024px) {
     body {
         font-size: 14px;
@@ -186,7 +214,7 @@ button, .btn {
     }
 }
 
-/* 手機 (Mobile) */
+/* Mobile */
 @media (max-width: 768px) {
     body {
         font-size: 12px;
@@ -202,19 +230,19 @@ button, .btn {
         min-height: 36px;
     }
 
-    /* 確保文字不會消失 */
+    /* Ensure text remains readable */
     p, span, div {
         font-size: 12px !important;
         line-height: 1.4 !important;
     }
 
-    /* 調整 padding 避免內容被截斷 */
+    /* Adjust padding to avoid clipping */
     .panel, .card {
         padding: 12px !important;
     }
 }
 
-/* 小手機 (Small Mobile) */
+/* Small mobile */
 @media (max-width: 480px) {
     body {
         font-size: 11px;
@@ -230,7 +258,7 @@ button, .btn {
         min-height: 32px;
     }
 
-    /* 強制顯示文字 */
+    /* Force text to remain visible */
     p, span, div {
         font-size: 11px !important;
         line-height: 1.3 !important;
