@@ -238,7 +238,9 @@ function toDialogueCondition(raw: unknown): DialogueCondition | undefined {
     if (missingItems) cond.missing_items = missingItems;
 
     if (typeof data.quest_active === 'string' && data.quest_active) cond.quest_active = data.quest_active;
+    if (typeof data.quest_not_active === 'string' && data.quest_not_active) cond.quest_not_active = data.quest_not_active;
     if (typeof data.quest_completed === 'string' && data.quest_completed) cond.quest_completed = data.quest_completed;
+    if (typeof data.quest_not_completed === 'string' && data.quest_not_completed) cond.quest_not_completed = data.quest_not_completed;
 
     return Object.keys(cond).length > 0 ? cond : undefined;
 }

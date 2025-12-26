@@ -5,7 +5,9 @@ export type DialogueCondition = {
     has_items?: string[];
     missing_items?: string[];
     quest_active?: string;
+    quest_not_active?: string;
     quest_completed?: string;
+    quest_not_completed?: string;
 };
 
 export type DialogueAction =

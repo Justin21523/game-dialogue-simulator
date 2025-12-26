@@ -187,6 +187,22 @@
                     "y": 760,
                     "label": "Notice Board",
                     "message": "Notice: Help requests are posted daily."
+                },
+                {
+                    "interactable_id": "dig_spot_cache",
+                    "type": "quest_target",
+                    "x": 3380,
+                    "y": 760,
+                    "label": "Dig Site",
+                    "required_ability": "DIGGING"
+                },
+                {
+                    "interactable_id": "cat_tree",
+                    "type": "quest_target",
+                    "x": 1540,
+                    "y": 760,
+                    "label": "Rescue Spot",
+                    "required_ability": "ANIMAL_RESCUE"
                 }
             ],
             "secrets": [
@@ -353,6 +369,14 @@
                     "y": 760,
                     "label": "Repair Station",
                     "required_ability": "ENGINEERING"
+                },
+                {
+                    "interactable_id": "garage_clearance_panel",
+                    "type": "quest_target",
+                    "x": 1180,
+                    "y": 760,
+                    "label": "Security Panel",
+                    "required_ability": "POLICE"
                 }
             ],
             "colliders": [

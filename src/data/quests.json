@@ -79,6 +79,326 @@
                 "required_world_flags": [],
                 "completed_quest_templates": []
             }
+        },
+        {
+            "template_id": "qt_main_town_welcome",
+            "title": "Town Welcome Briefing",
+            "description": "Head to the Town District and coordinate with the locals to stabilize services.",
+            "type": "main",
+            "destination_location_id": "town_district",
+            "repeatable": false,
+            "steps": [
+                {
+                    "id": "talk_dispatcher",
+                    "type": "talk",
+                    "title": "Talk to Paul (Dispatcher)",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_dispatcher" }]
+                },
+                {
+                    "id": "go_town",
+                    "type": "go_to_location",
+                    "title": "Travel to the Town District",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "town_district" }]
+                },
+                {
+                    "id": "talk_shopkeeper",
+                    "type": "talk",
+                    "title": "Meet the Shopkeeper",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_shopkeeper" }]
+                }
+            ],
+            "rewards": {
+                "currency": 200,
+                "exp": 120,
+                "unlock_locations": ["town_district", "town_shop_interior", "town_house_interior", "town_garage_interior"]
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": []
+            }
+        },
+        {
+            "template_id": "qt_main_town_power",
+            "title": "Power Cell Delivery",
+            "description": "Recover a spare power cell and deliver it to the mechanic in the garage.",
+            "type": "main",
+            "destination_location_id": "town_garage_interior",
+            "repeatable": false,
+            "steps": [
+                {
+                    "id": "collect_power_cell",
+                    "type": "collect",
+                    "title": "Find a spare Power Cell",
+                    "required_count": 1,
+                    "conditions": [{ "item_id": "item_power_cell" }]
+                },
+                {
+                    "id": "go_garage",
+                    "type": "go_to_location",
+                    "title": "Enter the Garage",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "town_garage_interior" }]
+                },
+                {
+                    "id": "deliver_power_cell",
+                    "type": "deliver",
+                    "title": "Deliver the Power Cell to the Mechanic",
+                    "required_count": 1,
+                    "conditions": [{ "item_id": "item_power_cell", "npc_id": "npc_mechanic" }]
+                }
+            ],
+            "rewards": {
+                "currency": 260,
+                "exp": 160,
+                "unlock_locations": []
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": ["qt_main_town_welcome"]
+            }
+        },
+        {
+            "template_id": "qt_main_town_relay",
+            "title": "Restore the Rooftop Relay",
+            "description": "Access the city terminal and repair the rooftop relay to restore services.",
+            "type": "main",
+            "destination_location_id": "town_district",
+            "repeatable": false,
+            "steps": [
+                {
+                    "id": "investigate_terminal",
+                    "type": "investigate",
+                    "title": "Access the City Network Terminal (requires Espionage)",
+                    "required_count": 1,
+                    "conditions": [{ "target_id": "terminal_city_net", "required_ability": "ESPIONAGE" }]
+                },
+                {
+                    "id": "fix_relay",
+                    "type": "fix_build",
+                    "title": "Repair the Rooftop Relay (requires Engineering)",
+                    "required_count": 1,
+                    "conditions": [{ "target_id": "relay_rooftop", "required_ability": "ENGINEERING" }]
+                },
+                {
+                    "id": "report_dispatcher",
+                    "type": "talk",
+                    "title": "Report back to Paul",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_dispatcher" }]
+                }
+            ],
+            "rewards": {
+                "currency": 400,
+                "exp": 240,
+                "unlock_locations": ["warehouse_district"]
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": ["qt_main_town_power"]
+            }
+        },
+        {
+            "template_id": "qt_side_missing_poster",
+            "title": "Missing Poster",
+            "description": "Help the kid recover a missing poster and deliver it to the town guard.",
+            "type": "side",
+            "destination_location_id": "town_house_interior",
+            "repeatable": true,
+            "steps": [
+                {
+                    "id": "talk_kid",
+                    "type": "talk",
+                    "title": "Talk to the Kid",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_kid" }]
+                },
+                {
+                    "id": "collect_poster",
+                    "type": "collect",
+                    "title": "Find the Missing Poster",
+                    "required_count": 1,
+                    "conditions": [{ "item_id": "poster_missing" }]
+                },
+                {
+                    "id": "deliver_poster",
+                    "type": "deliver",
+                    "title": "Deliver the poster to the Guard",
+                    "required_count": 1,
+                    "conditions": [{ "item_id": "poster_missing", "npc_id": "npc_guard" }]
+                }
+            ],
+            "rewards": {
+                "currency": 120,
+                "exp": 60,
+                "unlock_locations": []
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": ["qt_main_town_welcome"]
+            }
+        },
+        {
+            "template_id": "qt_side_terminal_logs",
+            "title": "Terminal Logs",
+            "description": "Help the investigator access the terminal logs.",
+            "type": "side",
+            "destination_location_id": "town_district",
+            "repeatable": true,
+            "steps": [
+                {
+                    "id": "talk_investigator",
+                    "type": "talk",
+                    "title": "Talk to the Investigator",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_investigator" }]
+                },
+                {
+                    "id": "investigate_terminal",
+                    "type": "investigate",
+                    "title": "Access the terminal (requires Espionage)",
+                    "required_count": 1,
+                    "conditions": [{ "target_id": "terminal_city_net", "required_ability": "ESPIONAGE" }]
+                },
+                {
+                    "id": "return_investigator",
+                    "type": "talk",
+                    "title": "Report the findings",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_investigator" }]
+                }
+            ],
+            "rewards": {
+                "currency": 180,
+                "exp": 90,
+                "unlock_locations": []
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": ["qt_main_town_welcome"]
+            }
+        },
+        {
+            "template_id": "qt_side_garage_clearance",
+            "title": "Garage Clearance",
+            "description": "Clear a security lockout inside the garage. Requires police support.",
+            "type": "side",
+            "destination_location_id": "town_garage_interior",
+            "repeatable": true,
+            "steps": [
+                {
+                    "id": "talk_officer",
+                    "type": "talk",
+                    "title": "Talk to the Officer",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_officer" }]
+                },
+                {
+                    "id": "clear_panel",
+                    "type": "clear_manage",
+                    "title": "Clear the security panel (requires Police)",
+                    "required_count": 1,
+                    "conditions": [{ "target_id": "garage_clearance_panel", "required_ability": "POLICE" }]
+                },
+                {
+                    "id": "return_officer",
+                    "type": "talk",
+                    "title": "Confirm the clearance",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_officer" }]
+                }
+            ],
+            "rewards": {
+                "currency": 160,
+                "exp": 80,
+                "unlock_locations": []
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": ["qt_main_town_welcome"]
+            }
+        },
+        {
+            "template_id": "qt_side_buried_cache",
+            "title": "Buried Cache",
+            "description": "Recover a buried cache from a hidden spot. Requires digging support.",
+            "type": "side",
+            "destination_location_id": "town_district",
+            "repeatable": true,
+            "steps": [
+                {
+                    "id": "talk_digger",
+                    "type": "talk",
+                    "title": "Talk to the Digger",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_digger" }]
+                },
+                {
+                    "id": "dig_cache",
+                    "type": "dig_recover",
+                    "title": "Dig up the cache (requires Digging)",
+                    "required_count": 1,
+                    "conditions": [{ "target_id": "dig_spot_cache", "required_ability": "DIGGING" }]
+                },
+                {
+                    "id": "return_digger",
+                    "type": "talk",
+                    "title": "Share what you found",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_digger" }]
+                }
+            ],
+            "rewards": {
+                "currency": 200,
+                "exp": 100,
+                "unlock_locations": []
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": ["qt_main_town_welcome"]
+            }
+        },
+        {
+            "template_id": "qt_side_animal_rescue",
+            "title": "Animal Rescue",
+            "description": "Help a resident rescue a trapped animal. Requires animal rescue support.",
+            "type": "side",
+            "destination_location_id": "town_house_interior",
+            "repeatable": true,
+            "steps": [
+                {
+                    "id": "talk_resident",
+                    "type": "talk",
+                    "title": "Talk to the Resident",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_resident" }]
+                },
+                {
+                    "id": "rescue_cat",
+                    "type": "clear_manage",
+                    "title": "Rescue the animal (requires Animal Rescue)",
+                    "required_count": 1,
+                    "conditions": [{ "target_id": "cat_tree", "required_ability": "ANIMAL_RESCUE" }]
+                },
+                {
+                    "id": "return_resident",
+                    "type": "talk",
+                    "title": "Bring good news",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_resident" }]
+                }
+            ],
+            "rewards": {
+                "currency": 140,
+                "exp": 70,
+                "unlock_locations": []
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": ["qt_main_town_welcome"]
+            }
         }
     ]
 }

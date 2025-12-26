@@ -23,6 +23,14 @@
                             ]
                         },
                         {
+                            "choice_id": "town_help",
+                            "text": "Any work in the Town District?",
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_main_town_welcome" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
+                        {
                             "choice_id": "decline",
                             "text": "Not right now.",
                             "actions": [{ "type": "close_dialogue" }]
@@ -115,6 +123,19 @@
                         "If you see anything suspicious, let the team know."
                     ],
                     "choices": [
+                        {
+                            "choice_id": "deliver_poster",
+                            "text": "Deliver Missing Poster",
+                            "if": { "quest_active": "qt_side_missing_poster", "has_items": ["poster_missing"] },
+                            "actions": [
+                                {
+                                    "type": "emit_event",
+                                    "event": "DELIVER_ITEM",
+                                    "payload": { "itemId": "poster_missing", "npcId": "npc_guard", "quantity": 1 }
+                                },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
                         { "choice_id": "close", "text": "Understood.", "actions": [{ "type": "close_dialogue" }] }
                     ]
                 }
@@ -129,10 +150,29 @@
                     "node_id": "start",
                     "speaker_name": "Shopkeeper",
                     "lines": [
-                        "Welcome! Our deliveries have been delayed.",
-                        "If you can help stabilize town services, the whole district will benefit."
+                        { "text": "Welcome! Our deliveries have been delayed." },
+                        { "text": "I heard you found a hidden alley stash. Keep that key safe.", "if": { "flags_all": ["secret_alley_found"] } },
+                        { "text": "If you can help stabilize town services, the whole district will benefit." }
                     ],
                     "choices": [
+                        {
+                            "choice_id": "start_power",
+                            "text": "I can help with deliveries.",
+                            "if": { "quest_completed": "qt_main_town_welcome", "quest_not_completed": "qt_main_town_power" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_main_town_power" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
+                        {
+                            "choice_id": "start_poster",
+                            "text": "Any small side jobs?",
+                            "if": { "quest_completed": "qt_main_town_welcome", "quest_not_active": "qt_side_missing_poster" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_side_missing_poster" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
                         { "choice_id": "close", "text": "I'll look around.", "actions": [{ "type": "close_dialogue" }] }
                     ]
                 }
@@ -151,6 +191,19 @@
                         "If you find a spare power cell, bring it to the garage."
                     ],
                     "choices": [
+                        {
+                            "choice_id": "deliver_cell",
+                            "text": "Deliver the Power Cell",
+                            "if": { "quest_active": "qt_main_town_power", "has_items": ["item_power_cell"] },
+                            "actions": [
+                                {
+                                    "type": "emit_event",
+                                    "event": "DELIVER_ITEM",
+                                    "payload": { "itemId": "item_power_cell", "npcId": "npc_mechanic", "quantity": 1 }
+                                },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
                         { "choice_id": "close", "text": "Got it.", "actions": [{ "type": "close_dialogue" }] }
                     ]
                 }
@@ -169,6 +222,24 @@
                         "If you have an espionage specialist, you can access the deeper menus."
                     ],
                     "choices": [
+                        {
+                            "choice_id": "start_logs",
+                            "text": "I can help you access the logs.",
+                            "if": { "quest_completed": "qt_main_town_welcome", "quest_not_active": "qt_side_terminal_logs" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_side_terminal_logs" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
+                        {
+                            "choice_id": "start_relay",
+                            "text": "Need help restoring the relay?",
+                            "if": { "quest_completed": "qt_main_town_power", "quest_not_active": "qt_main_town_relay", "quest_not_completed": "qt_main_town_relay" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_main_town_relay" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
                         { "choice_id": "close", "text": "I'll check it.", "actions": [{ "type": "close_dialogue" }] }
                     ]
                 }
@@ -187,6 +258,15 @@
                         "If we need to recover something, a digging companion can help."
                     ],
                     "choices": [
+                        {
+                            "choice_id": "start_cache",
+                            "text": "Need help recovering anything?",
+                            "if": { "quest_completed": "qt_main_town_welcome", "quest_not_active": "qt_side_buried_cache" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_side_buried_cache" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
                         { "choice_id": "close", "text": "Thanks.", "actions": [{ "type": "close_dialogue" }] }
                     ]
                 }
@@ -223,6 +303,15 @@
                         "My kid has been posting flyers all day."
                     ],
                     "choices": [
+                        {
+                            "choice_id": "start_rescue",
+                            "text": "Need help with anything?",
+                            "if": { "quest_completed": "qt_main_town_welcome", "quest_not_active": "qt_side_animal_rescue" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_side_animal_rescue" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
                         { "choice_id": "close", "text": "Good to know.", "actions": [{ "type": "close_dialogue" }] }
                     ]
                 }
@@ -241,6 +330,15 @@
                         "If you find it, can you bring it back?"
                     ],
                     "choices": [
+                        {
+                            "choice_id": "start_poster",
+                            "text": "I'll help you find it.",
+                            "if": { "quest_completed": "qt_main_town_welcome", "quest_not_active": "qt_side_missing_poster" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_side_missing_poster" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
                         { "choice_id": "close", "text": "I'll keep an eye out.", "actions": [{ "type": "close_dialogue" }] }
                     ]
                 }
@@ -259,6 +357,15 @@
                         "If you need clearance for a restricted area, call a police companion."
                     ],
                     "choices": [
+                        {
+                            "choice_id": "start_clearance",
+                            "text": "I can clear the lockout.",
+                            "if": { "quest_completed": "qt_main_town_welcome", "quest_not_active": "qt_side_garage_clearance" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_side_garage_clearance" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
                         { "choice_id": "close", "text": "Understood.", "actions": [{ "type": "close_dialogue" }] }
                     ]
                 }
