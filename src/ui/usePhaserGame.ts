@@ -17,7 +17,6 @@ function restartFromBoot(game: Phaser.Game, initial: InitialPhaserParams): void 
 
     const activeSceneKeys = game.scene.getScenes(true).map((scene) => scene.scene.key);
     for (const key of activeSceneKeys) {
-        if (key === 'UIScene') continue;
         game.scene.stop(key);
     }
 
