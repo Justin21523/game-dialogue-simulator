@@ -38,6 +38,7 @@ export class UIScene extends Phaser.Scene {
         const inLaunch = this.scene.isActive('LaunchScene');
         const inExplore =
             this.scene.isActive('BaseLocationScene') || this.scene.isActive('WarehouseLocationScene') || this.scene.isActive('ExplorationScene');
+        const inWorld = this.scene.isActive('WorldScene');
 
         if (inLaunch) {
             this.hintText.setText('Launch: Hold Space  |  Release to cool down');
@@ -51,7 +52,7 @@ export class UIScene extends Phaser.Scene {
             return;
         }
 
-        if (inExplore) {
+        if (inExplore || inWorld) {
             this.hintText.setText('Explore: Move A/D or ←/→  |  Interact E  |  Call Companion C');
             this.hintText.setVisible(true);
             return;

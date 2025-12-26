@@ -11,6 +11,7 @@ import { LaunchScene } from '../scenes/LaunchScene';
 import { TransformationScene } from '../scenes/TransformationScene';
 import { UIScene } from '../scenes/UIScene';
 import { WarehouseLocationScene } from '../scenes/WarehouseLocationScene';
+import { WorldScene } from '../scenes/WorldScene';
 
 export type InitialFlightParams = {
     missionType: string;
@@ -69,6 +70,7 @@ export function createPhaserGame(parent: HTMLElement, initial?: InitialPhaserPar
             TransformationScene,
             LandingScene,
             ExplorationScene,
+            WorldScene,
             BaseLocationScene,
             WarehouseLocationScene,
             UIScene
