@@ -52,7 +52,7 @@ export class UIScene extends Phaser.Scene {
         }
 
         if (inExplore) {
-            this.hintText.setText('Explore: Move WASD  |  Interact E  |  Call Companion C');
+            this.hintText.setText('Explore: Move A/D or ←/→  |  Interact E  |  Call Companion C');
             this.hintText.setVisible(true);
             return;
         }
