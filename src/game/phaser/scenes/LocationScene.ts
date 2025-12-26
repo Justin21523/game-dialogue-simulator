@@ -69,6 +69,7 @@ export abstract class LocationScene extends Phaser.Scene {
         e: Phaser.Input.Keyboard.Key;
         c: Phaser.Input.Keyboard.Key;
     };
+    private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
 
     private promptText?: Phaser.GameObjects.Text;
     private inputLocked = false;
@@ -141,12 +142,13 @@ export abstract class LocationScene extends Phaser.Scene {
             return;
         }
 
-        const axisX = (this.keys.d.isDown ? 1 : 0) - (this.keys.a.isDown ? 1 : 0);
-        const axisY = (this.keys.s.isDown ? 1 : 0) - (this.keys.w.isDown ? 1 : 0);
+        const cursors = this.cursors;
+        const rightDown = this.keys.d.isDown || (cursors?.right?.isDown ?? false);
+        const leftDown = this.keys.a.isDown || (cursors?.left?.isDown ?? false);
+        const axisX = (rightDown ? 1 : 0) - (leftDown ? 1 : 0);
         const speedX = 420;
-        const speedY = 220;
         const body = this.player.body as Phaser.Physics.Arcade.Body;
-        body.setVelocity(axisX * speedX, axisY * speedY);
+        body.setVelocity(axisX * speedX, 0);
 
         if (axisX !== 0) this.player.setFlipX(axisX < 0);
 
@@ -381,6 +383,7 @@ export abstract class LocationScene extends Phaser.Scene {
             e: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
             c: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C)
         };
+        this.cursors = this.input.keyboard.createCursorKeys();
     }
 
     private updateNpcPatrol(dt: number): void {
@@ -443,6 +446,16 @@ export abstract class LocationScene extends Phaser.Scene {
             const obj = this.interactables.find((o) => o.interactableId === target.interactableId) ?? null;
             if (!obj) return;
             if (obj.state === 'completed') return;
+
+            if (obj.type === 'pickup') {
+                eventBus.emit(EVENTS.ITEM_COLLECTED, { itemId: obj.interactableId, quantity: 1, actorId: this.charId });
+                obj.state = 'completed';
+                obj.sprite.setVisible(false);
+                obj.label.setText('Collected');
+                obj.label.setAlpha(0.65);
+                this.flashPrompt('Item collected!');
+                return;
+            }
 
             if (obj.requiredAbility && !companionManager.isAbilityAvailable(obj.requiredAbility)) {
                 this.flashPrompt(`Requires ${obj.requiredAbility}. Press C to call a companion.`);
