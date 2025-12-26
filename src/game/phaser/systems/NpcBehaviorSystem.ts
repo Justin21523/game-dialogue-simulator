@@ -7,6 +7,7 @@ export type SpawnedNpc = {
     def: NpcDefinition;
     sprite: Phaser.Physics.Arcade.Sprite;
     label: Phaser.GameObjects.Text;
+    baseY: number;
     dir: -1 | 1;
     pathIndex: number;
     waitUntilMs: number;
@@ -22,7 +23,9 @@ export class NpcBehaviorSystem {
 
     private updateSingle(npc: SpawnedNpc, timeMs: number, dt: number): void {
         if (npc.def.idleAnimation === 'bob') {
-            npc.sprite.y += Math.sin(timeMs / 500) * 0.02;
+            npc.sprite.y = npc.baseY + Math.sin(timeMs / 500) * 3;
+        } else {
+            npc.sprite.y = npc.baseY;
         }
 
         const path = npc.def.patrolPath;
@@ -57,4 +60,3 @@ export class NpcBehaviorSystem {
         npc.sprite.setFlipX(npc.dir < 0);
     }
 }
-

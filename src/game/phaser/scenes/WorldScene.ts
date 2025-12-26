@@ -42,6 +42,7 @@ type SpawnedExit = {
 const DEFAULT_GROUND_Y = 760;
 const INTERACT_RANGE = 150;
 const PLAYER_SPEED = 320;
+const TILE_SIZE = 64;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return Boolean(value) && typeof value === 'object';
@@ -63,6 +64,8 @@ export class WorldScene extends Phaser.Scene {
     private interactables: SpawnedInteractable[] = [];
     private exits: SpawnedExit[] = [];
     private colliders!: Phaser.Physics.Arcade.StaticGroup;
+    private tilemap?: Phaser.Tilemaps.Tilemap;
+    private tileLayer: Phaser.Tilemaps.TilemapLayer | null = null;
 
     private keys?: {
         a: Phaser.Input.Keyboard.Key;
@@ -175,6 +178,12 @@ export class WorldScene extends Phaser.Scene {
     }
 
     private createGround(): void {
+        const theme = this.location.theme ?? 'airport_base';
+        if (theme === 'town_outdoor' || theme === 'park_outdoor' || theme.startsWith('interior_')) {
+            this.createTileBackdrop(theme);
+            return;
+        }
+
         const floorKey = `world-floor:${this.locationId}`;
         if (!this.textures.exists(floorKey)) {
             const g = this.add.graphics({ x: 0, y: 0 });
@@ -191,6 +200,129 @@ export class WorldScene extends Phaser.Scene {
         this.add.tileSprite(this.location.worldWidth / 2, this.groundY + 150, this.location.worldWidth, 320, floorKey).setDepth(10);
     }
 
+    private createTileBackdrop(theme: string): void {
+        const tilesetKey = this.ensureTilesetTexture();
+        const cols = Math.max(1, Math.ceil(this.location.worldWidth / TILE_SIZE));
+        const rows = Math.max(1, Math.ceil(GAME_HEIGHT / TILE_SIZE));
+
+        const EMPTY = -1;
+        const TILE_GRASS = 0;
+        const TILE_ROAD = 1;
+        const TILE_SIDEWALK = 2;
+        const TILE_FLOOR = 3;
+        const TILE_WALL = 4;
+
+        const data: number[][] = [];
+        for (let y = 0; y < rows; y += 1) {
+            const row: number[] = [];
+            for (let x = 0; x < cols; x += 1) {
+                let t = EMPTY;
+                if (theme.startsWith('interior_')) {
+                    const isBottomBand = y >= rows - 5;
+                    const isWall = x === 0 || x === cols - 1 || y === rows - 5;
+                    if (isBottomBand) {
+                        t = isWall ? TILE_WALL : TILE_FLOOR;
+                    }
+                } else {
+                    const isGround = y >= rows - 4;
+                    const isSidewalk = y === rows - 4;
+                    if (isGround) {
+                        t = TILE_GRASS;
+                    }
+                    if (isSidewalk) {
+                        const roadStart = Math.floor(cols * 0.2);
+                        const roadEnd = Math.floor(cols * 0.8);
+                        t = x >= roadStart && x <= roadEnd ? TILE_ROAD : TILE_SIDEWALK;
+                    }
+                }
+                row.push(t);
+            }
+            data.push(row);
+        }
+
+        this.tilemap = this.make.tilemap({ data, tileWidth: TILE_SIZE, tileHeight: TILE_SIZE });
+        const tileset = this.tilemap.addTilesetImage('world-tileset', tilesetKey, TILE_SIZE, TILE_SIZE, 0, 0);
+        if (!tileset) return;
+
+        this.tileLayer = this.tilemap.createLayer(0, tileset, 0, 0);
+        this.tileLayer?.setDepth(8);
+    }
+
+    private ensureTilesetTexture(): string {
+        const key = 'world-tileset:v1';
+        if (this.textures.exists(key)) return key;
+
+        const columns = 4;
+        const rows = 2;
+        const width = TILE_SIZE * columns;
+        const height = TILE_SIZE * rows;
+        const g = this.add.graphics({ x: 0, y: 0 });
+
+        // Tile 0: grass
+        g.fillStyle(0x1f8b4c, 1);
+        g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        g.fillStyle(0xffffff, 0.06);
+        for (let i = 0; i < 40; i += 1) {
+            g.fillCircle(Phaser.Math.Between(0, TILE_SIZE), Phaser.Math.Between(0, TILE_SIZE), Phaser.Math.Between(1, 3));
+        }
+
+        // Tile 1: road
+        g.fillStyle(0x2f2f2f, 1);
+        g.fillRect(TILE_SIZE, 0, TILE_SIZE, TILE_SIZE);
+        g.fillStyle(0xffffff, 0.15);
+        for (let i = 0; i < 3; i += 1) {
+            g.fillRect(TILE_SIZE + 10 + i * 18, 30, 10, 4);
+            g.fillRect(TILE_SIZE + 10 + i * 18, 46, 10, 4);
+        }
+
+        // Tile 2: sidewalk
+        g.fillStyle(0x5c5c5c, 1);
+        g.fillRect(TILE_SIZE * 2, 0, TILE_SIZE, TILE_SIZE);
+        g.lineStyle(2, 0xffffff, 0.08);
+        for (let y = 8; y < TILE_SIZE; y += 16) {
+            g.beginPath();
+            g.moveTo(TILE_SIZE * 2 + 6, y);
+            g.lineTo(TILE_SIZE * 3 - 6, y);
+            g.strokePath();
+        }
+
+        // Tile 3: interior floor
+        g.fillStyle(0x2b2b2b, 1);
+        g.fillRect(TILE_SIZE * 3, 0, TILE_SIZE, TILE_SIZE);
+        g.fillStyle(0xffffff, 0.06);
+        g.fillRect(TILE_SIZE * 3 + 8, 12, TILE_SIZE - 16, TILE_SIZE - 24);
+
+        // Tile 4: wall
+        g.fillStyle(0x1a1f2a, 1);
+        g.fillRect(0, TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        g.lineStyle(4, 0xffffff, 0.06);
+        g.strokeRect(6, TILE_SIZE + 6, TILE_SIZE - 12, TILE_SIZE - 12);
+
+        // Tile 5: window
+        g.fillStyle(0x1a1f2a, 1);
+        g.fillRect(TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        g.fillStyle(0x00eaff, 0.2);
+        g.fillRoundedRect(TILE_SIZE + 10, TILE_SIZE + 12, TILE_SIZE - 20, TILE_SIZE - 28, 10);
+
+        // Tile 6: roof
+        g.fillStyle(0x4b3a2f, 1);
+        g.fillRect(TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        g.fillStyle(0x000000, 0.1);
+        for (let x = 0; x < TILE_SIZE; x += 10) {
+            g.fillRect(TILE_SIZE * 2 + x, TILE_SIZE, 5, TILE_SIZE);
+        }
+
+        // Tile 7: decal
+        g.fillStyle(0x000000, 0);
+        g.fillRect(TILE_SIZE * 3, TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        g.fillStyle(0xffd700, 0.25);
+        g.fillCircle(TILE_SIZE * 3 + TILE_SIZE / 2, TILE_SIZE + TILE_SIZE / 2, 18);
+
+        g.generateTexture(key, width, height);
+        g.destroy();
+        return key;
+    }
+
     private createPlayer(): void {
         const spawn = this.location.spawnPoints[this.spawnPoint] ?? this.location.spawnPoints.default ?? { x: 320, y: this.groundY };
         const playerKey = this.getCharacterTextureKey('player', this.charId);
@@ -200,6 +332,7 @@ export class WorldScene extends Phaser.Scene {
         this.player.setOrigin(0.5, 1);
         this.player.setCollideWorldBounds(true);
         this.setSpriteDisplayHeight(this.player, 520);
+        this.player.setDepth(100);
 
         const body = this.player.body as Phaser.Physics.Arcade.Body;
         body.setAllowGravity(false);
@@ -219,6 +352,7 @@ export class WorldScene extends Phaser.Scene {
             sprite.setImmovable(true);
             sprite.setCollideWorldBounds(true);
             this.setSpriteDisplayHeight(sprite, 420);
+            sprite.setDepth(90);
 
             const body = sprite.body as Phaser.Physics.Arcade.Body;
             body.setAllowGravity(false);
@@ -241,6 +375,7 @@ export class WorldScene extends Phaser.Scene {
                 def,
                 sprite,
                 label,
+                baseY: sprite.y,
                 dir: 1,
                 pathIndex: 0,
                 waitUntilMs: 0

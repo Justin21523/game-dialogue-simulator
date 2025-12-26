@@ -4,6 +4,7 @@
             "npc_id": "npc_dispatcher",
             "display_name": "Paul",
             "character_id": "paul",
+            "portrait": "profile",
             "dialogue_id": "dlg_dispatcher_offer",
             "dialogue_id_active": "dlg_dispatcher_active",
             "dialogue_id_repeat": "dlg_dispatcher_repeat",
@@ -11,18 +12,139 @@
                 "min_x": 860,
                 "max_x": 1020,
                 "speed": 26
-            }
+            },
+            "idle_animation": "bob",
+            "interaction_radius": 170
         },
         {
             "npc_id": "npc_citizen",
             "display_name": "Local Citizen",
             "character_id": "bello",
+            "portrait": "grid",
             "dialogue_id": "dlg_citizen_smalltalk",
             "patrol": {
                 "min_x": 980,
                 "max_x": 1280,
                 "speed": 34
-            }
+            },
+            "idle_animation": "none",
+            "interaction_radius": 160
+        },
+        {
+            "npc_id": "npc_guard",
+            "display_name": "Town Guard",
+            "character_id": "chase",
+            "portrait": "grid",
+            "dialogue_id": "dlg_guard_root",
+            "patrol_path": {
+                "speed": 42,
+                "points": [
+                    { "x": 980, "wait_ms": 600 },
+                    { "x": 1120, "wait_ms": 600 }
+                ]
+            },
+            "idle_animation": "none",
+            "interaction_radius": 170
+        },
+        {
+            "npc_id": "npc_shopkeeper",
+            "display_name": "Shopkeeper",
+            "character_id": "bello",
+            "portrait": "profile",
+            "dialogue_id": "dlg_shopkeeper_root",
+            "patrol_path": {
+                "speed": 18,
+                "points": [
+                    { "x": 1280, "wait_ms": 800 },
+                    { "x": 1400, "wait_ms": 700 }
+                ]
+            },
+            "idle_animation": "bob",
+            "interaction_radius": 160
+        },
+        {
+            "npc_id": "npc_mechanic",
+            "display_name": "Mechanic",
+            "character_id": "donnie",
+            "portrait": "grid",
+            "dialogue_id": "dlg_mechanic_root",
+            "patrol_path": {
+                "speed": 22,
+                "points": [
+                    { "x": 2440, "wait_ms": 700 },
+                    { "x": 2600, "wait_ms": 700 }
+                ]
+            },
+            "idle_animation": "none",
+            "interaction_radius": 170
+        },
+        {
+            "npc_id": "npc_investigator",
+            "display_name": "Investigator",
+            "character_id": "jerome",
+            "portrait": "grid",
+            "dialogue_id": "dlg_investigator_root",
+            "patrol_path": {
+                "speed": 26,
+                "points": [
+                    { "x": 1600, "wait_ms": 500 },
+                    { "x": 1780, "wait_ms": 500 }
+                ]
+            },
+            "idle_animation": "none",
+            "interaction_radius": 170
+        },
+        {
+            "npc_id": "npc_digger",
+            "display_name": "Digger",
+            "character_id": "todd",
+            "portrait": "grid",
+            "dialogue_id": "dlg_digger_root",
+            "patrol_path": {
+                "speed": 24,
+                "points": [
+                    { "x": 3080, "wait_ms": 500 },
+                    { "x": 3220, "wait_ms": 500 }
+                ]
+            },
+            "idle_animation": "none",
+            "interaction_radius": 170
+        },
+        {
+            "npc_id": "npc_customer",
+            "display_name": "Customer",
+            "character_id": "paul",
+            "portrait": "grid",
+            "dialogue_id": "dlg_customer_root",
+            "idle_animation": "bob",
+            "interaction_radius": 160
+        },
+        {
+            "npc_id": "npc_resident",
+            "display_name": "Resident",
+            "character_id": "flip",
+            "portrait": "grid",
+            "dialogue_id": "dlg_resident_root",
+            "idle_animation": "none",
+            "interaction_radius": 160
+        },
+        {
+            "npc_id": "npc_kid",
+            "display_name": "Kid",
+            "character_id": "jett",
+            "portrait": "grid",
+            "dialogue_id": "dlg_kid_root",
+            "idle_animation": "bob",
+            "interaction_radius": 160
+        },
+        {
+            "npc_id": "npc_officer",
+            "display_name": "Officer",
+            "character_id": "chase",
+            "portrait": "profile",
+            "dialogue_id": "dlg_officer_root",
+            "idle_animation": "none",
+            "interaction_radius": 160
         }
     ]
 }
