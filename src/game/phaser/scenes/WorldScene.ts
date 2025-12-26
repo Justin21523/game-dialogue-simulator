@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
 
+import { audioManager } from '../../../shared/audio/audioManager';
 import { GAME_HEIGHT, GAME_WIDTH } from '../../../shared/constants';
 import { getLocation, getNpc } from '../../../shared/data/gameData';
 import { eventBus } from '../../../shared/eventBus';
 import { EVENTS } from '../../../shared/eventNames';
+import { SKILL_EXPLORATION_FLIGHT } from '../../../shared/skills/skillIds';
 import { companionManager } from '../../../shared/systems/companionManager';
 import { worldStateManager } from '../../../shared/systems/worldStateManager';
 import { missionManager } from '../../../shared/quests/missionManager';
@@ -76,8 +78,11 @@ export class WorldScene extends Phaser.Scene {
     private keys?: {
         a: Phaser.Input.Keyboard.Key;
         d: Phaser.Input.Keyboard.Key;
+        w: Phaser.Input.Keyboard.Key;
+        s: Phaser.Input.Keyboard.Key;
         e: Phaser.Input.Keyboard.Key;
         c: Phaser.Input.Keyboard.Key;
+        f: Phaser.Input.Keyboard.Key;
     };
     private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
 
@@ -85,6 +90,9 @@ export class WorldScene extends Phaser.Scene {
     private highlight?: Phaser.GameObjects.Graphics;
     private inputLocked = false;
     private lastPersistAtMs = 0;
+
+    private flightTransition: 'none' | 'takeoff' | 'landing' = 'none';
+    private flightEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
 
     constructor() {
         super({ key: 'WorldScene' });
@@ -140,6 +148,7 @@ export class WorldScene extends Phaser.Scene {
 
         this.createGround();
         this.createPlayer();
+        this.createFlightVfx();
         this.createProps(this.location.props ?? []);
         this.createDoors(this.location.doors ?? []);
         this.createInteractables(this.location.interactables);
@@ -159,6 +168,7 @@ export class WorldScene extends Phaser.Scene {
 
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             this.parallax.destroy();
+            this.flightEmitter?.destroy();
         });
     }
 
@@ -178,6 +188,9 @@ export class WorldScene extends Phaser.Scene {
             }
             if (Phaser.Input.Keyboard.JustDown(this.keys.c)) {
                 eventBus.emit(EVENTS.UI_TOGGLE_COMPANION_PANEL, { actorId: this.charId });
+            }
+            if (Phaser.Input.Keyboard.JustDown(this.keys.f)) {
+                this.toggleFlightMode();
             }
         }
 
@@ -577,13 +590,21 @@ export class WorldScene extends Phaser.Scene {
         this.keys = {
             a: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
             d: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+            w: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+            s: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
             e: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
-            c: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C)
+            c: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C),
+            f: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F)
         };
         this.cursors = this.input.keyboard.createCursorKeys();
     }
 
     private updatePlayerMovement(): void {
+        if (this.flightTransition !== 'none') {
+            const body = this.player.body as Phaser.Physics.Arcade.Body;
+            body.setVelocity(0, 0);
+            return;
+        }
         if (this.inputLocked) {
             const body = this.player.body as Phaser.Physics.Arcade.Body;
             body.setVelocity(0, 0);
@@ -594,17 +615,109 @@ export class WorldScene extends Phaser.Scene {
         const cursors = this.cursors;
         const rightDown = this.keys.d.isDown || (cursors?.right?.isDown ?? false);
         const leftDown = this.keys.a.isDown || (cursors?.left?.isDown ?? false);
-        const velocity = rightDown ? PLAYER_SPEED : leftDown ? -PLAYER_SPEED : 0;
-
         const body = this.player.body as Phaser.Physics.Arcade.Body;
+        if (this.movementMode === 'hover') {
+            const upDown = this.keys.w.isDown || (cursors?.up?.isDown ?? false);
+            const downDown = this.keys.s.isDown || (cursors?.down?.isDown ?? false);
+
+            const speedX = PLAYER_SPEED * 1.15;
+            const speedY = PLAYER_SPEED * 0.85;
+            const vx = rightDown ? speedX : leftDown ? -speedX : 0;
+            const vy = downDown ? speedY : upDown ? -speedY : 0;
+
+            body.setVelocity(vx, vy);
+            if (vx !== 0) {
+                this.player.setFlipX(vx < 0);
+            }
+
+            const minY = this.groundY - 520;
+            const maxY = this.groundY - 120;
+            this.player.y = Phaser.Math.Clamp(this.player.y, minY, maxY);
+
+            if (this.flightEmitter) {
+                const intensity = Phaser.Math.Clamp(Math.abs(vx) / speedX, 0, 1);
+                this.flightEmitter.frequency = 28 - intensity * 12;
+            }
+            return;
+        }
+
+        const velocity = rightDown ? PLAYER_SPEED : leftDown ? -PLAYER_SPEED : 0;
         body.setVelocity(velocity, 0);
         if (velocity !== 0) {
             this.player.setFlipX(velocity < 0);
         }
 
-        if (this.movementMode === 'walk') {
-            this.player.y = this.groundY;
+        this.player.y = this.groundY;
+    }
+
+    private createFlightVfx(): void {
+        if (this.flightEmitter) return;
+        if (!this.textures.exists('world-vfx-dot')) return;
+
+        const emitter = this.add
+            .particles(0, 0, 'world-vfx-dot', {
+                speed: { min: 220, max: 420 },
+                angle: { min: 140, max: 220 },
+                lifespan: { min: 260, max: 520 },
+                quantity: 1,
+                frequency: 24,
+                alpha: { start: 0.22, end: 0 },
+                scale: { start: 0.4, end: 0 }
+            })
+            .setDepth(60)
+            .setBlendMode(Phaser.BlendModes.ADD);
+
+        emitter.startFollow(this.player, 0, -220);
+        emitter.stop();
+        this.flightEmitter = emitter;
+    }
+
+    private toggleFlightMode(): void {
+        if (this.inputLocked) return;
+        if (this.flightTransition !== 'none') return;
+        if (!worldStateManager.isSkillUnlocked(SKILL_EXPLORATION_FLIGHT)) {
+            this.flashPrompt('Flight mode is locked. Open Skills (K) to unlock it.');
+            return;
         }
+
+        const hoverY = this.groundY - 240;
+        const body = this.player.body as Phaser.Physics.Arcade.Body;
+        body.setVelocity(0, 0);
+
+        if (this.movementMode === 'walk') {
+            this.movementMode = 'hover';
+            this.flightTransition = 'takeoff';
+            audioManager.playSound('launch');
+            this.flightEmitter?.start();
+
+            this.tweens.add({
+                targets: this.player,
+                y: hoverY,
+                duration: 520,
+                ease: 'Cubic.easeOut',
+                onComplete: () => {
+                    this.flightTransition = 'none';
+                    audioManager.playSound('hover');
+                }
+            });
+            return;
+        }
+
+        this.flightTransition = 'landing';
+        audioManager.playSound('arrival');
+        this.flightEmitter?.stop();
+
+        this.tweens.add({
+            targets: this.player,
+            y: this.groundY,
+            duration: 420,
+            ease: 'Cubic.easeIn',
+            onComplete: () => {
+                this.movementMode = 'walk';
+                this.flightTransition = 'none';
+                this.player.y = this.groundY;
+            }
+        });
     }
 
     private updatePrompt(): void {
@@ -918,6 +1031,14 @@ export class WorldScene extends Phaser.Scene {
             g.fillStyle(0xffd700, 0.9);
             g.fillCircle(96, 110, 8);
             g.generateTexture('world-door', 120, 220);
+            g.destroy();
+        }
+
+        if (!this.textures.exists('world-vfx-dot')) {
+            const g = this.add.graphics({ x: 0, y: 0 });
+            g.fillStyle(0xffffff, 1);
+            g.fillCircle(8, 8, 8);
+            g.generateTexture('world-vfx-dot', 16, 16);
             g.destroy();
         }
 
