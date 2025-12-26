@@ -24,6 +24,7 @@ import '../css/screens/save-load.css';
 import '../css/screens/return-base.css';
 import '../css/screens/landing.css';
 
+import { ErrorBoundary } from './ui/components/ErrorBoundary';
 import { GameRoot } from './ui/GameRoot';
 
 const rootElement = document.getElementById('root');
@@ -33,6 +34,8 @@ if (!rootElement) {
 
 ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-        <GameRoot />
+        <ErrorBoundary>
+            <GameRoot />
+        </ErrorBoundary>
     </React.StrictMode>
 );
