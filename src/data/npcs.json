@@ -1,0 +1,28 @@
+{
+    "npcs": [
+        {
+            "npc_id": "npc_dispatcher",
+            "display_name": "Paul",
+            "character_id": "paul",
+            "dialogue_id": "dlg_dispatcher_offer",
+            "dialogue_id_active": "dlg_dispatcher_active",
+            "dialogue_id_repeat": "dlg_dispatcher_repeat",
+            "patrol": {
+                "min_x": 860,
+                "max_x": 1020,
+                "speed": 26
+            }
+        },
+        {
+            "npc_id": "npc_citizen",
+            "display_name": "Local Citizen",
+            "character_id": "bello",
+            "dialogue_id": "dlg_citizen_smalltalk",
+            "patrol": {
+                "min_x": 980,
+                "max_x": 1280,
+                "speed": 34
+            }
+        }
+    ]
+}

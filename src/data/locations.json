@@ -1,0 +1,71 @@
+{
+    "locations": [
+        {
+            "location_id": "base_airport",
+            "display_name": "Airport Base",
+            "world_width": 2600,
+            "world_height": 1080,
+            "spawn_points": {
+                "default": { "x": 320, "y": 760 }
+            },
+            "npc_spawns": [
+                { "npc_id": "npc_dispatcher", "x": 940, "y": 760 }
+            ],
+            "interactables": [
+                {
+                    "interactable_id": "base_gate",
+                    "type": "exit_hint",
+                    "x": 2320,
+                    "y": 760,
+                    "label": "Gate to Warehouse District"
+                }
+            ],
+            "exits": [
+                {
+                    "exit_id": "to_warehouse",
+                    "x": 2440,
+                    "y": 740,
+                    "width": 180,
+                    "height": 320,
+                    "target_location_id": "warehouse_district",
+                    "target_spawn_point": "entry"
+                }
+            ]
+        },
+        {
+            "location_id": "warehouse_district",
+            "display_name": "Warehouse District",
+            "world_width": 3200,
+            "world_height": 1080,
+            "spawn_points": {
+                "entry": { "x": 320, "y": 760 },
+                "relay": { "x": 1560, "y": 760 }
+            },
+            "npc_spawns": [
+                { "npc_id": "npc_citizen", "x": 1120, "y": 760 }
+            ],
+            "interactables": [
+                {
+                    "interactable_id": "relay_001",
+                    "type": "quest_target",
+                    "x": 1600,
+                    "y": 760,
+                    "label": "Broken Signal Relay",
+                    "required_ability": "ENGINEERING"
+                }
+            ],
+            "exits": [
+                {
+                    "exit_id": "to_base",
+                    "x": 200,
+                    "y": 740,
+                    "width": 180,
+                    "height": 320,
+                    "target_location_id": "base_airport",
+                    "target_spawn_point": "default"
+                }
+            ]
+        }
+    ]
+}
+

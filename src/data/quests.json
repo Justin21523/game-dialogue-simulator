@@ -1,0 +1,52 @@
+{
+    "quest_templates": [
+        {
+            "template_id": "qt_repair_relay",
+            "title": "Repair the Signal Relay",
+            "description": "Travel to the Warehouse District, call Engineering support, and repair the broken relay.",
+            "type": "main",
+            "destination_location_id": "warehouse_district",
+            "repeatable": true,
+            "steps": [
+                {
+                    "id": "talk_dispatcher",
+                    "type": "talk",
+                    "title": "Talk to Paul (Dispatcher)",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_dispatcher" }]
+                },
+                {
+                    "id": "go_warehouse",
+                    "type": "go_to_location",
+                    "title": "Go to the Warehouse District",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "warehouse_district" }]
+                },
+                {
+                    "id": "fix_relay",
+                    "type": "fix_build",
+                    "title": "Repair the relay (requires Engineering)",
+                    "required_count": 1,
+                    "conditions": [{ "target_id": "relay_001", "required_ability": "ENGINEERING" }]
+                },
+                {
+                    "id": "return_base",
+                    "type": "go_to_location",
+                    "title": "Return to the Airport Base",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "base_airport" }]
+                }
+            ],
+            "rewards": {
+                "currency": 180,
+                "exp": 90,
+                "unlock_locations": ["warehouse_district"]
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": []
+            }
+        }
+    ]
+}
+

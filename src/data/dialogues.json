@@ -1,0 +1,107 @@
+{
+    "dialogues": [
+        {
+            "dialogue_id": "dlg_dispatcher_offer",
+            "npc_id": "npc_dispatcher",
+            "start_node_id": "start",
+            "nodes": [
+                {
+                    "node_id": "start",
+                    "speaker_name": "Paul",
+                    "lines": [
+                        "Hey pilot! We have a problem at the Warehouse District.",
+                        "A signal relay is down and deliveries are stuck.",
+                        "Can you head over there and call in Engineering support to fix it?"
+                    ],
+                    "choices": [
+                        {
+                            "choice_id": "accept",
+                            "text": "I'll take the job.",
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_repair_relay" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
+                        {
+                            "choice_id": "decline",
+                            "text": "Not right now.",
+                            "actions": [{ "type": "close_dialogue" }]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "dialogue_id": "dlg_dispatcher_active",
+            "npc_id": "npc_dispatcher",
+            "start_node_id": "active",
+            "nodes": [
+                {
+                    "node_id": "active",
+                    "speaker_name": "Paul",
+                    "lines": [
+                        "You're currently assigned to a job.",
+                        "Head to the Warehouse District and repair the relay. Call Engineering if you need help."
+                    ],
+                    "choices": [
+                        {
+                            "choice_id": "close",
+                            "text": "On it.",
+                            "actions": [{ "type": "close_dialogue" }]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "dialogue_id": "dlg_dispatcher_repeat",
+            "npc_id": "npc_dispatcher",
+            "start_node_id": "repeat",
+            "nodes": [
+                {
+                    "node_id": "repeat",
+                    "speaker_name": "Paul",
+                    "lines": [
+                        "Nice work out there.",
+                        "If you want another run, I can dispatch a similar repair job."
+                    ],
+                    "choices": [
+                        {
+                            "choice_id": "again",
+                            "text": "Send me another mission.",
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_repair_relay" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
+                        {
+                            "choice_id": "close",
+                            "text": "Maybe later.",
+                            "actions": [{ "type": "close_dialogue" }]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "dialogue_id": "dlg_citizen_smalltalk",
+            "npc_id": "npc_citizen",
+            "start_node_id": "hello",
+            "nodes": [
+                {
+                    "node_id": "hello",
+                    "speaker_name": "Local Citizen",
+                    "lines": ["Welcome to the Warehouse District!", "Be careful around the damaged relay."],
+                    "choices": [
+                        {
+                            "choice_id": "close",
+                            "text": "Thanks.",
+                            "actions": [{ "type": "close_dialogue" }]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
