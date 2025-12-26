@@ -387,12 +387,22 @@ Player Info:
 Mission Context:
 {rag_context[:300] if rag_context else 'No mission context'}
 
-Generate:
-1. Greeting lines (1-2 sentences) appropriate for NPC type
-2. Emotion: happy, worried, hopeful, neutral, excited
-3. If mission NPC and not registered: add line asking for help
+Generate a multi-turn dialogue with 3-5 lines that:
+1. Starts with an appropriate greeting for the NPC type
+2. Includes meaningful conversation (not just "hello" and "goodbye")
+3. Shows NPC personality through dialogue
+4. If first interaction: introduce themselves and provide context
+5. If mission NPC and not registered: explain their problem naturally across multiple lines
+6. If returning player: acknowledge previous interaction and continue conversation
 
-Return JSON format with: lines (array), emotion (string)"""
+Important: Create NATURAL dialogue with 3-5 distinct lines. Each line should add new information or depth to the conversation.
+
+Return JSON format with:
+- lines: array of 3-5 dialogue lines (strings)
+- emotion: "happy" | "worried" | "hopeful" | "neutral" | "excited" | "grateful"
+
+Example good response:
+{{"lines": ["Hello there! Welcome to our village!", "I'm Maria, the local baker. We make the best bread in the region!", "Have you tried our special cinnamon rolls? They're famous around here!", "If you need anything during your stay, feel free to ask me!"], "emotion": "happy"}}"""
 
             response = await llm.generate(prompt, max_tokens=300)
 
@@ -414,27 +424,80 @@ Return JSON format with: lines (array), emotion (string)"""
         except Exception as e:
             logger.warning(f"AI dialogue generation failed: {e}, using fallback")
 
-        # Fallback: Template-based responses
-        greetings = {
-            "merchant": ["Welcome! What can I get for you today?", "Hello there! Looking for something special?"],
-            "resident": ["Hello! Nice day, isn't it?", "Hi there! Welcome to our town!"],
-            "official": ["Hello. State your business, please.", "Good day. How may I assist you?"],
-            "child": ["Wow! A Super Wings! Can I see you fly?", "Hi! You're so cool!"]
+        # Fallback: Template-based multi-turn responses
+        dialogue_templates = {
+            "merchant": {
+                "lines": [
+                    "Welcome to my shop! I'm glad you stopped by.",
+                    "We have fresh supplies delivered every day from the nearby villages.",
+                    "Is there anything special you're looking for today?",
+                    "Feel free to browse, and let me know if you need any recommendations!"
+                ],
+                "emotion": "happy"
+            },
+            "resident": {
+                "lines": [
+                    "Hello there! Welcome to our town!",
+                    "It's always nice to see new faces around here.",
+                    "The weather has been beautiful lately, hasn't it?",
+                    "If you need directions or information, I'd be happy to help!"
+                ],
+                "emotion": "happy"
+            },
+            "official": {
+                "lines": [
+                    "Good day. I'm the local official here.",
+                    "I handle administrative matters and keep things running smoothly.",
+                    "State your business, and I'll see what I can do to assist.",
+                    "Everything must be done properly and by the rules, of course."
+                ],
+                "emotion": "neutral"
+            },
+            "child": {
+                "lines": [
+                    "Wow! A real Super Wing! This is so cool!",
+                    "I've always wanted to see one up close!",
+                    "Can you really fly and transform? That's amazing!",
+                    "Maybe one day I can help with a delivery too!"
+                ],
+                "emotion": "excited"
+            },
+            "questgiver": {
+                "lines": [
+                    "Oh, thank goodness someone has arrived!",
+                    "I've been hoping a Super Wing would come to help.",
+                    "We have a situation here that requires your special skills.",
+                    "Would you be willing to hear me out?"
+                ],
+                "emotion": "worried"
+            }
         }
 
-        greeting_list = greetings.get(npc_type, greetings["resident"])
-        import secrets
-        greeting = secrets.SystemRandom().choice(greeting_list)
+        # Choose template based on NPC type
+        template_key = "questgiver" if (is_mission_npc and not mission_registered) else npc_type
+        template = dialogue_templates.get(template_key, dialogue_templates["resident"])
 
-        lines = [greeting]
-        emotion = "happy"
+        lines = template["lines"].copy()
+        emotion = template["emotion"]
 
+        # Add mission-specific lines if needed
         if is_mission_npc and not mission_registered:
-            lines.append("I've been waiting for help! Can you assist me with something important?")
-            emotion = "worried"
+            # Already handled by questgiver template
+            pass
         elif mission_context.get("is_target"):
-            lines.append("Thank you for coming! I really need your help.")
-            emotion = "hopeful"
+            lines = [
+                "You're here! I've been waiting for you!",
+                "Thank you so much for coming to help.",
+                "This means a lot to me and everyone here.",
+                "Please, let me know how I can assist with your mission."
+            ]
+            emotion = "grateful"
+
+        # Add variety for returning players
+        if len(previous_interactions) > 0:
+            lines[0] = f"Welcome back! It's good to see you again."
+            if len(previous_interactions) > 2:
+                lines.insert(1, "You've been very helpful around here. Everyone appreciates it!")
 
         return {
             "lines": lines,

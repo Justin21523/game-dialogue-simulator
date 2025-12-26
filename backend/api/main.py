@@ -23,7 +23,7 @@ from .routers import (
     missions,
     images,
     content,
-    # ===== 新增以下 8 個 =====
+    # ===== Additional routers =====
     assets,
     campaign,
     comfyui,
@@ -32,12 +32,14 @@ from .routers import (
     animation,
     sound,
     voice,
-    # ===== RAG 系統 =====
+    # ===== RAG system =====
     rag,
-    # ===== NPC 生成系統 =====
+    # ===== NPC generation =====
     npc,
-    # ===== 世界生成系統 =====
+    # ===== World generation =====
     world,
+    # ===== AI character appearance =====
+    character_appearance,
 )
 
 logger = logging.getLogger(__name__)
@@ -155,7 +157,7 @@ app.include_router(
     tags=["Content Generation"]
 )
 
-# ===== 新增：修復 404 錯誤 =====
+# ===== Added: restore missing routes / avoid 404s =====
 app.include_router(
     assets.router,
     prefix=f"{settings.api.api_prefix}/assets",
@@ -168,7 +170,7 @@ app.include_router(
     tags=["Campaign"]
 )
 
-# ===== 新增：圖片生成基礎設施 =====
+# ===== Added: image generation infrastructure =====
 app.include_router(
     comfyui.router,
     prefix=f"{settings.api.api_prefix}/comfyui",
@@ -187,7 +189,7 @@ app.include_router(
     tags=["Image Generation"]
 )
 
-# ===== 新增：動畫與多媒體 =====
+# ===== Added: animation and media =====
 app.include_router(
     animation.router,
     prefix=f"{settings.api.api_prefix}/animation",
@@ -206,25 +208,32 @@ app.include_router(
     tags=["Voice Generation"]
 )
 
-# ===== 新增：RAG 系統 =====
+# ===== Added: RAG system =====
 app.include_router(
     rag.router,
     prefix=f"{settings.api.api_prefix}/rag",
     tags=["RAG"]
 )
 
-# ===== 新增：NPC 生成系統 =====
+# ===== Added: NPC generation =====
 app.include_router(
     npc.router,
     prefix=f"{settings.api.api_prefix}/npc",
     tags=["NPC Generation"]
 )
 
-# ===== Phase 2：世界生成系統 =====
+# ===== Phase 2: world generation =====
 app.include_router(
     world.router,
     prefix=f"{settings.api.api_prefix}",
     tags=["World Generation"]
+)
+
+# ===== AI character appearance =====
+app.include_router(
+    character_appearance.router,
+    prefix=f"{settings.api.api_prefix}/character/appearance",
+    tags=["Character Appearance"]
 )
 
 
