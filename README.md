@@ -1,174 +1,85 @@
-# Super Wings Simulator - 網頁模擬遊戲
+# Game Dialogue Simulator (Web Game)
 
-一個基於 Super Wings 動畫的完整模擬遊戲，使用 SDXL LoRA 生成的高品質角色圖片。
+A browser-based simulation game inspired by the Super Wings animated series, using high-quality character art generated from SDXL LoRA models.
 
-## 專案概述
+## Overview
 
-**遊戲類型**: 模擬遊戲 + 角色派遣管理
-**技術棧**: HTML5 / CSS3 / JavaScript (ES6+)
-**已訓練角色**: 8 個（Jett, Jerome, Donnie, Chase, Flip, Todd, Paul, Bello）
+- **Genre**: simulation + dispatch/management
+- **Frontend**: Vite + React + TypeScript + Phaser 3
+- **Backend**: FastAPI
+- **Characters available**: 8 (Jett, Jerome, Donnie, Chase, Flip, Todd, Paul, Bello)
 
-## 功能特色
+## Highlights
 
-- ✈️ **角色派遣系統** - 選擇角色執行世界各地的任務
-- 🌍 **全球任務** - 6 種任務類型，15+ 個地點
-- 📊 **資源管理** - 金錢、燃料、道具管理
-- 🎬 **動畫流程** - 完整的飛行、變身、任務動畫序列
-- 💾 **進度儲存** - LocalStorage 自動儲存
+- **Dispatch system**: pick a character and send them on missions worldwide
+- **Mission variety**: multiple mission types and locations
+- **Resource management**: money, fuel, and items
+- **Animation pipeline**: launch → flight → arrival → transformation → landing
+- **Persistence**: LocalStorage save snapshot for quick resume
 
-## 快速開始
+## Quick Start
 
-### 開啟遊戲
-直接開啟 `index.html` 即可開始遊戲（開發中）
+### Frontend (Vite + React + TS + Phaser 3)
 
-### 開發伺服器（建議）
 ```bash
-# 使用 Python 簡易伺服器
-cd ~/web-projects/super-wings-simulator
-python3 -m http.server 8000
-
-# 瀏覽器開啟 http://localhost:8000
+npm install
+npm run dev
 ```
 
-## 專案結構
+Open the Vite URL (default `http://localhost:5173`).
 
+### Frontend build preview (static hosting)
+
+```bash
+npm run build
+python3 -m http.server 8000 --directory dist
 ```
+
+## Project Structure
+
+```txt
 super-wings-simulator/
-├── index.html                 # 遊戲入口
-├── css/                       # 樣式檔案
-│   ├── main.css              # 全域樣式
-│   ├── components.css        # 可重用元件
-│   ├── animations.css        # 動畫效果
-│   └── screens/              # 各畫面專用樣式
-├── js/                        # JavaScript 程式碼
-│   ├── main.js               # 應用入口
-│   ├── config.js             # 遊戲配置
-│   ├── core/                 # 核心系統
-│   │   ├── game-state.js    # 狀態管理
-│   │   ├── event-bus.js     # 事件系統
-│   │   └── save-load.js     # 儲存/讀取
-│   ├── models/               # 資料模型
-│   │   ├── character.js     # 角色類別
-│   │   ├── mission.js       # 任務類別
-│   │   └── resource.js      # 資源管理
-│   ├── systems/              # 遊戲系統
-│   │   ├── dispatch.js      # 派遣邏輯
-│   │   └── rewards.js       # 獎勵計算
-│   └── ui/screens/           # UI 畫面
-│       ├── main-menu.js
-│       ├── hangar.js
-│       ├── mission-board.js
-│       ├── in-flight.js
-│       └── results.js
-├── assets/images/             # 圖片資源
-│   ├── characters/           # 角色圖片
-│   ├── backgrounds/          # 背景場景
-│   └── ui/                   # UI 元素
-├── data/                      # 遊戲資料
-│   ├── characters.json       # 角色資料庫
-│   ├── missions.json         # 任務定義
-│   └── balancing.json        # 平衡參數
-├── docs/                      # 專案文檔
-│   └── IMPLEMENTATION_PLAN.md # 完整實作計畫
-├── scripts/                   # 工具腳本
-│   └── generate_assets.py   # 圖片生成腳本
-└── prompts/                   # Prompt 模板
-    └── game_assets/          # 遊戲素材模板
+├── index.html                  # App entry (boots React)
+├── src/                        # Frontend (React + TS + Phaser 3)
+│   ├── main.tsx                # React entry point
+│   ├── ui/                     # React screens/overlays (no per-frame logic)
+│   ├── game/phaser/            # Phaser scenes/systems (game loop)
+│   └── shared/                 # Shared logic (API, save, progression, quests)
+├── css/                        # Styles
+│   ├── main.css                # Global styles / theme variables
+│   ├── components.css          # Reusable UI components
+│   ├── animations.css          # Shared animations
+│   └── screens/                # Per-screen styles
+├── backend/                    # FastAPI backend (`/api/v1`)
+├── assets/images/              # Art assets
+│   ├── characters/             # Character images and sequences
+│   ├── backgrounds/            # Background art
+│   └── ui/                     # UI art
+├── data/                       # Game data (legacy + generators)
+├── docs/                       # Project docs
+├── scripts/                    # Helper scripts
+└── prompts/                    # Prompt templates
 ```
 
-## 開發階段
+## Gameplay Notes
 
-### Phase 1: 角色資訊整理（當前階段）
-- [x] 修正 Flip 的顏色配置
-- [ ] 建立統一角色資料庫
-- [ ] 準備 prompt 模板
+### Character stats (concept)
+- **Speed**: affects travel time
+- **Reliability**: affects success rate
+- **Specialization**: mission matching bonuses
 
-### Phase 2: 圖片生成
-- [ ] 生成角色肖像（64張）
-- [ ] 生成角色狀態（48張）
-- [ ] 生成表情特寫（48張）
-- [ ] 生成背景場景（15張）
-- [ ] 生成 UI 元素（30張）
+### Mission types (examples)
+- **Delivery**
+- **Rescue**
+- **Sports**
+- **Construction**
+- **Police**
+- **Animal Care**
 
-### Phase 3: Web 遊戲開發
-- [ ] 核心系統實作
-- [ ] UI 畫面開發
-- [ ] 遊戲流程整合
+## License
 
-### Phase 4: 打磨與部署
-- [ ] 動畫優化
-- [ ] 效能調整
-- [ ] 測試與 bug 修復
-- [ ] 部署到 GitHub Pages
+This project is for learning and demonstration purposes. Super Wings-related character/IP rights belong to their respective owners.
 
-## 遊戲機制
+## Status
 
-### 角色系統
-每個角色有獨特的屬性：
-- **Speed** (速度): 1-10，影響任務時長
-- **Reliability** (可靠性): 70-100%，影響成功率
-- **Specialization** (專長): 匹配任務類型可獲得加成
-
-### 任務類型
-- 📦 **Delivery** (送貨) - Jett 專長
-- 🚑 **Rescue** (救援)
-- ⚽ **Sports** (運動) - Flip 專長
-- 🏗️ **Construction** (建造) - Donnie/Todd 專長
-- 🚓 **Police** (警察) - Paul 專長
-- 🐾 **Animal Care** (動物照顧) - Bello 專長
-
-### 資源系統
-- **Money** (金錢): 完成任務獲得，用於購買道具和解鎖角色
-- **Fuel** (燃料): 派遣任務消耗，每分鐘自動補充 +1
-- **Repair Kits** (修理包): 恢復角色能量
-- **Boost Packs** (加速包): 立即完成任務
-
-## 技術細節
-
-### 圖片生成
-- **Base Model**: SDXL 1.0
-- **LoRA Models**: 每個角色的 epoch 15 checkpoint
-- **Resolution**: 1024×1024 (角色)、1280×720 (背景)
-- **Format**: PNG → WebP（優化）
-
-### 效能目標
-- 首次載入 < 3 秒
-- 畫面切換 < 300ms
-- 動畫 60 FPS
-
-### 瀏覽器支援
-- Chrome/Edge 100+
-- Firefox 100+
-- Safari 15+
-- 支援桌面、平板、手機
-
-## 角色資訊
-
-### 已訓練的 8 個角色
-
-| 角色 | 顏色 | 特徵 | 專長 |
-|------|------|------|------|
-| **Jett** | 紅+白 | 黃色螺旋槳 | Delivery |
-| **Jerome** | 藍色 | 戰鬥機造型 | General |
-| **Donnie** | 黃+藍 | 工具專家 | Construction |
-| **Chase** | 深藍 | 3條紅閃電 | Spy/Transform |
-| **Flip** | 紅+白條紋 | **藍帽子+黃邊** | Sports |
-| **Todd** | 褐色 | 鑽頭鼻子 | Digging |
-| **Paul** | 藍+白 | 警察標記 | Police |
-| **Bello** | 黑白條紋 | 斑馬紋 | Animals |
-
-## 相關連結
-
-- [完整實作計畫](./docs/IMPLEMENTATION_PLAN.md)
-- [Super Wings Wiki](https://super-wings.fandom.com/)
-- [原始專案文檔](/mnt/c/ai_projects/3d-animation-lora-pipeline/docs/projects/super-wings/)
-
-## 授權
-
-本專案僅供學習和展示用途。Super Wings 相關角色版權歸原作者所有。
-
-## 開發狀態
-
-🚧 **開發中** - Phase 1 進行中
-
-最後更新：2025-12-16
+In active development. Last updated: 2025-12-16
