@@ -77,14 +77,22 @@ export function usePhaserGame(
         }
 
         if (nextKey && initialKeyRef.current !== nextKey) {
-            try {
-                restartFromBoot(gameRef.current, initial as InitialPhaserParams);
-                initialKeyRef.current = nextKey;
-                return;
-            } catch (err) {
-                console.warn('[phaser] restart failed; recreating game', err);
+            const prevKey = initialKeyRef.current;
+            const prevMode = prevKey ? prevKey.split(':', 1)[0] : null;
+            const nextMode = nextKey.split(':', 1)[0];
+            const modeChanged = Boolean(prevMode && nextMode && prevMode !== nextMode);
+
+            if (!modeChanged) {
+                try {
+                    restartFromBoot(gameRef.current, initial as InitialPhaserParams);
+                    initialKeyRef.current = nextKey;
+                    return;
+                } catch (err) {
+                    console.warn('[phaser] restart failed; recreating game', err);
+                }
             }
 
+            // Mode switches are more robust when fully recreating the Phaser game.
             gameRef.current.destroy(true);
             gameRef.current = null;
             while (parent.firstChild) parent.removeChild(parent.firstChild);
