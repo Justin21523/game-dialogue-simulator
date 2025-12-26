@@ -143,6 +143,17 @@
     font-size: 0.9rem;
 }
 
+.char-score {
+    margin-top: 6px;
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(255, 215, 0, 0.16);
+    color: rgba(0, 0, 0, 0.75);
+}
+
 .match-badge {
     background: var(--color-accent);
     color: var(--text-main);
@@ -177,4 +188,35 @@
 .ai-reasoning.muted {
     color: var(--text-secondary);
     font-style: italic;
+}
+
+.guide-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.guide-loading {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.guide-error {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    color: var(--color-danger);
+    font-weight: 700;
+}
+
+.guide-text {
+    white-space: pre-wrap;
+    line-height: 1.55;
+    color: var(--text-main);
+}
+
+.guide-tips {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--text-secondary);
 }
