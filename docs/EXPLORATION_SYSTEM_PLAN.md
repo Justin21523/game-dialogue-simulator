@@ -1,5 +1,9 @@
 # Super Wings Simulator - 任務探索系統計畫
 
+> Note (2025-12): 舊版 `js/` 前端已移除。本文件中的 `js/...` 路徑多為歷史/設計參考；目前探索/夥伴的 Phaser 2D/2.5D 原型實作在：
+> - `src/game/phaser/scenes/ExplorationScene.ts`
+> - `src/game/phaser/systems/PartnerSystem.ts`
+
 ## 專案概述
 
 將現有的簡單任務互動系統重構為完整的 **2D 橫向捲軸探索遊戲**，包含：

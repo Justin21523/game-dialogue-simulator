@@ -1,5 +1,7 @@
 # Super Wings Simulator - API 修復與 AI 驅動系統計劃
 
+> Note (2025-12): 舊版 `js/` 前端已移除。本文件引用的 `js/...` 檔案路徑為歷史/設計參考；新版前端主要在 `src/`（React + TS + Phaser）。
+
 ## ⚠️ **用戶優先級**: 先修復所有 API 錯誤，再做新功能
 
 ---
