@@ -9,6 +9,15 @@ export function usePhaserGame(
     initial?: InitialPhaserParams
 ): void {
     const gameRef = React.useRef<Phaser.Game | null>(null);
+    const initialKeyRef = React.useRef<string | null>(null);
+
+    const buildInitialKey = React.useCallback((value: InitialPhaserParams | undefined): string | null => {
+        if (!value) return null;
+        if (value.mode === 'flight') {
+            return `flight:${value.flight.charId}:${value.flight.missionId ?? ''}:${value.flight.missionType}:${value.flight.location ?? ''}`;
+        }
+        return `exploration:${value.exploration.charId}:${value.exploration.startLocationId ?? ''}:${value.exploration.spawnPoint ?? ''}`;
+    }, []);
 
     React.useEffect(() => {
         const parent = parentRef.current;
@@ -17,6 +26,7 @@ export function usePhaserGame(
         return () => {
             gameRef.current?.destroy(true);
             gameRef.current = null;
+            initialKeyRef.current = null;
 
             while (parent.firstChild) {
                 parent.removeChild(parent.firstChild);
@@ -27,18 +37,34 @@ export function usePhaserGame(
     React.useEffect(() => {
         const parent = parentRef.current;
         if (!parent) return;
+        const nextKey = buildInitialKey(initial);
+
         if (!enabled) {
             if (!gameRef.current) return;
             gameRef.current.destroy(true);
             gameRef.current = null;
+            initialKeyRef.current = null;
             while (parent.firstChild) {
                 parent.removeChild(parent.firstChild);
             }
             return;
         }
 
-        if (gameRef.current) return;
-        gameRef.current = createPhaserGame(parent, initial);
+        if (!gameRef.current) {
+            gameRef.current = createPhaserGame(parent, initial);
+            initialKeyRef.current = nextKey;
+            return;
+        }
+
+        if (nextKey && initialKeyRef.current !== nextKey) {
+            gameRef.current.destroy(true);
+            gameRef.current = null;
+            while (parent.firstChild) {
+                parent.removeChild(parent.firstChild);
+            }
+            gameRef.current = createPhaserGame(parent, initial);
+            initialKeyRef.current = nextKey;
+        }
     }, [
         enabled,
         initial?.mode,
@@ -49,6 +75,7 @@ export function usePhaserGame(
         initial && initial.mode === 'exploration' ? initial.exploration.charId : undefined,
         initial && initial.mode === 'exploration' ? initial.exploration.startLocationId : undefined,
         initial && initial.mode === 'exploration' ? initial.exploration.spawnPoint : undefined,
+        buildInitialKey,
         parentRef
     ]);
 }

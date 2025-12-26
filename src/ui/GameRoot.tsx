@@ -28,6 +28,7 @@ import type { CharacterState, FlightParams, Mission, MissionResult, Resources, S
 import type { AchievementState, StatisticsState } from '../shared/types/Progress';
 import type { SaveSnapshot } from '../shared/types/Save';
 import type { Quest } from '../shared/quests/quest';
+import { startQuestFromTemplate } from '../shared/quests/questRuntime';
 import { HangarScreen } from './screens/HangarScreen';
 import { AchievementsScreen } from './screens/AchievementsScreen';
 import { ExplorationScreen } from './screens/ExplorationScreen';
@@ -60,6 +61,10 @@ type GameState = {
     activeSessionId: string | null;
     lastResult: MissionResult | null;
     explorationDebrief: MissionResult | null;
+    inboundFlight: FlightResult | null;
+    explorationStartLocationId: string;
+    explorationSpawnPoint: string;
+    pendingExplorationQuestTemplateId: string | null;
     statistics: StatisticsState;
     achievements: AchievementState;
 };
@@ -75,8 +80,10 @@ type GameAction =
     | { type: 'CANCEL_MISSION'; screen: ScreenId }
     | { type: 'ABORT_FLIGHT'; screen: ScreenId }
     | { type: 'FLIGHT_COMPLETE'; result: FlightResult }
+    | { type: 'MISSION_COMPLETE_FROM_EXPLORATION'; mission: Mission; actorId: string }
     | { type: 'QUEST_COMPLETE'; questId: string; title: string; description: string; location: string; actorId: string; rewards: { money: number; exp: number } }
     | { type: 'CLOSE_EXPLORATION_DEBRIEF' }
+    | { type: 'CLEAR_PENDING_EXPLORATION_QUEST' }
     | { type: 'TICK_PLAYTIME'; nowIso: string; deltaSeconds: number }
     | { type: 'LOAD_SNAPSHOT'; snapshot: LoadedSnapshot; nowIso: string; nowMs: number }
     | { type: 'RESET_PROGRESS'; nowIso: string; nowMs: number }
@@ -197,8 +204,8 @@ function GameRootInner() {
                     mode: 'exploration',
                     exploration: {
                         charId: state.selectedCharacterId,
-                        startLocationId: 'base_airport',
-                        spawnPoint: 'default'
+                        startLocationId: state.explorationStartLocationId,
+                        spawnPoint: state.explorationSpawnPoint
                     }
                 }
               : undefined
@@ -243,6 +250,11 @@ function GameRootInner() {
             const leader = quest.participants?.find((p) => p.role === 'leader')?.characterId;
             const actorId = leader || current.selectedCharacterId;
 
+            if (current.activeMission && current.inboundFlight && quest.type === 'main') {
+                dispatch({ type: 'MISSION_COMPLETE_FROM_EXPLORATION', mission: current.activeMission, actorId });
+                return;
+            }
+
             dispatch({
                 type: 'QUEST_COMPLETE',
                 questId,
@@ -259,6 +271,25 @@ function GameRootInner() {
             eventBus.off(EVENTS.QUEST_COMPLETED, onQuestCompleted);
         };
     }, []);
+
+    React.useEffect(() => {
+        if (state.screen !== 'exploration') return;
+        if (!state.pendingExplorationQuestTemplateId) return;
+
+        let cancelled = false;
+        startQuestFromTemplate(state.pendingExplorationQuestTemplateId, { actorId: state.selectedCharacterId, type: 'main' })
+            .catch((err: unknown) => {
+                console.warn('[exploration] auto-start quest failed', err);
+            })
+            .finally(() => {
+                if (cancelled) return;
+                dispatch({ type: 'CLEAR_PENDING_EXPLORATION_QUEST' });
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [dispatch, state.pendingExplorationQuestTemplateId, state.screen, state.selectedCharacterId]);
 
     React.useEffect(() => {
         persistSnapshot(state);
@@ -608,6 +639,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 activeMission: action.mission,
                 activeSessionId: null,
                 lastResult: null,
+                explorationDebrief: null,
+                inboundFlight: null,
+                pendingExplorationQuestTemplateId: null,
                 flightParams: { missionId: action.mission.id, missionType: action.mission.type, charId: action.charId }
             };
         }
@@ -625,7 +659,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             const mission = state.activeMission;
             const flightParams = state.flightParams;
             if (!mission || !flightParams) {
-                return { ...state, screen: action.screen, activeMission: null, flightParams: null };
+                return { ...state, screen: action.screen, activeMission: null, flightParams: null, inboundFlight: null, pendingExplorationQuestTemplateId: null };
             }
 
             const refundFuel = Math.ceil(mission.fuelCost * GAME_CONFIG.FUEL_COST_MULTIPLIER);
@@ -641,7 +675,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 characters: nextCharacters,
                 activeMission: null,
                 flightParams: null,
-                lastResult: null
+                lastResult: null,
+                inboundFlight: null,
+                pendingExplorationQuestTemplateId: null
             };
         }
 
@@ -656,7 +692,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 screen: action.screen,
                 characters: nextCharacters,
                 activeMission: null,
-                flightParams: null
+                flightParams: null,
+                inboundFlight: null,
+                pendingExplorationQuestTemplateId: null
             };
         }
 
@@ -669,6 +707,20 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             const char = state.characters.find((c) => c.id === action.result.charId);
             if (!char) {
                 return { ...state, screen: 'hangar', activeMission: null, flightParams: null };
+            }
+
+            if (action.result.success) {
+                return {
+                    ...state,
+                    screen: 'exploration',
+                    flightParams: null,
+                    lastResult: null,
+                    explorationDebrief: null,
+                    inboundFlight: action.result,
+                    explorationStartLocationId: 'warehouse_district',
+                    explorationSpawnPoint: 'entry',
+                    pendingExplorationQuestTemplateId: 'qt_repair_relay_field'
+                };
             }
 
             const bonus = Math.max(0, Math.floor(action.result.score));
@@ -765,6 +817,116 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 achievements: nextAchievements,
                 activeMission: null,
                 flightParams: null
+            };
+        }
+
+        case 'MISSION_COMPLETE_FROM_EXPLORATION': {
+            const mission = action.mission;
+            const char = state.characters.find((c) => c.id === action.actorId) ?? state.characters[0];
+            if (!char) return { ...state, screen: 'hangar' };
+
+            const inbound = state.inboundFlight;
+            const bonus = inbound ? Math.max(0, Math.floor(inbound.score)) : 0;
+            const expGain = Math.max(0, Math.floor(mission.rewardExp));
+            const totalMoney = Math.max(0, Math.floor(mission.rewardMoney + bonus));
+
+            let nextResources: Resources = { ...state.resources, money: state.resources.money + totalMoney };
+
+            let nextStatistics = recordMissionCompleted(state.statistics, {
+                missionType: mission.type.toLowerCase(),
+                characterId: char.id,
+                location: mission.location,
+                rewardsMoney: totalMoney,
+                flightStats: inbound?.flightStats
+            });
+            nextStatistics = recordMoneyBalance(nextStatistics, nextResources.money);
+
+            const baseChar: CharacterState = { ...char, status: 'IDLE' };
+            let nextChar = applyExp(baseChar, expGain);
+
+            const missionLevelUps = Math.max(0, nextChar.level - baseChar.level);
+            for (let i = 0; i < missionLevelUps; i += 1) {
+                nextStatistics = recordLevelUp(nextStatistics, nextChar.level);
+            }
+
+            let nextCharacters = state.characters.map((c) => (c.id === nextChar.id ? nextChar : c));
+
+            let nextAchievements: AchievementState = state.achievements;
+            const progressKey = `${nextChar.id}_${mission.type.toLowerCase()}`;
+            const currentCount = nextAchievements.progress[progressKey] ?? 0;
+            nextAchievements = { ...nextAchievements, progress: { ...nextAchievements.progress, [progressKey]: currentCount + 1 } };
+
+            for (let guard = 0; guard < 6; guard += 1) {
+                const { next, unlocked } = checkForNewUnlocks(nextAchievements, nextStatistics);
+                nextAchievements = next;
+                if (unlocked.length === 0) break;
+
+                let bonusMoney = 0;
+                let bonusExp = 0;
+                for (const item of unlocked) {
+                    bonusMoney += Math.max(0, item.definition.reward?.money ?? 0);
+                    bonusExp += Math.max(0, item.definition.reward?.experience ?? 0);
+                }
+
+                if (bonusMoney > 0) {
+                    nextResources = { ...nextResources, money: nextResources.money + bonusMoney };
+                    nextStatistics = recordMoneyBalance(nextStatistics, nextResources.money);
+                }
+
+                if (bonusExp > 0) {
+                    const before = nextChar;
+                    nextChar = applyExp(nextChar, bonusExp);
+                    const levelUps = Math.max(0, nextChar.level - before.level);
+                    for (let i = 0; i < levelUps; i += 1) {
+                        nextStatistics = recordLevelUp(nextStatistics, nextChar.level);
+                    }
+                    nextCharacters = nextCharacters.map((c) => (c.id === nextChar.id ? nextChar : c));
+                }
+            }
+
+            nextStatistics = {
+                ...nextStatistics,
+                achievementsUnlocked: nextAchievements.unlocked.length,
+                achievementPoints: nextAchievements.totalPoints
+            };
+
+            const rewards = { money: totalMoney, exp: expGain, bonus };
+
+            const nextResult: MissionResult = {
+                mission,
+                character: nextChar,
+                success: true,
+                score: bonus,
+                rewards
+            };
+
+            if (state.screen === 'exploration') {
+                return {
+                    ...state,
+                    explorationDebrief: nextResult,
+                    resources: nextResources,
+                    characters: nextCharacters,
+                    statistics: nextStatistics,
+                    achievements: nextAchievements,
+                    activeMission: null,
+                    flightParams: null,
+                    inboundFlight: null,
+                    pendingExplorationQuestTemplateId: null
+                };
+            }
+
+            return {
+                ...state,
+                screen: 'results',
+                resources: nextResources,
+                characters: nextCharacters,
+                lastResult: nextResult,
+                statistics: nextStatistics,
+                achievements: nextAchievements,
+                activeMission: null,
+                flightParams: null,
+                inboundFlight: null,
+                pendingExplorationQuestTemplateId: null
             };
         }
 
@@ -878,6 +1040,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         case 'CLOSE_EXPLORATION_DEBRIEF':
             return { ...state, explorationDebrief: null };
 
+        case 'CLEAR_PENDING_EXPLORATION_QUEST':
+            return { ...state, pendingExplorationQuestTemplateId: null };
+
         case 'TICK_PLAYTIME': {
             const nextStatistics = tickPlayTime(state.statistics, action.deltaSeconds, action.nowIso);
             if (nextStatistics === state.statistics) return state;
@@ -954,6 +1119,10 @@ function createDefaultState(): GameState {
         activeSessionId: null,
         lastResult: null,
         explorationDebrief: null,
+        inboundFlight: null,
+        explorationStartLocationId: 'base_airport',
+        explorationSpawnPoint: 'default',
+        pendingExplorationQuestTemplateId: null,
         statistics: createDefaultStatistics(),
         achievements: createDefaultAchievementState()
     };
