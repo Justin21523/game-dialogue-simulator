@@ -12,26 +12,13 @@ function createLocalStorageStub(store = new Map()) {
 }
 
 // axios stub
-function createAxiosStub() {
-  const instance = {
-    defaults: { baseURL: '', headers: { common: {} } },
-    interceptors: { response: { use: () => {} } },
-    get: async () => ({ status: 200, data: {} }),
-    post: async () => ({ status: 200, data: {} }),
-    delete: async () => ({ status: 200, data: {} }),
-  };
-  return {
-    create: () => instance,
-  };
-}
-
 // shared store to simulate persistence across mode switches
 const sharedStore = new Map();
 global.localStorage = createLocalStorageStub(sharedStore);
-global.axios = createAxiosStub();
 
-const { missionManager } = await import('../js/managers/mission-manager.js');
-const { Quest, QuestStatus, ObjectiveType } = await import('../js/models/quest.js');
+const { missionManager } = await import('../dist-node/shared/quests/missionManager.js');
+const { Quest, QuestStatus } = await import('../dist-node/shared/quests/quest.js');
+const { ObjectiveType } = await import('../dist-node/shared/quests/objective.js');
 
 function resetManager() {
   missionManager.initialized = false;
@@ -53,7 +40,7 @@ async function simulateModeSwitch() {
 async function run() {
   await simulateModeSwitch();
 
-  // 建立主線 + 支線
+  // Create a main quest + a sub quest
   const mainQuest = new Quest({
     questId: 'main_branch',
     title: 'Multi-mode Mainline',
@@ -82,31 +69,31 @@ async function run() {
   missionManager.offerQuest(subQuest, { type: 'sub' });
   await missionManager.acceptQuest(subQuest.questId, { type: 'sub', actorId: 'jett' });
 
-  // 夥伴完成 assigned objective
+  // Partner completes an assigned objective
   missionManager.routeProgressEvent('PARTNER_SUMMONED', { partnerId: 'dizzy', actorId: 'dizzy' });
-  assert.strictEqual(subQuest.objectives[0].status, 'completed', '夥伴應能完成指派目標');
+  assert.strictEqual(subQuest.objectives[0].status, 'completed', 'Partner should be able to complete assigned objectives');
 
-  // 主線分支：只完成 explore_a，explore_b 為可選
+  // Main branch: only explore_a is required; explore_b is optional
   missionManager.routeProgressEvent('NPC_INTERACTION', { npc: { npcId: 'npc_main' }, actorId: 'jett' });
   missionManager.routeProgressEvent('AREA_EXPLORED', { area: 'zone_a', actorId: 'jett' });
-  assert.strictEqual(mainQuest.objectives.find(o => o.id === 'explore_a').status, 'completed', '主線 A 應完成');
-  assert.strictEqual(mainQuest.status, QuestStatus.COMPLETED, '主線應完成（B 是 optional）');
+  assert.strictEqual(mainQuest.objectives.find(o => o.id === 'explore_a').status, 'completed', 'Main objective A should complete');
+  assert.strictEqual(mainQuest.status, QuestStatus.COMPLETED, 'Main quest should complete (B is optional)');
 
-  // 模擬模式切換：重新初始化並從 shared localStorage 載入
+  // Simulate a mode switch: re-initialize and load from shared localStorage
   await simulateModeSwitch();
   const loadedMain = missionManager.getQuest('main_branch');
   const loadedSub = missionManager.getQuest('sub_partner');
-  assert.strictEqual(loadedMain?.status, QuestStatus.COMPLETED, '模式切換後主線狀態應保留完成');
-  assert.strictEqual(loadedSub?.objectives[0].status, 'completed', '模式切換後支線進度應保留');
+  assert.strictEqual(loadedMain?.status, QuestStatus.COMPLETED, 'Main quest status should persist across mode switch');
+  assert.strictEqual(loadedSub?.objectives[0].status, 'completed', 'Sub quest progress should persist across mode switch');
 
-  // 確認 stateLog 中有 objective_update 記錄
+  // Ensure stateLog includes objective_update entries
   const hasLog = (missionManager.stateLog || []).some((l) => l.type === 'objective_update');
-  assert.ok(hasLog, '狀態流應包含 objective_update');
+  assert.ok(hasLog, 'State log should include objective_update entries');
 
-  console.log('✅ mission-manager-mode.test.mjs 通過');
+  console.log('✅ mission-manager-mode.test.mjs passed');
 }
 
 run().catch((err) => {
-  console.error('❌ mission-manager-mode.test.mjs 失敗', err);
+  console.error('❌ mission-manager-mode.test.mjs failed', err);
   process.exit(1);
 });
