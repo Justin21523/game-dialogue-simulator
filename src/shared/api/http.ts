@@ -7,9 +7,14 @@ export type HttpError = {
 const DEFAULT_TIMEOUT_MS = 15000;
 const BACKEND_UNAVAILABLE_COOLDOWN_MS = 5000;
 
-type BackendAvailability = 'unknown' | 'available' | 'unavailable';
+export type BackendAvailability = 'unknown' | 'available' | 'unavailable';
 let backendAvailability: BackendAvailability = 'unknown';
 let backendUnavailableUntilMs = 0;
+let backendProbePromise: Promise<boolean> | null = null;
+
+export function getBackendAvailability(): BackendAvailability {
+    return backendAvailability;
+}
 
 function getApiBase(): string {
     const base = import.meta.env.VITE_API_BASE || 'http://localhost:8001/api/v1';
@@ -28,6 +33,44 @@ async function parseJsonSafely(res: Response): Promise<unknown> {
         return JSON.parse(text);
     } catch {
         return text;
+    }
+}
+
+async function ensureBackendAvailable(timeoutMs: number): Promise<boolean> {
+    const nowMs = Date.now();
+    if (backendAvailability === 'available') return true;
+    if (backendAvailability === 'unavailable' && backendUnavailableUntilMs > nowMs) return false;
+    if (backendProbePromise) return backendProbePromise;
+
+    backendProbePromise = (async () => {
+        const controller = new AbortController();
+        const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs);
+
+        try {
+            const res = await fetch(joinUrl(getApiBase(), '/health'), {
+                method: 'GET',
+                signal: controller.signal
+            });
+            if (res.ok) {
+                backendAvailability = 'available';
+                backendUnavailableUntilMs = 0;
+                return true;
+            }
+        } catch {
+            // Ignore probe errors; requestJson will surface a user-friendly message.
+        } finally {
+            globalThis.clearTimeout(timeoutId);
+        }
+
+        backendAvailability = 'unavailable';
+        backendUnavailableUntilMs = Date.now() + BACKEND_UNAVAILABLE_COOLDOWN_MS;
+        return false;
+    })();
+
+    try {
+        return await backendProbePromise;
+    } finally {
+        backendProbePromise = null;
     }
 }
 
@@ -53,6 +96,8 @@ export async function deleteJson<T>(path: string, opts?: { timeoutMs?: number })
 
 async function requestJson<T>(path: string, init: RequestInit, opts?: { timeoutMs?: number }): Promise<T> {
     const nowMs = Date.now();
+    const timeoutMs = opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+
     if (backendAvailability === 'unavailable' && backendUnavailableUntilMs > nowMs) {
         const error: HttpError = {
             status: 0,
@@ -62,9 +107,20 @@ async function requestJson<T>(path: string, init: RequestInit, opts?: { timeoutM
         throw error;
     }
 
+    if (backendAvailability !== 'available') {
+        const ok = await ensureBackendAvailable(Math.min(timeoutMs, 2000));
+        if (!ok) {
+            const error: HttpError = {
+                status: 0,
+                message: 'Backend unavailable. Start the FastAPI server or set VITE_API_BASE.',
+                body: null
+            };
+            throw error;
+        }
+    }
+
     const controller = new AbortController();
-    const timeoutMs = opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+    const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs);
 
     try {
         let res: Response;
@@ -97,6 +153,6 @@ async function requestJson<T>(path: string, init: RequestInit, opts?: { timeoutM
         backendUnavailableUntilMs = 0;
         return (await res.json()) as T;
     } finally {
-        window.clearTimeout(timeoutId);
+        globalThis.clearTimeout(timeoutId);
     }
 }

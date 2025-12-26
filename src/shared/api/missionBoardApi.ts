@@ -1,4 +1,5 @@
 import { getJson, postJson } from './http';
+import type { HttpError } from './http';
 
 export type TutorialHintResponse = {
     topic: string;
@@ -63,6 +64,124 @@ export type EventResolveResponse = {
     penalties?: Record<string, unknown> | null;
 };
 
+function isOfflineBackendError(err: unknown): boolean {
+    if (!err || typeof err !== 'object') return false;
+    const maybe = err as Partial<HttpError>;
+    return maybe.status === 0;
+}
+
+function hashString32(input: string): number {
+    // FNV-1a 32-bit
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < input.length; i += 1) {
+        hash ^= input.charCodeAt(i);
+        hash = Math.imul(hash, 0x01000193);
+        hash >>>= 0;
+    }
+    return hash >>> 0;
+}
+
+function mulberry32(seed: number): () => number {
+    let t = seed >>> 0;
+    return () => {
+        t += 0x6d2b79f5;
+        let x = Math.imul(t ^ (t >>> 15), 1 | t);
+        x ^= x + Math.imul(x ^ (x >>> 7), 61 | x);
+        return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+function clampDifficulty(raw: string | null | undefined): string {
+    const normalized = (raw ?? 'medium').trim().toLowerCase();
+    if (normalized === 'easy' || normalized === 'medium' || normalized === 'hard') return normalized;
+    return 'medium';
+}
+
+function buildLocalEvent(params: {
+    characterId: string;
+    location: string;
+    missionPhase: string;
+    originalProblem: string;
+    eventType?: string | null;
+    difficulty?: string | null;
+}): GameEventResponse {
+    const seed = hashString32(
+        [params.characterId, params.location, params.missionPhase, params.eventType ?? '', params.difficulty ?? '', params.originalProblem].join('|')
+    );
+    const rng = mulberry32(seed);
+
+    const difficulty = clampDifficulty(params.difficulty);
+
+    const lowerProblem = params.originalProblem.toLowerCase();
+    const relatedAbility = (() => {
+        if (lowerProblem.includes('traffic') || lowerProblem.includes('crowd')) return 'POLICE';
+        if (lowerProblem.includes('broken') || lowerProblem.includes('repair') || lowerProblem.includes('signal')) return 'ENGINEERING';
+        if (lowerProblem.includes('missing') || lowerProblem.includes('mystery') || lowerProblem.includes('suspect')) return 'ESPIONAGE';
+        if (lowerProblem.includes('dig') || lowerProblem.includes('tunnel') || lowerProblem.includes('recover')) return 'DIGGING';
+        if (lowerProblem.includes('animal') || lowerProblem.includes('rescue')) return 'ANIMAL_RESCUE';
+        const abilities = ['ENGINEERING', 'POLICE', 'ESPIONAGE', 'DIGGING', 'ANIMAL_RESCUE'];
+        return abilities[Math.floor(rng() * abilities.length)];
+    })();
+
+    const templates = [
+        {
+            name: 'Unexpected Obstacle',
+            description: `Something blocks the mission route near ${params.location}.`,
+            challenge: 'Choose a safe way to proceed without delaying the mission.'
+        },
+        {
+            name: 'Local Request',
+            description: `A citizen asks for help during the ${params.missionPhase} phase.`,
+            challenge: 'Decide how to assist while staying on schedule.'
+        },
+        {
+            name: 'Equipment Alert',
+            description: 'A system warning appears on the dashboard.',
+            challenge: 'Stabilize the situation and continue the mission.'
+        }
+    ];
+    const picked = templates[Math.floor(rng() * templates.length)];
+
+    const choices: EventChoice[] = [
+        { option: 'Take a careful approach', outcome: 'You proceed carefully and keep things under control.' },
+        { option: 'Call for support', outcome: 'Support arrives and the situation improves.' },
+        { option: 'Try a quick workaround', outcome: 'You improvise and push forward under pressure.' }
+    ];
+
+    return {
+        event_id: `local_evt_${seed.toString(16)}`,
+        event_type: params.eventType ?? 'local_event',
+        name: picked.name,
+        description: picked.description,
+        challenge: picked.challenge,
+        choices,
+        difficulty,
+        related_ability: relatedAbility,
+        reward_potential: null
+    };
+}
+
+function resolveLocalEvent(params: { eventId: string; choiceIndex: number }): EventResolveResponse {
+    const rawSeed = params.eventId.startsWith('local_evt_') ? params.eventId.slice('local_evt_'.length) : params.eventId;
+    const seed = hashString32(rawSeed);
+    const rng = mulberry32(seed ^ (params.choiceIndex + 1));
+
+    const baseChance = params.choiceIndex === 0 ? 0.75 : params.choiceIndex === 1 ? 0.6 : 0.45;
+    const success = rng() < baseChance;
+
+    const outcome = success
+        ? 'Success! The team adapts quickly and keeps the mission on track.'
+        : 'Setback. The situation is contained, but it costs time and focus.';
+
+    return {
+        event_id: params.eventId,
+        success,
+        outcome,
+        rewards: null,
+        penalties: null
+    };
+}
+
 export type PackageResult = {
     success: boolean;
     package_id: string;
@@ -125,22 +244,40 @@ export async function generateMissionEvent(params: {
     eventType?: string | null;
     difficulty?: string | null;
 }): Promise<GameEventResponse> {
-    return postJson<GameEventResponse>('/events/generate', {
-        character_id: params.characterId,
-        location: params.location,
-        mission_phase: params.missionPhase,
-        original_problem: params.originalProblem,
-        event_type: params.eventType ?? null,
-        difficulty: params.difficulty ?? null
-    }, { timeoutMs: 60000 });
+    try {
+        return await postJson<GameEventResponse>(
+            '/events/generate',
+            {
+                character_id: params.characterId,
+                location: params.location,
+                mission_phase: params.missionPhase,
+                original_problem: params.originalProblem,
+                event_type: params.eventType ?? null,
+                difficulty: params.difficulty ?? null
+            },
+            { timeoutMs: 60000 }
+        );
+    } catch (err) {
+        if (isOfflineBackendError(err)) {
+            return buildLocalEvent(params);
+        }
+        throw err;
+    }
 }
 
 export async function resolveMissionEvent(params: { eventId: string; choiceIndex: number }): Promise<EventResolveResponse> {
-    return postJson<EventResolveResponse>(
-        '/events/resolve',
-        { event_id: params.eventId, choice_index: params.choiceIndex },
-        { timeoutMs: 60000 }
-    );
+    try {
+        return await postJson<EventResolveResponse>(
+            '/events/resolve',
+            { event_id: params.eventId, choice_index: params.choiceIndex },
+            { timeoutMs: 60000 }
+        );
+    } catch (err) {
+        if (isOfflineBackendError(err)) {
+            return resolveLocalEvent(params);
+        }
+        throw err;
+    }
 }
 
 function normalizeLocation(raw: string): string {
