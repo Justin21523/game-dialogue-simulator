@@ -8,7 +8,14 @@ type ErrorBoundaryState = {
     error: Error | null;
 };
 
-const KNOWN_STORAGE_KEYS = ['sws:save:v1', 'missionManagerState', 'sws:world:v1', 'sws:companions:v1'] as const;
+const KNOWN_STORAGE_KEYS = [
+    'sws:save:v1',
+    'missionManagerState',
+    'sws:world:v2',
+    'sws:world:v1',
+    'sws:companions:v2',
+    'sws:companions:v1'
+] as const;
 
 function clearKnownLocalState(): void {
     try {
@@ -76,4 +83,3 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
         );
     }
 }
-

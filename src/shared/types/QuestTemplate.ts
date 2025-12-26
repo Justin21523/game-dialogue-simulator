@@ -4,10 +4,13 @@ export type QuestStepType =
     | 'talk'
     | 'go_to_location'
     | 'collect'
+    | 'deliver'
     | 'fix_build'
     | 'investigate'
     | 'clear_manage'
-    | 'dig_recover';
+    | 'dig_recover'
+    | 'escort'
+    | 'puzzle_unlock';
 
 export type QuestTemplateStep = {
     id: string;
