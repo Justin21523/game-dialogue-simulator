@@ -408,6 +408,19 @@ export class MissionManager {
                 }
                 break;
             }
+            case ObjectiveType.ESCORT:
+            case ObjectiveType.CUSTOM: {
+                if (eventType !== EVENTS.CUSTOM_ACTION) break;
+                const targetId = (payload.actionTarget as string | undefined) || (payload.targetId as string | undefined) || (payload.target_id as string | undefined);
+
+                const hasConditions = (objective.conditions ?? []).length > 0;
+                if (!hasConditions || matcher(targetId, ['target_id', 'target', 'escort_id', 'action_target', 'actionTarget'])) {
+                    objective.updateProgress(objective.currentCount + 1);
+                    this.emitObjectiveUpdate(quest, objective, objective.type, { targetId, actorId });
+                    return true;
+                }
+                break;
+            }
             default:
                 break;
         }

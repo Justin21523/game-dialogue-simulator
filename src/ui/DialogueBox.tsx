@@ -62,8 +62,18 @@ function isConditionMet(cond: DialogueCondition | undefined): boolean {
         if (!isActive) return false;
     }
 
+    if (cond.quest_not_active) {
+        const active = missionManager.getActiveQuests();
+        const isActive = active.some((q) => q.templateId === cond.quest_not_active);
+        if (isActive) return false;
+    }
+
     if (cond.quest_completed) {
         if (!worldStateManager.isQuestTemplateCompleted(cond.quest_completed)) return false;
+    }
+
+    if (cond.quest_not_completed) {
+        if (worldStateManager.isQuestTemplateCompleted(cond.quest_not_completed)) return false;
     }
 
     return true;
@@ -188,7 +198,7 @@ export function DialogueBox() {
             try {
                 for (const action of actions) {
                     if (action.type === 'quest_start') {
-                        await startQuestFromTemplate(action.questTemplateId, { actorId: session.actorId, type: 'main' });
+                        await startQuestFromTemplate(action.questTemplateId, { actorId: session.actorId });
                         continue;
                     }
                     if (action.type === 'emit_event') {

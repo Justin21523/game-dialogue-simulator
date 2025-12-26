@@ -14,6 +14,8 @@ function mapStepTypeToObjectiveType(stepType: string): ObjectiveType {
             return ObjectiveType.TALK;
         case 'collect':
             return ObjectiveType.COLLECT;
+        case 'deliver':
+            return ObjectiveType.DELIVER;
         case 'go_to_location':
             return ObjectiveType.GO_TO_LOCATION;
         case 'fix_build':
@@ -24,6 +26,10 @@ function mapStepTypeToObjectiveType(stepType: string): ObjectiveType {
             return ObjectiveType.CLEAR_MANAGE;
         case 'dig_recover':
             return ObjectiveType.DIG_RECOVER;
+        case 'escort':
+            return ObjectiveType.ESCORT;
+        case 'puzzle_unlock':
+            return ObjectiveType.CUSTOM;
         default:
             return ObjectiveType.CUSTOM;
     }
