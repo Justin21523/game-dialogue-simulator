@@ -1,12 +1,14 @@
 import { getCompanion, listCompanions } from '../data/gameData.js';
 import { eventBus } from '../eventBus.js';
 import { EVENTS } from '../eventNames.js';
+import { worldStateManager } from './worldStateManager.js';
 import type { CompanionAbility, CompanionState } from '../types/Companion.js';
 
 const STORAGE_KEY = 'sws:companions:v2';
 
 export class CompanionManager {
     private initialized = false;
+    private listenersRegistered = false;
     private called = new Set<string>();
     private unlocked = new Set<string>();
     private selected: string | null = null;
@@ -20,33 +22,27 @@ export class CompanionManager {
                 globalThis.localStorage?.getItem(STORAGE_KEY) ??
                 // Backwards compatibility (pre-v2 saves).
                 globalThis.localStorage?.getItem('sws:companions:v1');
-            if (!raw) return;
-            const parsed = JSON.parse(raw) as Partial<CompanionState> | null;
+            if (raw) {
+                const parsed = JSON.parse(raw) as Partial<CompanionState> | null;
 
-            const calledIds = Array.isArray(parsed?.called) ? parsed?.called.filter((id): id is string => typeof id === 'string') : [];
-            this.called = new Set(calledIds);
+                const calledIds = Array.isArray(parsed?.called) ? parsed?.called.filter((id): id is string => typeof id === 'string') : [];
+                this.called = new Set(calledIds);
 
-            const unlockedIds = Array.isArray((parsed as Partial<CompanionState>)?.unlocked)
-                ? ((parsed as Partial<CompanionState>).unlocked ?? []).filter((id): id is string => typeof id === 'string')
-                : calledIds;
-            this.unlocked = new Set(unlockedIds);
+                const unlockedIds = Array.isArray((parsed as Partial<CompanionState>)?.unlocked)
+                    ? ((parsed as Partial<CompanionState>).unlocked ?? []).filter((id): id is string => typeof id === 'string')
+                    : calledIds;
+                this.unlocked = new Set(unlockedIds);
 
-            this.selected = typeof (parsed as Partial<CompanionState>)?.selected === 'string' ? (parsed as Partial<CompanionState>).selected ?? null : null;
+                this.selected =
+                    typeof (parsed as Partial<CompanionState>)?.selected === 'string' ? (parsed as Partial<CompanionState>).selected ?? null : null;
+            }
         } catch {
             // Ignore storage failures.
         }
 
         // Ensure at least default companions are unlocked for a fresh profile.
-        if (this.unlocked.size === 0) {
-            for (const def of listCompanions()) {
-                if (!def.unlock || def.unlock.type === 'default') {
-                    this.unlocked.add(def.companionId);
-                }
-            }
-            if (this.unlocked.size > 0) {
-                this.persist();
-            }
-        }
+        this.refreshUnlockedFromWorld();
+        this.registerListeners();
     }
 
     getUnlockedCompanionIds(): string[] {
@@ -131,6 +127,43 @@ export class CompanionManager {
         return listCompanions();
     }
 
+    refreshUnlockedFromWorld(): void {
+        worldStateManager.initialize();
+        const world = worldStateManager.getState();
+
+        const newlyUnlocked: string[] = [];
+        for (const def of listCompanions()) {
+            if (this.unlocked.has(def.companionId)) continue;
+            if (world.unlockedCompanions.includes(def.companionId)) {
+                this.unlocked.add(def.companionId);
+                newlyUnlocked.push(def.companionId);
+                continue;
+            }
+
+            const unlock = def.unlock;
+            if (!unlock || unlock.type === 'default') {
+                this.unlocked.add(def.companionId);
+                newlyUnlocked.push(def.companionId);
+                continue;
+            }
+            if (unlock.type === 'world_flag' && world.worldFlags.includes(unlock.flag)) {
+                this.unlocked.add(def.companionId);
+                newlyUnlocked.push(def.companionId);
+                continue;
+            }
+            if (unlock.type === 'quest_completed' && world.completedQuestTemplates.includes(unlock.templateId)) {
+                this.unlocked.add(def.companionId);
+                newlyUnlocked.push(def.companionId);
+                continue;
+            }
+        }
+
+        if (newlyUnlocked.length > 0) {
+            worldStateManager.unlockCompanions(newlyUnlocked);
+            this.persist();
+        }
+    }
+
     private persist(): void {
         try {
             const payload: CompanionState = {
@@ -143,6 +176,15 @@ export class CompanionManager {
         } catch {
             // Ignore write failures.
         }
+    }
+
+    private registerListeners(): void {
+        if (this.listenersRegistered) return;
+        this.listenersRegistered = true;
+
+        eventBus.on(EVENTS.WORLD_STATE_CHANGED, () => {
+            this.refreshUnlockedFromWorld();
+        });
     }
 }
 

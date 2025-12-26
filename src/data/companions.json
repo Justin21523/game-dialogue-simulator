@@ -4,20 +4,46 @@
             "companion_id": "donnie",
             "display_name": "Donnie",
             "character_id": "donnie",
+            "category": "ENGINEERING",
             "abilities": ["ENGINEERING"]
         },
         {
             "companion_id": "chase",
             "display_name": "Chase",
             "character_id": "chase",
+            "category": "POLICE",
             "abilities": ["POLICE"]
         },
         {
             "companion_id": "jerome",
             "display_name": "Jerome",
             "character_id": "jerome",
+            "category": "ESPIONAGE",
             "abilities": ["ESPIONAGE"]
+        },
+        {
+            "companion_id": "todd",
+            "display_name": "Todd",
+            "character_id": "todd",
+            "category": "DIGGING",
+            "abilities": ["DIGGING"],
+            "unlock": { "type": "quest_completed", "template_id": "qt_side_buried_cache" }
+        },
+        {
+            "companion_id": "bello",
+            "display_name": "Bello",
+            "character_id": "bello",
+            "category": "ANIMAL_RESCUE",
+            "abilities": ["ANIMAL_RESCUE"],
+            "unlock": { "type": "quest_completed", "template_id": "qt_side_animal_rescue" }
+        },
+        {
+            "companion_id": "flip",
+            "display_name": "Flip",
+            "character_id": "flip",
+            "category": "SUPPORT",
+            "abilities": ["ENGINEERING"],
+            "unlock": { "type": "world_flag", "flag": "secret_alley_found" }
         }
     ]
 }
-
