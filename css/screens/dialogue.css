@@ -101,3 +101,71 @@
     margin-bottom: 6px;
     letter-spacing: 1px;
 }
+
+.dialogue-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.dialogue-choice-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.mission-briefing-screen .dialogue-box {
+    cursor: default;
+}
+
+.mission-briefing-screen .text-area {
+    white-space: pre-wrap;
+}
+
+.mission-story-screen .dialogue-box {
+    cursor: default;
+}
+
+.mission-story-screen .text-area {
+    white-space: pre-wrap;
+}
+
+/* Exploration Dialogue Overlay */
+
+.dialogue-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 20px;
+    z-index: 2000;
+    pointer-events: auto;
+}
+
+.dialogue-box--exploration {
+    width: min(920px, 100%);
+    margin: 0;
+    cursor: default;
+}
+
+.dialogue-box__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.dialogue-box__name {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--color-primary);
+    letter-spacing: 0.4px;
+}
+
+.dialogue-line {
+    margin: 0 0 8px 0;
+}
