@@ -159,11 +159,31 @@
     margin-bottom: 12px;
 }
 
+.dialogue-box__header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.dialogue-box__portrait {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.08);
+    border: 2px solid rgba(0, 0, 0, 0.08);
+    flex: 0 0 auto;
+}
+
 .dialogue-box__name {
     font-size: 1.1rem;
     font-weight: 900;
     color: var(--color-primary);
     letter-spacing: 0.4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .dialogue-line {

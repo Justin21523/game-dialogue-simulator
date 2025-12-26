@@ -1,11 +1,15 @@
 import React from 'react';
 
 import { getDialogue, getNpc } from '../shared/data/gameData';
+import { getCharacterGridPortraitSrc } from '../shared/characterAssets';
 import { eventBus } from '../shared/eventBus';
 import { EVENTS } from '../shared/eventNames';
 import { missionManager } from '../shared/quests/missionManager';
 import { startQuestFromTemplate } from '../shared/quests/questRuntime';
+import { companionManager } from '../shared/systems/companionManager';
+import { worldStateManager } from '../shared/systems/worldStateManager';
 import type { DialogueAction, DialogueDefinition, DialogueLine, DialogueSession } from '../shared/types/Dialogue';
+import type { DialogueChoice, DialogueCondition } from '../shared/types/Dialogue';
 
 type DialogueOpenPayload = {
     npcId: string;
@@ -19,6 +23,60 @@ function findDialogueNode(def: DialogueDefinition, nodeId: string) {
 
 function getLineText(line: DialogueLine): string {
     return typeof line === 'string' ? line : line.text;
+}
+
+function isConditionMet(cond: DialogueCondition | undefined): boolean {
+    if (!cond) return true;
+
+    worldStateManager.initialize();
+    companionManager.initialize();
+
+    const flagsAll = cond.flags_all ?? [];
+    for (const flag of flagsAll) {
+        if (!worldStateManager.hasWorldFlag(flag)) return false;
+    }
+
+    const flagsNone = cond.flags_none ?? [];
+    for (const flag of flagsNone) {
+        if (worldStateManager.hasWorldFlag(flag)) return false;
+    }
+
+    const flagsAny = cond.flags_any ?? [];
+    if (flagsAny.length > 0 && !flagsAny.some((flag) => worldStateManager.hasWorldFlag(flag))) {
+        return false;
+    }
+
+    const hasItems = cond.has_items ?? [];
+    for (const itemId of hasItems) {
+        if (!worldStateManager.hasItem(itemId, 1)) return false;
+    }
+
+    const missingItems = cond.missing_items ?? [];
+    for (const itemId of missingItems) {
+        if (worldStateManager.hasItem(itemId, 1)) return false;
+    }
+
+    if (cond.quest_active) {
+        const active = missionManager.getActiveQuests();
+        const isActive = active.some((q) => q.templateId === cond.quest_active);
+        if (!isActive) return false;
+    }
+
+    if (cond.quest_completed) {
+        if (!worldStateManager.isQuestTemplateCompleted(cond.quest_completed)) return false;
+    }
+
+    return true;
+}
+
+function isLineVisible(line: DialogueLine): boolean {
+    if (typeof line === 'string') return true;
+    return isConditionMet(line.if);
+}
+
+function filterChoices(choices: DialogueChoice[] | undefined): DialogueChoice[] {
+    if (!choices) return [];
+    return choices.filter((c) => c.hideIfUnavailable === false || isConditionMet(c.if));
 }
 
 function pickDialogueId(payload: DialogueOpenPayload): string | null {
@@ -61,6 +119,8 @@ export function DialogueBox() {
             void missionManager.initialize({ mainCharacter: actorId }).catch(() => {
                 // Ignore init failures (storage).
             });
+            worldStateManager.initialize();
+            companionManager.initialize();
 
             const npc = getNpc(npcId);
             const npcName = npc?.displayName ?? npcId;
@@ -107,6 +167,17 @@ export function DialogueBox() {
         return findDialogueNode(definition, session.nodeId);
     }, [definition, session]);
 
+    const npcDef = React.useMemo(() => (session ? getNpc(session.npcId) : null), [session]);
+    const portraitSrc = npcDef ? getCharacterGridPortraitSrc(npcDef.characterId) : null;
+
+    const visibleLines = React.useMemo(() => {
+        if (!node) return [];
+        const lines = node.lines.filter(isLineVisible);
+        return lines.length > 0 ? lines : node.lines;
+    }, [node]);
+
+    const visibleChoices = React.useMemo(() => filterChoices(node?.choices), [node]);
+
     const runActions = React.useCallback(
         async (actions: DialogueAction[] | undefined): Promise<'closed' | 'continue'> => {
             if (!actions || actions.length === 0) return 'continue';
@@ -122,6 +193,27 @@ export function DialogueBox() {
                     }
                     if (action.type === 'emit_event') {
                         eventBus.emit(action.event, action.payload ?? {});
+                        continue;
+                    }
+                    if (action.type === 'set_flag') {
+                        worldStateManager.setWorldFlag(action.flag);
+                        continue;
+                    }
+                    if (action.type === 'give_item') {
+                        worldStateManager.addItem(action.itemId, action.quantity ?? 1);
+                        continue;
+                    }
+                    if (action.type === 'take_item') {
+                        worldStateManager.removeItem(action.itemId, action.quantity ?? 1);
+                        continue;
+                    }
+                    if (action.type === 'unlock_companion') {
+                        companionManager.unlockCompanion(action.companionId);
+                        worldStateManager.unlockCompanions([action.companionId]);
+                        continue;
+                    }
+                    if (action.type === 'unlock_skill') {
+                        worldStateManager.unlockSkill(action.skillId);
                         continue;
                     }
                     if (action.type === 'close_dialogue') {
@@ -159,33 +251,50 @@ export function DialogueBox() {
         <div className="dialogue-overlay" role="dialog" aria-modal="true">
             <div className="dialogue-box dialogue-box--exploration" onClick={(e) => e.stopPropagation()}>
                 <div className="dialogue-box__header">
-                    <div className="dialogue-box__name">{node.speakerName || session.npcName}</div>
+                    <div className="dialogue-box__header-left">
+                        {portraitSrc ? (
+                            <img
+                                className="dialogue-box__portrait"
+                                src={portraitSrc}
+                                alt={`${session.npcName} portrait`}
+                                loading="lazy"
+                                onError={(e) => {
+                                    e.currentTarget.src = getCharacterGridPortraitSrc('jett');
+                                }}
+                            />
+                        ) : null}
+                        <div className="dialogue-box__name">{node.speakerName || session.npcName}</div>
+                    </div>
                     <button className="btn btn-secondary btn-sm" type="button" onClick={closeDialogue} disabled={isBusy}>
                         Close (Esc)
                     </button>
                 </div>
 
                 <div className="text-area">
-                    {node.lines.map((line, idx) => (
+                    {visibleLines.map((line, idx) => (
                         <p key={`${session.nodeId}-${idx}`} className="dialogue-line">
                             {getLineText(line)}
                         </p>
                     ))}
                 </div>
 
-                {node.choices && node.choices.length > 0 ? (
+                {visibleChoices.length > 0 ? (
                     <div className="dialogue-choice-grid">
-                        {node.choices.map((choice) => (
-                            <button
-                                key={choice.choiceId}
-                                className="btn btn-primary"
-                                type="button"
-                                disabled={isBusy}
-                                onClick={() => void runChoice(choice)}
-                            >
-                                {choice.text}
-                            </button>
-                        ))}
+                        {visibleChoices.map((choice) => {
+                            const available = isConditionMet(choice.if);
+                            const label = !available && choice.disabledText ? choice.disabledText : choice.text;
+                            return (
+                                <button
+                                    key={choice.choiceId}
+                                    className="btn btn-primary"
+                                    type="button"
+                                    disabled={isBusy || !available}
+                                    onClick={() => void runChoice(choice)}
+                                >
+                                    {label}
+                                </button>
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="dialogue-actions">

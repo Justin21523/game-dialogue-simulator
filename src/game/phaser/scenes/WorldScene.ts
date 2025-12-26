@@ -76,6 +76,7 @@ export class WorldScene extends Phaser.Scene {
     private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
 
     private promptText?: Phaser.GameObjects.Text;
+    private highlight?: Phaser.GameObjects.Graphics;
     private inputLocked = false;
     private lastPersistAtMs = 0;
 
@@ -158,6 +159,7 @@ export class WorldScene extends Phaser.Scene {
         this.parallax.update(this.cameras.main);
         this.npcBehavior.update(this.npcs, timeMs, dt);
         this.updatePrompt();
+        this.updateHighlight(timeMs);
         this.checkSecrets(this.location.secrets ?? []);
 
         if (this.keys) {
@@ -556,6 +558,8 @@ export class WorldScene extends Phaser.Scene {
             .setScrollFactor(0)
             .setDepth(5000)
             .setAlpha(0);
+
+        this.highlight = this.add.graphics().setDepth(95).setBlendMode(Phaser.BlendModes.ADD);
     }
 
     private setupInput(): void {
@@ -601,6 +605,45 @@ export class WorldScene extends Phaser.Scene {
 
         this.promptText.setText(prompt);
         this.promptText.setAlpha(1);
+    }
+
+    private updateHighlight(timeMs: number): void {
+        if (!this.highlight) return;
+        this.highlight.clear();
+        if (this.inputLocked) return;
+
+        const target = this.findNearestTarget();
+        if (!target) return;
+
+        let x = 0;
+        let y = 0;
+        let radius = 70;
+
+        if (target.kind === 'npc') {
+            const npc = this.npcs.find((n) => n.npcId === target.npcId);
+            if (!npc) return;
+            x = npc.sprite.x;
+            y = npc.sprite.y - npc.sprite.displayHeight * 0.5;
+            radius = Math.min(95, Math.max(60, (npc.def.interactionRadius ?? INTERACT_RANGE) * 0.5));
+        } else if (target.kind === 'exit') {
+            const ex = this.exits.find((e) => e.targetLocationId === target.targetLocationId && e.targetSpawnPoint === target.targetSpawnPoint);
+            if (!ex) return;
+            x = ex.zone.x;
+            y = ex.zone.y - ex.zone.height * 0.5;
+            radius = 90;
+        } else {
+            const obj = this.interactables.find((o) => o.id === target.id);
+            if (!obj) return;
+            x = obj.sprite.x;
+            y = obj.sprite.y - obj.sprite.displayHeight * 0.5;
+            radius = obj.kind === 'door' ? 92 : 72;
+        }
+
+        const pulse = 0.2 + Math.sin(timeMs / 280) * 0.08;
+        this.highlight.lineStyle(8, 0x00eaff, 0.18 + pulse);
+        this.highlight.strokeCircle(x, y, radius);
+        this.highlight.lineStyle(3, 0xffffff, 0.08 + pulse * 0.4);
+        this.highlight.strokeCircle(x, y, radius - 10);
     }
 
     private getNearestPrompt(): string | null {
