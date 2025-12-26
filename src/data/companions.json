@@ -1,0 +1,23 @@
+{
+    "companions": [
+        {
+            "companion_id": "donnie",
+            "display_name": "Donnie",
+            "character_id": "donnie",
+            "abilities": ["ENGINEERING"]
+        },
+        {
+            "companion_id": "chase",
+            "display_name": "Chase",
+            "character_id": "chase",
+            "abilities": ["POLICE"]
+        },
+        {
+            "companion_id": "jerome",
+            "display_name": "Jerome",
+            "character_id": "jerome",
+            "abilities": ["ESPIONAGE"]
+        }
+    ]
+}
+
