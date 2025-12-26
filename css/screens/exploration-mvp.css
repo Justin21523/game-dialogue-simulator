@@ -52,6 +52,70 @@
     margin-top: 0;
 }
 
+.companion-panel__controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px 0 12px 0;
+}
+
+.companion-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.companion-search {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.22);
+    color: var(--text-light);
+}
+
+.companion-search::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.companion-panel .companion-card.locked {
+    opacity: 0.7;
+}
+
+.companion-panel .companion-card__identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.companion-panel .companion-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+.companion-panel .companion-portrait {
+    width: 54px;
+    height: 54px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.18);
+    flex: 0 0 auto;
+}
+
+.companion-panel .companion-unlock-hint {
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.companion-panel .companion-card__actions {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+}
+
 .exploration-top-left {
     position: absolute;
     top: 20px;
