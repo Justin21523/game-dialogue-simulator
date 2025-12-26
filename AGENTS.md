@@ -1,19 +1,23 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Frontend: `index.html` loads ES modules from `js/` (`core/` state, `ui/screens/` views, `systems/` logic); styles live in `css/`; art in `assets/`; game data in `data/*.json`.
+- Frontend: Vite + React + TypeScript + Phaser 3 under `src/` (React screens/overlays in `src/ui/`, game loop/rendering in `src/game/phaser/`, shared logic/types in `src/shared/`). `index.html` boots `src/main.tsx`.
 - Backend: FastAPI package in `backend/` with routers under `backend/api/routers/`, agents/RAG in `backend/core/`, settings in `backend/config.py`, and knowledge JSON in `backend/data/knowledge/`.
 - Docs in `docs/`, prompt templates in `prompts/`, helper scripts in `scripts/` (e.g., `generate_assets.py`).
 
 ## Build, Test, and Development Commands
-- Frontend preview: `python3 -m http.server 8000` and open `http://localhost:8000/index.html`.
+- Frontend dev: `npm run dev` (Vite) and open the printed URL (default `http://localhost:5173`).
+- Frontend build/preview: `npm run build` then `npm run preview` (or `python3 -m http.server 8000 --directory dist`).
+- Frontend typecheck: `npm run typecheck`.
+- Mission manager tests (Node): `npm run test:mission-manager`.
 - Backend setup: `python3 -m venv .venv && source .venv/bin/activate && pip install -r backend/requirements.txt` (torch/LLM deps are heavy; use a CPU wheel if needed).
 - Backend run: `uvicorn backend.main:app --reload --app-dir .`; configurable via env vars defined in `backend/config.py`.
 - Asset tools: `python scripts/generate_assets.py --help` writes to `assets/`.
 - Tests: `pytest backend` when cases exist; fixtures should stay small and deterministic.
 
 ## Coding Style & Naming Conventions
-- JavaScript: 4-space indent, semicolons, `PascalCase` classes (`HangarScreen`), `camelCase` functions/state, `SCREAMING_SNAKE_CASE` configs, kebab-cased files.
+- TypeScript/React: 4-space indent, semicolons, `PascalCase` components/classes (`HangarScreen`), `camelCase` functions/state, `SCREAMING_SNAKE_CASE` configs, kebab-cased files.
+- Phaser: Scenes/entities/systems own per-frame state; React must not drive per-frame movement/physics.
 - CSS: reuse `:root` variables in `css/main.css`, place shared pieces in `components.css`/`animations.css`, limit inline styles.
 - Python: type-hinted functions with docstrings, module-level loggers, Pydantic models for payloads, and FastAPI routers for IO boundaries.
 - Data: JSON keys stay lowercase with underscores; preserve locale fields (`name_zh`, etc.) when updating.
