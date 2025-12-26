@@ -5,11 +5,28 @@
             "display_name": "Airport Base",
             "world_width": 2600,
             "world_height": 1080,
+            "theme": "airport_base",
             "spawn_points": {
                 "default": { "x": 320, "y": 760 }
             },
             "npc_spawns": [
                 { "npc_id": "npc_dispatcher", "x": 940, "y": 760 }
+            ],
+            "props": [
+                { "prop_id": "base_sign", "type": "sign", "x": 520, "y": 760, "label": "Airport Base", "message": "Airport Base: missions depart from here." },
+                { "prop_id": "base_bench", "type": "bench", "x": 760, "y": 760, "label": "", "collides": true, "width": 220, "height": 90 }
+            ],
+            "doors": [
+                {
+                    "door_id": "door_town_gate",
+                    "label": "Town Gate",
+                    "x": 2060,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "town_district",
+                    "target_spawn_point": "gate"
+                }
             ],
             "interactables": [
                 {
@@ -37,12 +54,17 @@
             "display_name": "Warehouse District",
             "world_width": 3200,
             "world_height": 1080,
+            "theme": "warehouse",
             "spawn_points": {
                 "entry": { "x": 320, "y": 760 },
                 "relay": { "x": 1560, "y": 760 }
             },
             "npc_spawns": [
                 { "npc_id": "npc_citizen", "x": 1120, "y": 760 }
+            ],
+            "props": [
+                { "prop_id": "warehouse_lamp", "type": "lamp", "x": 420, "y": 760, "label": "", "collides": false },
+                { "prop_id": "warehouse_crate_stack", "type": "crate", "x": 820, "y": 760, "label": "", "collides": true, "width": 160, "height": 120 }
             ],
             "interactables": [
                 {
@@ -65,7 +87,279 @@
                     "target_spawn_point": "default"
                 }
             ]
+        },
+        {
+            "location_id": "town_district",
+            "display_name": "Town District",
+            "world_width": 3800,
+            "world_height": 1080,
+            "theme": "town_outdoor",
+            "spawn_points": {
+                "default": { "x": 420, "y": 760 },
+                "gate": { "x": 320, "y": 760 },
+                "shop": { "x": 1420, "y": 760 },
+                "house": { "x": 2060, "y": 760 },
+                "garage": { "x": 2740, "y": 760 }
+            },
+            "parallax": {
+                "layers": [
+                    { "id": "sky", "kind": "solid", "color": "#071826", "alpha": 1, "speed": 0 },
+                    { "id": "clouds", "kind": "noise", "color": "#071826", "alpha": 0.12, "speed": 0.05 },
+                    { "id": "far_city", "kind": "stripes", "color": "#102236", "alpha": 0.08, "speed": 0.12 },
+                    { "id": "near_props", "kind": "stripes", "color": "#16405c", "alpha": 0.1, "speed": 0.22 }
+                ]
+            },
+            "npc_spawns": [
+                { "npc_id": "npc_dispatcher", "x": 720, "y": 760 },
+                { "npc_id": "npc_guard", "x": 1040, "y": 760 },
+                { "npc_id": "npc_shopkeeper", "x": 1320, "y": 760 },
+                { "npc_id": "npc_mechanic", "x": 2500, "y": 760 },
+                { "npc_id": "npc_investigator", "x": 1700, "y": 760 },
+                { "npc_id": "npc_digger", "x": 3160, "y": 760 }
+            ],
+            "props": [
+                { "prop_id": "town_welcome_sign", "type": "sign", "x": 520, "y": 760, "label": "Welcome", "message": "Welcome to the Town District." },
+                { "prop_id": "town_lamp_1", "type": "lamp", "x": 940, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_bench_1", "type": "bench", "x": 1200, "y": 760, "label": "", "collides": true, "width": 220, "height": 90 },
+                { "prop_id": "town_fence_1", "type": "fence", "x": 3360, "y": 760, "label": "", "collides": true, "width": 280, "height": 110 }
+            ],
+            "doors": [
+                {
+                    "door_id": "door_shop",
+                    "label": "Town Shop",
+                    "x": 1420,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "town_shop_interior",
+                    "target_spawn_point": "entry"
+                },
+                {
+                    "door_id": "door_house",
+                    "label": "House",
+                    "x": 2060,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "town_house_interior",
+                    "target_spawn_point": "entry"
+                },
+                {
+                    "door_id": "door_garage",
+                    "label": "Garage",
+                    "x": 2740,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "town_garage_interior",
+                    "target_spawn_point": "entry"
+                }
+            ],
+            "interactables": [
+                {
+                    "interactable_id": "relay_rooftop",
+                    "type": "quest_target",
+                    "x": 3000,
+                    "y": 760,
+                    "label": "Rooftop Relay",
+                    "required_ability": "ENGINEERING"
+                },
+                {
+                    "interactable_id": "terminal_city_net",
+                    "type": "terminal",
+                    "x": 1720,
+                    "y": 760,
+                    "label": "City Network Terminal",
+                    "required_ability": "ESPIONAGE",
+                    "message": "Terminal accessed."
+                },
+                {
+                    "interactable_id": "item_power_cell",
+                    "type": "pickup",
+                    "x": 2380,
+                    "y": 760,
+                    "label": "Power Cell"
+                },
+                {
+                    "interactable_id": "town_notice_board",
+                    "type": "sign",
+                    "x": 980,
+                    "y": 760,
+                    "label": "Notice Board",
+                    "message": "Notice: Help requests are posted daily."
+                }
+            ],
+            "secrets": [
+                {
+                    "secret_id": "secret_alley",
+                    "x": 3640,
+                    "y": 740,
+                    "width": 220,
+                    "height": 320,
+                    "world_flag": "secret_alley_found",
+                    "reward_currency": 150,
+                    "reward_item_id": "item_mysterious_key",
+                    "message": "Secret found: A hidden alley stash!"
+                }
+            ],
+            "colliders": [
+                { "collider_id": "town_wall_left", "x": 60, "y": 620, "width": 120, "height": 520 },
+                { "collider_id": "town_wall_right", "x": 3740, "y": 620, "width": 120, "height": 520 }
+            ],
+            "exits": [
+                {
+                    "exit_id": "to_base",
+                    "x": 220,
+                    "y": 740,
+                    "width": 180,
+                    "height": 320,
+                    "target_location_id": "base_airport",
+                    "target_spawn_point": "default"
+                },
+                {
+                    "exit_id": "to_warehouse",
+                    "x": 3560,
+                    "y": 740,
+                    "width": 180,
+                    "height": 320,
+                    "target_location_id": "warehouse_district",
+                    "target_spawn_point": "entry"
+                }
+            ]
+        },
+        {
+            "location_id": "town_shop_interior",
+            "display_name": "Town Shop (Interior)",
+            "world_width": 1800,
+            "world_height": 1080,
+            "theme": "interior_shop",
+            "spawn_points": {
+                "entry": { "x": 320, "y": 760 }
+            },
+            "npc_spawns": [
+                { "npc_id": "npc_shopkeeper", "x": 620, "y": 760 },
+                { "npc_id": "npc_customer", "x": 980, "y": 760 }
+            ],
+            "props": [
+                { "prop_id": "shop_counter", "type": "bench", "x": 740, "y": 760, "label": "", "collides": true, "width": 260, "height": 120 },
+                { "prop_id": "shop_crate", "type": "crate", "x": 1160, "y": 760, "label": "", "collides": true, "width": 140, "height": 120 }
+            ],
+            "doors": [
+                {
+                    "door_id": "door_shop_exit",
+                    "label": "Exit to Town",
+                    "x": 220,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "town_district",
+                    "target_spawn_point": "shop"
+                }
+            ],
+            "interactables": [
+                {
+                    "interactable_id": "shop_terminal",
+                    "type": "terminal",
+                    "x": 1420,
+                    "y": 760,
+                    "label": "Inventory Terminal",
+                    "message": "The terminal lists deliveries and stock changes."
+                }
+            ],
+            "colliders": [
+                { "collider_id": "shop_wall_left", "x": 60, "y": 620, "width": 120, "height": 520 },
+                { "collider_id": "shop_wall_right", "x": 1740, "y": 620, "width": 120, "height": 520 }
+            ],
+            "exits": []
+        },
+        {
+            "location_id": "town_house_interior",
+            "display_name": "House (Interior)",
+            "world_width": 1600,
+            "world_height": 1080,
+            "theme": "interior_house",
+            "spawn_points": {
+                "entry": { "x": 320, "y": 760 }
+            },
+            "npc_spawns": [
+                { "npc_id": "npc_resident", "x": 620, "y": 760 },
+                { "npc_id": "npc_kid", "x": 980, "y": 760 }
+            ],
+            "props": [
+                { "prop_id": "house_table", "type": "bench", "x": 780, "y": 760, "label": "", "collides": true, "width": 220, "height": 110 },
+                { "prop_id": "house_crate_hidden", "type": "crate", "x": 1320, "y": 760, "label": "", "collides": true, "width": 140, "height": 120 }
+            ],
+            "doors": [
+                {
+                    "door_id": "door_house_exit",
+                    "label": "Exit to Town",
+                    "x": 220,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "town_district",
+                    "target_spawn_point": "house"
+                }
+            ],
+            "interactables": [
+                {
+                    "interactable_id": "poster_missing",
+                    "type": "pickup",
+                    "x": 1320,
+                    "y": 760,
+                    "label": "Missing Poster"
+                }
+            ],
+            "colliders": [
+                { "collider_id": "house_wall_left", "x": 60, "y": 620, "width": 120, "height": 520 },
+                { "collider_id": "house_wall_right", "x": 1540, "y": 620, "width": 120, "height": 520 }
+            ],
+            "exits": []
+        },
+        {
+            "location_id": "town_garage_interior",
+            "display_name": "Garage (Interior)",
+            "world_width": 2000,
+            "world_height": 1080,
+            "theme": "interior_garage",
+            "spawn_points": {
+                "entry": { "x": 320, "y": 760 }
+            },
+            "npc_spawns": [
+                { "npc_id": "npc_mechanic", "x": 740, "y": 760 },
+                { "npc_id": "npc_officer", "x": 1180, "y": 760 }
+            ],
+            "props": [
+                { "prop_id": "garage_toolbox", "type": "crate", "x": 980, "y": 760, "label": "", "collides": true, "width": 140, "height": 120 },
+                { "prop_id": "garage_bench", "type": "bench", "x": 1420, "y": 760, "label": "", "collides": true, "width": 260, "height": 120 }
+            ],
+            "doors": [
+                {
+                    "door_id": "door_garage_exit",
+                    "label": "Exit to Town",
+                    "x": 220,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "town_district",
+                    "target_spawn_point": "garage"
+                }
+            ],
+            "interactables": [
+                {
+                    "interactable_id": "garage_repair_station",
+                    "type": "quest_target",
+                    "x": 1420,
+                    "y": 760,
+                    "label": "Repair Station",
+                    "required_ability": "ENGINEERING"
+                }
+            ],
+            "colliders": [
+                { "collider_id": "garage_wall_left", "x": 60, "y": 620, "width": 120, "height": 520 },
+                { "collider_id": "garage_wall_right", "x": 1940, "y": 620, "width": 120, "height": 520 }
+            ],
+            "exits": []
         }
     ]
 }
-

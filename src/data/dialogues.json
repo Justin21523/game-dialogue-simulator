@@ -101,7 +101,168 @@
                     ]
                 }
             ]
+        },
+        {
+            "dialogue_id": "dlg_guard_root",
+            "npc_id": "npc_guard",
+            "start_node_id": "start",
+            "nodes": [
+                {
+                    "node_id": "start",
+                    "speaker_name": "Town Guard",
+                    "lines": [
+                        "Stay safe out there. The town has been restless lately.",
+                        "If you see anything suspicious, let the team know."
+                    ],
+                    "choices": [
+                        { "choice_id": "close", "text": "Understood.", "actions": [{ "type": "close_dialogue" }] }
+                    ]
+                }
+            ]
+        },
+        {
+            "dialogue_id": "dlg_shopkeeper_root",
+            "npc_id": "npc_shopkeeper",
+            "start_node_id": "start",
+            "nodes": [
+                {
+                    "node_id": "start",
+                    "speaker_name": "Shopkeeper",
+                    "lines": [
+                        "Welcome! Our deliveries have been delayed.",
+                        "If you can help stabilize town services, the whole district will benefit."
+                    ],
+                    "choices": [
+                        { "choice_id": "close", "text": "I'll look around.", "actions": [{ "type": "close_dialogue" }] }
+                    ]
+                }
+            ]
+        },
+        {
+            "dialogue_id": "dlg_mechanic_root",
+            "npc_id": "npc_mechanic",
+            "start_node_id": "start",
+            "nodes": [
+                {
+                    "node_id": "start",
+                    "speaker_name": "Mechanic",
+                    "lines": [
+                        "I can fix almost anything, but I need the right parts.",
+                        "If you find a spare power cell, bring it to the garage."
+                    ],
+                    "choices": [
+                        { "choice_id": "close", "text": "Got it.", "actions": [{ "type": "close_dialogue" }] }
+                    ]
+                }
+            ]
+        },
+        {
+            "dialogue_id": "dlg_investigator_root",
+            "npc_id": "npc_investigator",
+            "start_node_id": "start",
+            "nodes": [
+                {
+                    "node_id": "start",
+                    "speaker_name": "Investigator",
+                    "lines": [
+                        "That city network terminal has logs that might explain the outages.",
+                        "If you have an espionage specialist, you can access the deeper menus."
+                    ],
+                    "choices": [
+                        { "choice_id": "close", "text": "I'll check it.", "actions": [{ "type": "close_dialogue" }] }
+                    ]
+                }
+            ]
+        },
+        {
+            "dialogue_id": "dlg_digger_root",
+            "npc_id": "npc_digger",
+            "start_node_id": "start",
+            "nodes": [
+                {
+                    "node_id": "start",
+                    "speaker_name": "Digger",
+                    "lines": [
+                        "The ground here hides old utility tunnels.",
+                        "If we need to recover something, a digging companion can help."
+                    ],
+                    "choices": [
+                        { "choice_id": "close", "text": "Thanks.", "actions": [{ "type": "close_dialogue" }] }
+                    ]
+                }
+            ]
+        },
+        {
+            "dialogue_id": "dlg_customer_root",
+            "npc_id": "npc_customer",
+            "start_node_id": "start",
+            "nodes": [
+                {
+                    "node_id": "start",
+                    "speaker_name": "Customer",
+                    "lines": [
+                        "I was waiting for a delivery... again.",
+                        "Hopefully the town services come back soon."
+                    ],
+                    "choices": [
+                        { "choice_id": "close", "text": "We'll help.", "actions": [{ "type": "close_dialogue" }] }
+                    ]
+                }
+            ]
+        },
+        {
+            "dialogue_id": "dlg_resident_root",
+            "npc_id": "npc_resident",
+            "start_node_id": "start",
+            "nodes": [
+                {
+                    "node_id": "start",
+                    "speaker_name": "Resident",
+                    "lines": [
+                        "This house is small, but it has stories.",
+                        "My kid has been posting flyers all day."
+                    ],
+                    "choices": [
+                        { "choice_id": "close", "text": "Good to know.", "actions": [{ "type": "close_dialogue" }] }
+                    ]
+                }
+            ]
+        },
+        {
+            "dialogue_id": "dlg_kid_root",
+            "npc_id": "npc_kid",
+            "start_node_id": "start",
+            "nodes": [
+                {
+                    "node_id": "start",
+                    "speaker_name": "Kid",
+                    "lines": [
+                        "Hi! I made a missing poster, but I can't find where I put it.",
+                        "If you find it, can you bring it back?"
+                    ],
+                    "choices": [
+                        { "choice_id": "close", "text": "I'll keep an eye out.", "actions": [{ "type": "close_dialogue" }] }
+                    ]
+                }
+            ]
+        },
+        {
+            "dialogue_id": "dlg_officer_root",
+            "npc_id": "npc_officer",
+            "start_node_id": "start",
+            "nodes": [
+                {
+                    "node_id": "start",
+                    "speaker_name": "Officer",
+                    "lines": [
+                        "The garage is busy today.",
+                        "If you need clearance for a restricted area, call a police companion."
+                    ],
+                    "choices": [
+                        { "choice_id": "close", "text": "Understood.", "actions": [{ "type": "close_dialogue" }] }
+                    ]
+                }
+            ]
         }
     ]
 }
-
