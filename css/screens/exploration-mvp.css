@@ -1,0 +1,112 @@
+/**
+ * exploration-mvp.css
+ * Data-driven Exploration MVP UI (Dialogue / Companion panel / Debrief)
+ */
+
+.companion-panel .companion-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.companion-panel .companion-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.companion-panel .companion-card.called {
+    border-color: rgba(78, 205, 196, 0.55);
+    box-shadow: 0 0 18px rgba(78, 205, 196, 0.15);
+}
+
+.companion-panel .companion-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.companion-panel .companion-name {
+    font-weight: 900;
+    letter-spacing: 0.3px;
+}
+
+.companion-panel .companion-abilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.companion-panel__footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.companion-panel__hint {
+    margin-top: 0;
+}
+
+.exploration-top-left {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 120;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.exploration-top-left .btn {
+    white-space: nowrap;
+}
+
+/* Force the quest tracker to the top-right in exploration mode. */
+.exploration-screen .mission-tracker {
+    left: auto;
+    right: 20px;
+}
+
+.exploration-debrief__footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.exploration-debrief__text {
+    margin: 0;
+}
+
+.exploration-debrief__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 14px 0;
+}
+
+.exploration-debrief__card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.exploration-debrief__label {
+    font-size: 12px;
+    letter-spacing: 0.28px;
+    text-transform: uppercase;
+    opacity: 0.72;
+}
+
+.exploration-debrief__value {
+    margin-top: 6px;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 0.4px;
+}
