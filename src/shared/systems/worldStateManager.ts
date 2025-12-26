@@ -7,7 +7,7 @@ const STORAGE_KEY = 'sws:world:v2';
 
 const DEFAULT_STATE: WorldStateV2 = {
     version: 2,
-    unlockedLocations: ['base_airport', 'town_district'],
+    unlockedLocations: ['base_airport', 'town_district', 'warehouse_district'],
     worldFlags: [],
     completedQuestTemplates: [],
     inventory: {},

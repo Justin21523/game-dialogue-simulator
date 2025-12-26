@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 
+import { worldStateManager } from '../../../shared/systems/worldStateManager';
+
 type FlightInit = {
     missionType?: string;
     charId?: string;
@@ -22,13 +24,14 @@ export class BootScene extends Phaser.Scene {
         const mode = (this.registry.get('game:mode') as string | undefined) ?? 'flight';
 
         if (mode === 'exploration') {
+            worldStateManager.initialize();
             const init = this.registry.get('exploration:init') as ExplorationInit | undefined;
             const charId = init?.charId ?? 'jett';
-            const startLocationId = init?.startLocationId ?? 'base_airport';
-            const spawnPoint = init?.spawnPoint ?? 'default';
+            const last = worldStateManager.getLastPlayerState();
+            const startLocationId = init?.startLocationId ?? last?.locationId ?? 'base_airport';
+            const spawnPoint = init?.spawnPoint ?? last?.spawnPoint ?? 'default';
 
-            const startSceneKey = startLocationId === 'warehouse_district' ? 'WarehouseLocationScene' : 'BaseLocationScene';
-            this.scene.start(startSceneKey, { charId, spawnPoint });
+            this.scene.start('WorldScene', { charId, locationId: startLocationId, spawnPoint });
             this.scene.launch('UIScene');
             return;
         }
