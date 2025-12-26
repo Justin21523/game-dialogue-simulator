@@ -3,6 +3,27 @@ import type Phaser from 'phaser';
 
 import { createPhaserGame, type InitialPhaserParams } from '../game/phaser/config/phaserConfig';
 
+function setInitialRegistry(game: Phaser.Game, initial: InitialPhaserParams): void {
+    game.registry.set('game:mode', initial.mode);
+    if (initial.mode === 'flight') {
+        game.registry.set('flight:init', initial.flight);
+    } else {
+        game.registry.set('exploration:init', initial.exploration);
+    }
+}
+
+function restartFromBoot(game: Phaser.Game, initial: InitialPhaserParams): void {
+    setInitialRegistry(game, initial);
+
+    const activeSceneKeys = game.scene.getScenes(true).map((scene) => scene.scene.key);
+    for (const key of activeSceneKeys) {
+        if (key === 'UIScene') continue;
+        game.scene.stop(key);
+    }
+
+    game.scene.start('BootScene');
+}
+
 export function usePhaserGame(
     parentRef: React.RefObject<HTMLDivElement | null>,
     enabled: boolean,
@@ -57,11 +78,17 @@ export function usePhaserGame(
         }
 
         if (nextKey && initialKeyRef.current !== nextKey) {
+            try {
+                restartFromBoot(gameRef.current, initial as InitialPhaserParams);
+                initialKeyRef.current = nextKey;
+                return;
+            } catch (err) {
+                console.warn('[phaser] restart failed; recreating game', err);
+            }
+
             gameRef.current.destroy(true);
             gameRef.current = null;
-            while (parent.firstChild) {
-                parent.removeChild(parent.firstChild);
-            }
+            while (parent.firstChild) parent.removeChild(parent.firstChild);
             gameRef.current = createPhaserGame(parent, initial);
             initialKeyRef.current = nextKey;
         }
