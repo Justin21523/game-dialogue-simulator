@@ -1,0 +1,103 @@
+/* World event notification card styles */
+
+.event-notification {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 300px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    animation: slideInRight 0.4s ease-out;
+    z-index: 2000;
+    transition: opacity 0.3s ease;
+    font-family: 'Arial', sans-serif;
+}
+
+.event-notification.fading {
+    opacity: 0.7;
+}
+
+.event-notification .event-icon {
+    font-size: 32px;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.event-notification .event-content {
+    margin-bottom: 0;
+}
+
+.event-notification .event-title {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+}
+
+.event-notification .event-description {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    opacity: 0.9;
+    color: white;
+}
+
+.event-notification .event-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: white;
+}
+
+.event-notification .event-rewards,
+.event-notification .event-timer {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+/* Animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+/* Spacing when multiple notifications stack */
+.event-notification:nth-child(n+2) {
+    margin-top: 10px;
+}
+
+/* Rescue event styling */
+.event-notification[data-event-type="rescue"] {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+}
+
+/* Lost item event styling */
+.event-notification[data-event-type="lost_item"] {
+    background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
+}
+
+/* Urgent delivery event styling */
+.event-notification[data-event-type="urgent_delivery"] {
+    background: linear-gradient(135deg, #ffd43b 0%, #fab005 100%);
+}
