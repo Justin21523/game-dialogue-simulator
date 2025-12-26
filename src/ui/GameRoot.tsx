@@ -274,21 +274,13 @@ function GameRootInner() {
 
     React.useEffect(() => {
         if (state.screen !== 'exploration') return;
-        if (!state.pendingExplorationQuestTemplateId) return;
+        const templateId = state.pendingExplorationQuestTemplateId;
+        if (!templateId) return;
 
-        let cancelled = false;
-        startQuestFromTemplate(state.pendingExplorationQuestTemplateId, { actorId: state.selectedCharacterId, type: 'main' })
-            .catch((err: unknown) => {
-                console.warn('[exploration] auto-start quest failed', err);
-            })
-            .finally(() => {
-                if (cancelled) return;
-                dispatch({ type: 'CLEAR_PENDING_EXPLORATION_QUEST' });
-            });
-
-        return () => {
-            cancelled = true;
-        };
+        dispatch({ type: 'CLEAR_PENDING_EXPLORATION_QUEST' });
+        startQuestFromTemplate(templateId, { actorId: state.selectedCharacterId, type: 'main' }).catch((err: unknown) => {
+            console.warn('[exploration] auto-start quest failed', err);
+        });
     }, [dispatch, state.pendingExplorationQuestTemplateId, state.screen, state.selectedCharacterId]);
 
     React.useEffect(() => {
@@ -418,6 +410,11 @@ function GameRootInner() {
 
     const handleDispatch = React.useCallback(
         (missionId: string, charId: string): boolean => {
+            if (state.activeMission) {
+                toast.show('A mission is already in progress. Finish or cancel it before dispatching a new one.', 'warning');
+                return false;
+            }
+
             const mission = state.missions.find((m) => m.id === missionId);
             if (!mission) {
                 toast.show('Mission not found.', 'error');
