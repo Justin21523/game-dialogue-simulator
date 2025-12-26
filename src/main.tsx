@@ -17,6 +17,7 @@ import '../css/screens/task.css';
 import '../css/screens/exploration.css';
 import '../css/screens/exploration-hud.css';
 import '../css/screens/exploration-mvp.css';
+import '../css/screens/quest-journal.css';
 import '../css/screens/results.css';
 import '../css/screens/statistics.css';
 import '../css/screens/achievements.css';

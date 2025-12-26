@@ -1,0 +1,38 @@
+/**
+ * quest-journal.css
+ * Exploration quest journal (scrollable modal content).
+ */
+
+.quest-journal__section {
+    margin-bottom: 18px;
+}
+
+.quest-journal__section h4 {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+    letter-spacing: 0.4px;
+}
+
+.quest-journal__quest {
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
+    padding: 12px;
+}
+
+.quest-journal__title {
+    font-weight: 900;
+    margin-bottom: 4px;
+}
+
+.quest-journal__list,
+.quest-journal__objectives {
+    margin: 8px 0 0 0;
+    padding-left: 18px;
+}
+
+.quest-journal__list li,
+.quest-journal__objectives li {
+    margin: 6px 0;
+}
+

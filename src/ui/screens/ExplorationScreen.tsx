@@ -2,6 +2,7 @@ import React from 'react';
 
 import { DialogueBox } from '../DialogueBox';
 import { CompanionPanel } from '../CompanionPanel';
+import { QuestJournal } from '../QuestJournal';
 import { QuestTracker } from '../QuestTracker';
 import { getLocation } from '../../shared/data/gameData';
 import { eventBus } from '../../shared/eventBus';
@@ -22,6 +23,7 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
 
     const [locationId, setLocationId] = React.useState<string>('base_airport');
     const [companionOpen, setCompanionOpen] = React.useState(false);
+    const [journalOpen, setJournalOpen] = React.useState(false);
 
     React.useEffect(() => {
         void missionManager.initialize({ mainCharacter: actorId });
@@ -48,6 +50,19 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
         };
     }, [actorId]);
 
+    React.useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key.toLowerCase() === 'j') {
+                e.preventDefault();
+                setJournalOpen((v) => !v);
+            }
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => {
+            window.removeEventListener('keydown', onKeyDown);
+        };
+    }, []);
+
     const locationName = getLocation(locationId)?.displayName ?? locationId;
 
     return (
@@ -62,12 +77,16 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
                 <button className="btn btn-outline" type="button" onClick={() => setCompanionOpen(true)}>
                     📞 Call Companion (C)
                 </button>
+                <button className="btn btn-outline" type="button" onClick={() => setJournalOpen(true)}>
+                    📖 Journal (J)
+                </button>
                 <button className="btn btn-secondary" type="button" onClick={onBackToHangar}>
                     ◀ Back to Hangar
                 </button>
             </div>
 
             <CompanionPanel open={companionOpen} actorId={actorId} onClose={() => setCompanionOpen(false)} />
+            <QuestJournal open={journalOpen} onClose={() => setJournalOpen(false)} />
             <DialogueBox />
 
             <Modal
