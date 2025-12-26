@@ -5,7 +5,7 @@ import { eventBus } from '../shared/eventBus';
 import { EVENTS } from '../shared/eventNames';
 import { missionManager } from '../shared/quests/missionManager';
 import { startQuestFromTemplate } from '../shared/quests/questRuntime';
-import type { DialogueAction, DialogueDefinition, DialogueSession } from '../shared/types/Dialogue';
+import type { DialogueAction, DialogueDefinition, DialogueLine, DialogueSession } from '../shared/types/Dialogue';
 
 type DialogueOpenPayload = {
     npcId: string;
@@ -15,6 +15,10 @@ type DialogueOpenPayload = {
 
 function findDialogueNode(def: DialogueDefinition, nodeId: string) {
     return def.nodes.find((n) => n.nodeId === nodeId) ?? null;
+}
+
+function getLineText(line: DialogueLine): string {
+    return typeof line === 'string' ? line : line.text;
 }
 
 function pickDialogueId(payload: DialogueOpenPayload): string | null {
@@ -164,7 +168,7 @@ export function DialogueBox() {
                 <div className="text-area">
                     {node.lines.map((line, idx) => (
                         <p key={`${session.nodeId}-${idx}`} className="dialogue-line">
-                            {line}
+                            {getLineText(line)}
                         </p>
                     ))}
                 </div>
