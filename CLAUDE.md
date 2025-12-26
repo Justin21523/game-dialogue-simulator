@@ -2,46 +2,45 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 語言設定
-請使用**中文**與用戶溝通。
+## Language
+You may communicate with the user in Chinese, but keep all code, comments, and documentation in English unless explicitly requested otherwise.
 
-## 專案概述
-Super Wings 網頁模擬遊戲 - 結合經營管理與動作飛行的 Hybrid Game。
-前端使用 HTML5 Canvas + Vanilla JS，後端使用 Python 處理 AI 資產生成。
+## Project Overview
+Super Wings Simulator is a hybrid web game combining management/dispatch gameplay with an action flight mini-game.
+The frontend uses Vite + React + TypeScript + Phaser 3, and the backend uses FastAPI to provide AI content/asset APIs.
 
-## 開發伺服器
+## Dev Server
 ```bash
-python3 -m http.server 8000
-# 瀏覽器開啟 http://localhost:8000
+npm run dev
+# Open the Vite URL shown in the terminal (default http://localhost:5173)
 ```
 
-## 專案狀態
-- **Phase 1-2**: ✅ 資料庫與 AI 圖片生成系統 (進行中)
-- **Phase 3**: ✅ 核心管理玩法 (機庫、任務板)
-- **Phase 4**: ✅ 動作玩法 (出發序列、飛行引擎、音效系統)
-- **Phase 5**: ⏳ 視覺優化與內容擴充
+## Project Status
+- **Phase 1–2**: ✅ Database + AI image generation system
+- **Phase 3**: ✅ Core management gameplay (Hangar, Mission Board)
+- **Phase 4**: ✅ Action gameplay (Launch sequence, flight loop, audio)
+- **Phase 5**: ⏳ Visual polish + content expansion
 
-## 架構概覽
+## Architecture
 
-### 遊戲核心 (`js/core/`)
-- `game-state.js`: 狀態管理 (Money, Fuel, Characters)
-- `audio-manager.js`: Web Audio API 音效合成器
+### Frontend Entry
+- `index.html` → `src/main.tsx`
 
-### 動作引擎 (`js/game/`)
-- `flight-engine.js`: Canvas 飛行射擊邏輯
-- `entities.js`: 雲、障礙物(雷雲)、寶物(金幣)
-- `input.js`: 鍵盤輸入處理
+### React (UI/state only)
+- `src/ui/GameRoot.tsx`: useReducer + localStorage (resources/characters/missions/achievements/statistics)
+- `src/ui/screens/*`: screens (Hangar, Mission Board, Results, etc.)
 
-### UI 畫面 (`js/ui/screens/`)
-- `launch.js`: 出發加速小遊戲
-- `in-flight.js`: 飛行 HUD 與遊戲容器
-- `mission-board.js`: 任務選擇
+### Phaser (game loop)
+- `src/game/phaser/scenes/*`: Launch/Flight/Arrival/Transformation/Landing/Exploration
+- `src/game/phaser/systems/*`: Input/Background/Partner, etc.
 
-## 關鍵機制
-- **Launch**: 按住 Space 加速，RPM 滿後發射。
-- **Flight**: WASD 移動，Space 衝刺。撞擊雷雲扣分減速，吃金幣加分。
-- **Audio**: 引擎聲頻率隨速度改變 (Pitch Shift)。
+## Key Mechanics
+- **Launch**: hold Space to build RPM and launch.
+- **Flight**: move with WASD and boost with Space; clouds slow you down; coins increase score.
+- **Audio**: engine pitch changes with speed (pitch shift).
 
-## 常用指令
-- 生成圖片: `python scripts/generate_assets.py --all`
-- 檢查圖片數量: `find assets/images -name "*.png" | wc -l`
+## Common Commands
+- Generate assets: `python scripts/generate_assets.py --all`
+- Count images: `find assets/images -name "*.png" | wc -l`
+- Typecheck: `npm run typecheck`
+- Build: `npm run build`

@@ -15,12 +15,12 @@ Super Wings Simulator is a hybrid web-based simulation game that combines a trad
 ## Architecture
 
 ### Frontend (Game Client)
-*   **Tech:** HTML5 Canvas, CSS3, Vanilla JavaScript (ES6+).
-*   **Core Modules:**
-    *   `js/core/`: GameState, EventBus, AudioManager.
-    *   `js/game/`: FlightEngine, Entities, InputHandler (Canvas Logic).
-    *   `js/ui/`: Screens (Hangar, MissionBoard, Launch, InFlight, Results).
-*   **State Management:** `GameState` singleton with LocalStorage persistence.
+*   **Tech:** Vite + React + TypeScript + Phaser 3.
+*   **Runtime split:**
+    *   React owns screens/overlays + persistence (`src/ui/`).
+    *   Phaser owns the game loop/rendering/physics (`src/game/phaser/`).
+    *   Shared logic/types/API clients live in `src/shared/`.
+*   **Entry:** `index.html` → `src/main.tsx`.
 
 ### Backend (AI Pipeline)
 *   **Tech:** Python 3.10+, FastAPI, ComfyUI.
@@ -28,10 +28,9 @@ Super Wings Simulator is a hybrid web-based simulation game that combines a trad
 
 ## Key Files & Directories
 
-*   `js/main.js`: Application entry point.
-*   `js/game/flight-engine.js`: Core logic for the flight mini-game.
-*   `js/core/audio-manager.js`: Synthesizer for in-game sound effects.
-*   `js/ui/screens/launch.js`: Logic for the takeoff sequence.
+*   `src/ui/GameRoot.tsx`: React root state + routing.
+*   `src/game/phaser/scenes/*`: Launch/Flight/Arrival/Transformation/Landing/Exploration.
+*   `src/shared/api/*`: Backend API wrappers.
 *   `assets/images/`: Stores generated character and background assets.
 *   `scripts/generate_assets.py`: Python script for batch generating AI assets.
 
