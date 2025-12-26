@@ -16,6 +16,9 @@ export type WorldSceneInitData = {
     charId?: string;
     locationId?: string;
     spawnPoint?: string;
+    x?: number;
+    y?: number;
+    movementMode?: 'walk' | 'hover';
 };
 
 type SpawnedInteractable = {
@@ -52,6 +55,9 @@ export class WorldScene extends Phaser.Scene {
     private charId = 'jett';
     private locationId = 'base_airport';
     private spawnPoint = 'default';
+    private spawnX: number | null = null;
+    private spawnY: number | null = null;
+    private movementMode: 'walk' | 'hover' = 'walk';
 
     private location!: LocationDefinition;
     private groundY = DEFAULT_GROUND_Y;
@@ -88,6 +94,9 @@ export class WorldScene extends Phaser.Scene {
         this.charId = typeof data.charId === 'string' && data.charId ? data.charId : 'jett';
         this.locationId = typeof data.locationId === 'string' && data.locationId ? data.locationId : 'base_airport';
         this.spawnPoint = typeof data.spawnPoint === 'string' && data.spawnPoint ? data.spawnPoint : 'default';
+        this.spawnX = typeof data.x === 'number' && Number.isFinite(data.x) ? data.x : null;
+        this.spawnY = typeof data.y === 'number' && Number.isFinite(data.y) ? data.y : null;
+        this.movementMode = data.movementMode === 'hover' ? 'hover' : 'walk';
 
         const loc = getLocation(this.locationId);
         if (!loc) {
@@ -326,7 +335,8 @@ export class WorldScene extends Phaser.Scene {
     }
 
     private createPlayer(): void {
-        const spawn = this.location.spawnPoints[this.spawnPoint] ?? this.location.spawnPoints.default ?? { x: 320, y: this.groundY };
+        const spawnFromPoint = this.location.spawnPoints[this.spawnPoint] ?? this.location.spawnPoints.default ?? { x: 320, y: this.groundY };
+        const spawn = this.spawnX !== null && this.spawnY !== null ? { x: this.spawnX, y: this.spawnY } : spawnFromPoint;
         const playerKey = this.getCharacterTextureKey('player', this.charId);
         const texture = this.textures.exists(playerKey) ? playerKey : 'world-character-fallback';
 
@@ -592,7 +602,9 @@ export class WorldScene extends Phaser.Scene {
             this.player.setFlipX(velocity < 0);
         }
 
-        this.player.y = this.groundY;
+        if (this.movementMode === 'walk') {
+            this.player.y = this.groundY;
+        }
     }
 
     private updatePrompt(): void {
@@ -848,7 +860,7 @@ export class WorldScene extends Phaser.Scene {
             spawnPoint: this.spawnPoint,
             x: this.player?.x ?? 0,
             y: this.player?.y ?? 0,
-            movementMode: 'walk' as const
+            movementMode: this.movementMode
         };
         worldStateManager.setLastPlayerState(state);
         this.lastPersistAtMs = timeMs;

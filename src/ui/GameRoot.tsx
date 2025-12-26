@@ -9,6 +9,8 @@ import { eventBus } from '../shared/eventBus';
 import { EVENTS } from '../shared/eventNames';
 import { flightEventTarget, type FlightResult } from '../shared/flightEvents';
 import { GAME_CONFIG } from '../shared/gameConfig';
+import { getLocation } from '../shared/data/gameData';
+import { worldStateManager } from '../shared/systems/worldStateManager';
 import { generateMission } from '../shared/api/missionsApi';
 import { endMissionSession, startMissionSession } from '../shared/api/missionSessionsApi';
 import { generateNarration } from '../shared/api/narrationApi';
@@ -62,8 +64,6 @@ type GameState = {
     lastResult: MissionResult | null;
     explorationDebrief: MissionResult | null;
     inboundFlight: FlightResult | null;
-    explorationStartLocationId: string;
-    explorationSpawnPoint: string;
     pendingExplorationQuestTemplateId: string | null;
     statistics: StatisticsState;
     achievements: AchievementState;
@@ -203,9 +203,7 @@ function GameRootInner() {
               ? {
                     mode: 'exploration',
                     exploration: {
-                        charId: state.selectedCharacterId,
-                        startLocationId: state.explorationStartLocationId,
-                        spawnPoint: state.explorationSpawnPoint
+                        charId: state.selectedCharacterId
                     }
                 }
               : undefined
@@ -217,6 +215,13 @@ function GameRootInner() {
     React.useEffect(() => {
         const onFlightComplete = (event: Event) => {
             const detail = (event as CustomEvent<FlightResult>).detail;
+            if (detail?.success) {
+                const locationId = 'warehouse_district';
+                const spawnPoint = 'entry';
+                const location = getLocation(locationId);
+                const spawn = location?.spawnPoints?.[spawnPoint] ?? location?.spawnPoints?.default ?? { x: 320, y: 760 };
+                worldStateManager.setLastPlayerState({ locationId, spawnPoint, x: spawn.x, y: spawn.y, movementMode: 'walk' });
+            }
             dispatch({ type: 'FLIGHT_COMPLETE', result: detail });
         };
 
@@ -714,8 +719,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                     lastResult: null,
                     explorationDebrief: null,
                     inboundFlight: action.result,
-                    explorationStartLocationId: 'warehouse_district',
-                    explorationSpawnPoint: 'entry',
                     pendingExplorationQuestTemplateId: 'qt_repair_relay_field'
                 };
             }
@@ -1117,8 +1120,6 @@ function createDefaultState(): GameState {
         lastResult: null,
         explorationDebrief: null,
         inboundFlight: null,
-        explorationStartLocationId: 'base_airport',
-        explorationSpawnPoint: 'default',
         pendingExplorationQuestTemplateId: null,
         statistics: createDefaultStatistics(),
         achievements: createDefaultAchievementState()
