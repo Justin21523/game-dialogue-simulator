@@ -100,6 +100,11 @@ export class WorldScene extends Phaser.Scene {
     private flightEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
 
     private objectiveMarker?: Phaser.GameObjects.Sprite;
+    private ambientEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
+
+    private pulseSprite: Phaser.GameObjects.Sprite | null = null;
+    private pulseBaseScale: { x: number; y: number } | null = null;
+    private pulseTween?: Phaser.Tweens.Tween;
 
     constructor() {
         super({ key: 'WorldScene' });
@@ -156,6 +161,7 @@ export class WorldScene extends Phaser.Scene {
         this.createGround();
         this.createPlayer();
         this.createFlightVfx();
+        this.createAmbientVfx();
         this.createProps(this.location.props ?? []);
         this.createDoors(this.location.doors ?? []);
         this.createInteractables(this.location.interactables);
@@ -176,6 +182,8 @@ export class WorldScene extends Phaser.Scene {
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             this.parallax.destroy();
             this.flightEmitter?.destroy();
+            this.ambientEmitter?.destroy();
+            this.stopPulseSprite();
         });
     }
 
@@ -420,6 +428,9 @@ export class WorldScene extends Phaser.Scene {
         for (const def of props) {
             const texture = this.getPropTexture(def.type);
             const sprite = this.add.sprite(def.x, def.y, texture).setOrigin(0.5, 1).setDepth(20);
+            if (typeof def.width === 'number' && Number.isFinite(def.width) && typeof def.height === 'number' && Number.isFinite(def.height)) {
+                sprite.setDisplaySize(def.width, def.height);
+            }
             const label = this.add
                 .text(sprite.x, sprite.y - sprite.displayHeight - 10, def.label ?? '', {
                     fontFamily: 'Segoe UI, system-ui, sans-serif',
@@ -442,18 +453,20 @@ export class WorldScene extends Phaser.Scene {
                 (collider.body as Phaser.Physics.Arcade.StaticBody).updateFromGameObject();
             }
 
-            this.interactables.push({
-                id: def.propId,
-                kind: 'prop',
-                interactableType: 'prop',
-                sprite,
-                label,
-                requiredAbility: undefined,
-                targetLocationId: undefined,
-                targetSpawnPoint: undefined,
-                message: def.message,
-                state: 'idle'
-            });
+            if (def.message && def.message.trim().length > 0) {
+                this.interactables.push({
+                    id: def.propId,
+                    kind: 'prop',
+                    interactableType: 'prop',
+                    sprite,
+                    label,
+                    requiredAbility: undefined,
+                    targetLocationId: undefined,
+                    targetSpawnPoint: undefined,
+                    message: def.message,
+                    state: 'idle'
+                });
+            }
         }
     }
 
@@ -693,6 +706,32 @@ export class WorldScene extends Phaser.Scene {
         this.flightEmitter = emitter;
     }
 
+    private createAmbientVfx(): void {
+        if (this.ambientEmitter) return;
+        if (!this.textures.exists('world-vfx-dot')) return;
+        const theme = this.location.theme ?? '';
+        const isOutdoor = theme === 'town_outdoor' || theme === 'park_outdoor';
+        if (!isOutdoor) return;
+
+        const emitter = this.add
+            .particles(0, 0, 'world-vfx-dot', {
+                x: { min: 0, max: GAME_WIDTH },
+                y: { min: 0, max: GAME_HEIGHT - 260 },
+                speedX: { min: -12, max: 12 },
+                speedY: { min: -26, max: -64 },
+                lifespan: { min: 2400, max: 4800 },
+                quantity: 1,
+                frequency: 180,
+                alpha: { start: 0.16, end: 0 },
+                scale: { start: 0.25, end: 0 }
+            })
+            .setDepth(6)
+            .setScrollFactor(0)
+            .setBlendMode(Phaser.BlendModes.ADD);
+
+        this.ambientEmitter = emitter;
+    }
+
     private toggleFlightMode(): void {
         if (this.inputLocked) return;
         if (this.flightTransition !== 'none') return;
@@ -756,10 +795,16 @@ export class WorldScene extends Phaser.Scene {
     private updateHighlight(timeMs: number): void {
         if (!this.highlight) return;
         this.highlight.clear();
-        if (this.inputLocked) return;
+        if (this.inputLocked) {
+            this.stopPulseSprite();
+            return;
+        }
 
         const target = this.findNearestTarget();
-        if (!target) return;
+        if (!target) {
+            this.stopPulseSprite();
+            return;
+        }
 
         let x = 0;
         let y = 0;
@@ -767,22 +812,34 @@ export class WorldScene extends Phaser.Scene {
 
         if (target.kind === 'npc') {
             const npc = this.npcs.find((n) => n.npcId === target.npcId);
-            if (!npc) return;
+            if (!npc) {
+                this.stopPulseSprite();
+                return;
+            }
             x = npc.sprite.x;
             y = npc.sprite.y - npc.sprite.displayHeight * 0.5;
             radius = Math.min(95, Math.max(60, (npc.def.interactionRadius ?? INTERACT_RANGE) * 0.5));
+            this.setPulseSprite(npc.sprite);
         } else if (target.kind === 'exit') {
             const ex = this.exits.find((e) => e.targetLocationId === target.targetLocationId && e.targetSpawnPoint === target.targetSpawnPoint);
-            if (!ex) return;
+            if (!ex) {
+                this.stopPulseSprite();
+                return;
+            }
             x = ex.zone.x;
             y = ex.zone.y - ex.zone.height * 0.5;
             radius = 90;
+            this.stopPulseSprite();
         } else {
             const obj = this.interactables.find((o) => o.id === target.id);
-            if (!obj) return;
+            if (!obj) {
+                this.stopPulseSprite();
+                return;
+            }
             x = obj.sprite.x;
             y = obj.sprite.y - obj.sprite.displayHeight * 0.5;
             radius = obj.kind === 'door' ? 92 : 72;
+            this.setPulseSprite(obj.sprite);
         }
 
         const pulse = 0.2 + Math.sin(timeMs / 280) * 0.08;
@@ -790,6 +847,34 @@ export class WorldScene extends Phaser.Scene {
         this.highlight.strokeCircle(x, y, radius);
         this.highlight.lineStyle(3, 0xffffff, 0.08 + pulse * 0.4);
         this.highlight.strokeCircle(x, y, radius - 10);
+    }
+
+    private setPulseSprite(sprite: Phaser.GameObjects.Sprite): void {
+        if (this.pulseSprite === sprite) return;
+        this.stopPulseSprite();
+        this.pulseSprite = sprite;
+        this.pulseBaseScale = { x: sprite.scaleX, y: sprite.scaleY };
+        this.pulseTween = this.tweens.add({
+            targets: sprite,
+            scaleX: sprite.scaleX * 1.06,
+            scaleY: sprite.scaleY * 1.06,
+            duration: 420,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+
+    private stopPulseSprite(): void {
+        if (this.pulseTween) {
+            this.pulseTween.stop();
+            this.pulseTween = undefined;
+        }
+        if (this.pulseSprite && this.pulseBaseScale) {
+            this.pulseSprite.setScale(this.pulseBaseScale.x, this.pulseBaseScale.y);
+        }
+        this.pulseSprite = null;
+        this.pulseBaseScale = null;
     }
 
     private getNearestPrompt(): string | null {
@@ -816,15 +901,18 @@ export class WorldScene extends Phaser.Scene {
         if (!target) return;
 
         if (target.kind === 'npc') {
+            audioManager.playSound('button');
             eventBus.emit(EVENTS.DIALOGUE_OPEN, { npcId: target.npcId, actorId: this.charId });
             return;
         }
 
         if (target.kind === 'exit') {
             if (!worldStateManager.isLocationUnlocked(target.targetLocationId)) {
+                audioManager.playSound('error');
                 this.flashPrompt('This destination is locked.');
                 return;
             }
+            audioManager.playSound('button');
             this.transitionToLocation(target.targetLocationId, target.targetSpawnPoint);
             return;
         }
@@ -834,35 +922,42 @@ export class WorldScene extends Phaser.Scene {
 
         if (target.kind === 'door') {
             if (obj.requiredWorldFlag && !worldStateManager.hasWorldFlag(obj.requiredWorldFlag)) {
+                audioManager.playSound('error');
                 this.flashPrompt('Locked. Find a clue to open this door.');
                 return;
             }
             if (obj.requiredItemId && !worldStateManager.hasItem(obj.requiredItemId, obj.requiredItemQty ?? 1)) {
+                audioManager.playSound('error');
                 this.flashPrompt('Locked. You need a key item to open this door.');
                 return;
             }
             if (obj.targetLocationId) {
+                audioManager.playSound('button');
                 this.transitionToLocation(obj.targetLocationId, obj.targetSpawnPoint ?? 'default', { via: 'door', doorId: obj.id });
             }
             return;
         }
 
         if (target.kind === 'prop' && obj.message) {
+            audioManager.playSound('button');
             this.flashPrompt(obj.message);
             return;
         }
 
         if (obj.requiredAbility && !companionManager.isAbilityAvailable(obj.requiredAbility)) {
+            audioManager.playSound('error');
             this.flashPrompt(`Requires ${obj.requiredAbility}. Press C to call a companion.`);
             return;
         }
 
         if (obj.kind === 'interactable' && obj.targetLocationId && obj.targetSpawnPoint) {
+            audioManager.playSound('button');
             this.transitionToLocation(obj.targetLocationId, obj.targetSpawnPoint, { via: 'interactable', interactableId: obj.id });
             return;
         }
 
         if (obj.kind === 'interactable') {
+            audioManager.playSound('button');
             if (obj.requiredAbility) {
                 eventBus.emit(EVENTS.COMPANION_ABILITY_USED, {
                     ability: obj.requiredAbility,
@@ -1275,6 +1370,8 @@ export class WorldScene extends Phaser.Scene {
         const key = `world-prop:${type}`;
         if (this.textures.exists(key)) return key;
         const g = this.add.graphics({ x: 0, y: 0 });
+        let texW = 240;
+        let texH = 220;
         if (type === 'crate') {
             g.fillStyle(0x8b5a2b, 1);
             g.fillRoundedRect(0, 0, 110, 90, 12);
@@ -1302,11 +1399,38 @@ export class WorldScene extends Phaser.Scene {
             g.fillRoundedRect(0, 0, 200, 120, 16);
             g.lineStyle(6, 0xffffff, 0.25);
             g.strokeRoundedRect(10, 10, 180, 100, 12);
+        } else if (type === 'building') {
+            texW = 520;
+            texH = 560;
+            g.fillStyle(0x1a1f2a, 1);
+            g.fillRoundedRect(0, 0, texW, texH, 28);
+            g.fillStyle(0x000000, 0.22);
+            g.fillRoundedRect(22, 22, texW - 44, texH - 44, 22);
+            g.fillStyle(0x00eaff, 0.14);
+            const cols = 4;
+            const rows = 3;
+            const padX = 70;
+            const padY = 110;
+            const winW = 70;
+            const winH = 60;
+            for (let r = 0; r < rows; r += 1) {
+                for (let c = 0; c < cols; c += 1) {
+                    const x = padX + c * (winW + 55);
+                    const y = padY + r * (winH + 70);
+                    g.fillRoundedRect(x, y, winW, winH, 14);
+                }
+            }
+            g.fillStyle(0xffd700, 0.22);
+            g.fillRoundedRect(90, 44, texW - 180, 44, 18);
+            g.lineStyle(6, 0xffffff, 0.14);
+            g.strokeRoundedRect(90, 44, texW - 180, 44, 18);
+            g.fillStyle(0x4b3a2f, 1);
+            g.fillRoundedRect(texW / 2 - 60, texH - 170, 120, 150, 18);
         } else {
             g.fillStyle(0xffffff, 0.2);
             g.fillRoundedRect(0, 0, 120, 120, 14);
         }
-        g.generateTexture(key, 240, 220);
+        g.generateTexture(key, texW, texH);
         g.destroy();
         return key;
     }
