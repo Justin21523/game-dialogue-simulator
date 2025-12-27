@@ -1,5 +1,4 @@
-import { getJson, postJson } from './http';
-import type { HttpError } from './http';
+import { getJson, isOfflineBackendError, postJson } from './http';
 
 export type TutorialHintResponse = {
     topic: string;
@@ -63,12 +62,6 @@ export type EventResolveResponse = {
     rewards?: Record<string, unknown> | null;
     penalties?: Record<string, unknown> | null;
 };
-
-function isOfflineBackendError(err: unknown): boolean {
-    if (!err || typeof err !== 'object') return false;
-    const maybe = err as Partial<HttpError>;
-    return maybe.status === 0;
-}
 
 function hashString32(input: string): number {
     // FNV-1a 32-bit
