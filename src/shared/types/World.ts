@@ -1,4 +1,5 @@
 import type { CompanionAbility } from './Companion.js';
+import type { DialogueLine } from './Dialogue.js';
 
 export type NpcPatrol = {
     minX: number;
@@ -27,7 +28,8 @@ export type NpcDefinition = {
     patrol?: NpcPatrol;
     patrolPath?: NpcPatrolPath;
     interactionRadius?: number;
-    idleAnimation?: 'none' | 'bob';
+    idleAnimation?: 'none' | 'bob' | 'bob_slow' | 'bob_fast';
+    barks?: DialogueLine[];
 };
 
 export type NpcSpawn = {

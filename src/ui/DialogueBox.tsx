@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { getDialogue, getNpc } from '../shared/data/gameData';
+import { isDialogueConditionMet } from '../shared/dialogue/conditionEvaluator';
 import { getCharacterGridPortraitSrc } from '../shared/characterAssets';
 import { eventBus } from '../shared/eventBus';
 import { EVENTS } from '../shared/eventNames';
@@ -9,7 +10,7 @@ import { startQuestFromTemplate } from '../shared/quests/questRuntime';
 import { companionManager } from '../shared/systems/companionManager';
 import { worldStateManager } from '../shared/systems/worldStateManager';
 import type { DialogueAction, DialogueDefinition, DialogueLine, DialogueSession } from '../shared/types/Dialogue';
-import type { DialogueChoice, DialogueCondition } from '../shared/types/Dialogue';
+import type { DialogueChoice } from '../shared/types/Dialogue';
 
 type DialogueOpenPayload = {
     npcId: string;
@@ -25,68 +26,14 @@ function getLineText(line: DialogueLine): string {
     return typeof line === 'string' ? line : line.text;
 }
 
-function isConditionMet(cond: DialogueCondition | undefined): boolean {
-    if (!cond) return true;
-
-    worldStateManager.initialize();
-    companionManager.initialize();
-
-    const flagsAll = cond.flags_all ?? [];
-    for (const flag of flagsAll) {
-        if (!worldStateManager.hasWorldFlag(flag)) return false;
-    }
-
-    const flagsNone = cond.flags_none ?? [];
-    for (const flag of flagsNone) {
-        if (worldStateManager.hasWorldFlag(flag)) return false;
-    }
-
-    const flagsAny = cond.flags_any ?? [];
-    if (flagsAny.length > 0 && !flagsAny.some((flag) => worldStateManager.hasWorldFlag(flag))) {
-        return false;
-    }
-
-    const hasItems = cond.has_items ?? [];
-    for (const itemId of hasItems) {
-        if (!worldStateManager.hasItem(itemId, 1)) return false;
-    }
-
-    const missingItems = cond.missing_items ?? [];
-    for (const itemId of missingItems) {
-        if (worldStateManager.hasItem(itemId, 1)) return false;
-    }
-
-    if (cond.quest_active) {
-        const active = missionManager.getActiveQuests();
-        const isActive = active.some((q) => q.templateId === cond.quest_active);
-        if (!isActive) return false;
-    }
-
-    if (cond.quest_not_active) {
-        const active = missionManager.getActiveQuests();
-        const isActive = active.some((q) => q.templateId === cond.quest_not_active);
-        if (isActive) return false;
-    }
-
-    if (cond.quest_completed) {
-        if (!worldStateManager.isQuestTemplateCompleted(cond.quest_completed)) return false;
-    }
-
-    if (cond.quest_not_completed) {
-        if (worldStateManager.isQuestTemplateCompleted(cond.quest_not_completed)) return false;
-    }
-
-    return true;
-}
-
 function isLineVisible(line: DialogueLine): boolean {
     if (typeof line === 'string') return true;
-    return isConditionMet(line.if);
+    return isDialogueConditionMet(line.if);
 }
 
 function filterChoices(choices: DialogueChoice[] | undefined): DialogueChoice[] {
     if (!choices) return [];
-    return choices.filter((c) => c.hideIfUnavailable === false || isConditionMet(c.if));
+    return choices.filter((c) => c.hideIfUnavailable === false || isDialogueConditionMet(c.if));
 }
 
 function pickDialogueId(payload: DialogueOpenPayload): string | null {
@@ -291,7 +238,7 @@ export function DialogueBox() {
                 {visibleChoices.length > 0 ? (
                     <div className="dialogue-choice-grid">
                         {visibleChoices.map((choice) => {
-                            const available = isConditionMet(choice.if);
+                            const available = isDialogueConditionMet(choice.if);
                             const label = !available && choice.disabledText ? choice.disabledText : choice.text;
                             return (
                                 <button

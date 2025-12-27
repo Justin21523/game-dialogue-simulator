@@ -47,6 +47,7 @@ type RawNpcs = {
         patrol_path?: { speed: number; points: Array<{ x: number; wait_ms?: number }> };
         interaction_radius?: number;
         idle_animation?: string;
+        barks?: unknown[];
     }>;
 };
 
@@ -302,7 +303,10 @@ for (const entry of rawNpcs.npcs) {
         patrol,
         patrolPath,
         interactionRadius: typeof entry.interaction_radius === 'number' ? entry.interaction_radius : undefined,
-        idleAnimation: typeof entry.idle_animation === 'string' ? (entry.idle_animation as NpcDefinition['idleAnimation']) : undefined
+        idleAnimation: typeof entry.idle_animation === 'string' ? (entry.idle_animation as NpcDefinition['idleAnimation']) : undefined,
+        barks: Array.isArray(entry.barks)
+            ? entry.barks.map(toDialogueLine).filter((line): line is DialogueLine => Boolean(line))
+            : undefined
     });
 }
 
