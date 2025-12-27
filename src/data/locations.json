@@ -46,6 +46,15 @@
                     "height": 320,
                     "target_location_id": "warehouse_district",
                     "target_spawn_point": "entry"
+                },
+                {
+                    "exit_id": "to_park",
+                    "x": 1680,
+                    "y": 740,
+                    "width": 180,
+                    "height": 320,
+                    "target_location_id": "park_district",
+                    "target_spawn_point": "base_gate"
                 }
             ]
         },
@@ -253,8 +262,304 @@
                     "height": 320,
                     "target_location_id": "warehouse_district",
                     "target_spawn_point": "entry"
+                },
+                {
+                    "exit_id": "to_park",
+                    "x": 3240,
+                    "y": 740,
+                    "width": 180,
+                    "height": 320,
+                    "target_location_id": "park_district",
+                    "target_spawn_point": "town_gate"
                 }
             ]
+        },
+        {
+            "location_id": "park_district",
+            "display_name": "Park District",
+            "world_width": 4200,
+            "world_height": 1080,
+            "theme": "park_outdoor",
+            "spawn_points": {
+                "default": { "x": 420, "y": 760 },
+                "town_gate": { "x": 320, "y": 760 },
+                "base_gate": { "x": 4040, "y": 760 },
+                "cafe": { "x": 1480, "y": 760 },
+                "cabin": { "x": 2560, "y": 760 },
+                "shed": { "x": 3400, "y": 760 }
+            },
+            "parallax": {
+                "layers": [
+                    { "id": "sky", "kind": "solid", "color": "#071826", "alpha": 1, "speed": 0 },
+                    { "id": "mist", "kind": "noise", "color": "#071826", "alpha": 0.14, "speed": 0.04 },
+                    { "id": "far_trees", "kind": "stripes", "color": "#0f2b25", "alpha": 0.1, "speed": 0.1 },
+                    { "id": "near_leaves", "kind": "stripes", "color": "#1f8b4c", "alpha": 0.12, "speed": 0.22 }
+                ]
+            },
+            "npc_spawns": [
+                { "npc_id": "npc_citizen", "x": 920, "y": 760 },
+                { "npc_id": "npc_guard", "x": 1240, "y": 760 },
+                { "npc_id": "npc_resident", "x": 1760, "y": 760 },
+                { "npc_id": "npc_kid", "x": 2120, "y": 760 },
+                { "npc_id": "npc_investigator", "x": 2760, "y": 760 },
+                { "npc_id": "npc_digger", "x": 3080, "y": 760 }
+            ],
+            "props": [
+                { "prop_id": "park_sign", "type": "sign", "x": 520, "y": 760, "label": "Green Park", "message": "Green Park: a calm place with busy corners." },
+                { "prop_id": "park_lamp_1", "type": "lamp", "x": 780, "y": 760, "label": "", "collides": false },
+                { "prop_id": "park_bench_1", "type": "bench", "x": 980, "y": 760, "label": "", "collides": true, "width": 220, "height": 90 },
+                { "prop_id": "park_fence_1", "type": "fence", "x": 1960, "y": 760, "label": "", "collides": true, "width": 320, "height": 110 },
+                { "prop_id": "park_decor_cafe", "type": "decor", "x": 1480, "y": 760, "label": "Cafe", "collides": true, "width": 520, "height": 360 },
+                { "prop_id": "park_decor_cabin", "type": "decor", "x": 2560, "y": 760, "label": "Cabin", "collides": true, "width": 520, "height": 360 },
+                { "prop_id": "park_decor_shed", "type": "decor", "x": 3400, "y": 760, "label": "Shed", "collides": true, "width": 460, "height": 300 },
+                { "prop_id": "park_crate_stack", "type": "crate", "x": 3660, "y": 760, "label": "", "collides": true, "width": 160, "height": 120 }
+            ],
+            "doors": [
+                {
+                    "door_id": "door_park_cafe",
+                    "label": "Park Cafe",
+                    "x": 1480,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "park_cafe_interior",
+                    "target_spawn_point": "entry"
+                },
+                {
+                    "door_id": "door_park_cabin",
+                    "label": "Ranger Cabin",
+                    "x": 2560,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "park_cabin_interior",
+                    "target_spawn_point": "entry"
+                },
+                {
+                    "door_id": "door_park_shed",
+                    "label": "Sealed Shed",
+                    "x": 3400,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "park_shed_interior",
+                    "target_spawn_point": "entry",
+                    "required_item_id": "item_park_key"
+                }
+            ],
+            "interactables": [
+                {
+                    "interactable_id": "park_notice_board",
+                    "type": "sign",
+                    "x": 1040,
+                    "y": 760,
+                    "label": "Park Bulletin",
+                    "message": "Bulletin: Lost items reported near the cafe and the pond."
+                },
+                {
+                    "interactable_id": "park_generator",
+                    "type": "quest_target",
+                    "x": 2920,
+                    "y": 760,
+                    "label": "Park Generator",
+                    "required_ability": "ENGINEERING"
+                },
+                {
+                    "interactable_id": "park_security_gate",
+                    "type": "quest_target",
+                    "x": 3240,
+                    "y": 760,
+                    "label": "Security Gate Control",
+                    "required_ability": "POLICE"
+                },
+                {
+                    "interactable_id": "item_lost_map",
+                    "type": "pickup",
+                    "x": 1160,
+                    "y": 760,
+                    "label": "Lost Map"
+                }
+            ],
+            "secrets": [
+                {
+                    "secret_id": "secret_park_cache",
+                    "x": 3720,
+                    "y": 740,
+                    "width": 220,
+                    "height": 320,
+                    "world_flag": "park_cache_found",
+                    "reward_currency": 120,
+                    "reward_item_id": "item_park_key",
+                    "message": "Secret found: Park Cache Key!"
+                }
+            ],
+            "colliders": [
+                { "collider_id": "park_wall_left", "x": 60, "y": 620, "width": 120, "height": 520 },
+                { "collider_id": "park_wall_right", "x": 4140, "y": 620, "width": 120, "height": 520 }
+            ],
+            "exits": [
+                {
+                    "exit_id": "to_town",
+                    "x": 220,
+                    "y": 740,
+                    "width": 180,
+                    "height": 320,
+                    "target_location_id": "town_district",
+                    "target_spawn_point": "gate"
+                },
+                {
+                    "exit_id": "to_base",
+                    "x": 4040,
+                    "y": 740,
+                    "width": 180,
+                    "height": 320,
+                    "target_location_id": "base_airport",
+                    "target_spawn_point": "default"
+                }
+            ]
+        },
+        {
+            "location_id": "park_cafe_interior",
+            "display_name": "Park Cafe (Interior)",
+            "world_width": 1800,
+            "world_height": 1080,
+            "theme": "interior_shop",
+            "spawn_points": {
+                "entry": { "x": 320, "y": 760 }
+            },
+            "npc_spawns": [
+                { "npc_id": "npc_customer", "x": 620, "y": 760 },
+                { "npc_id": "npc_citizen", "x": 980, "y": 760 }
+            ],
+            "props": [
+                { "prop_id": "park_cafe_counter", "type": "bench", "x": 740, "y": 760, "label": "", "collides": true, "width": 260, "height": 120 },
+                { "prop_id": "park_cafe_crate", "type": "crate", "x": 1160, "y": 760, "label": "", "collides": true, "width": 140, "height": 120 },
+                { "prop_id": "park_cafe_sign", "type": "sign", "x": 520, "y": 760, "label": "Cafe Menu", "message": "Menu: hot cocoa, sandwiches, and calm vibes." }
+            ],
+            "doors": [
+                {
+                    "door_id": "door_park_cafe_exit",
+                    "label": "Exit to Park",
+                    "x": 220,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "park_district",
+                    "target_spawn_point": "cafe"
+                }
+            ],
+            "interactables": [
+                {
+                    "interactable_id": "cafe_terminal",
+                    "type": "terminal",
+                    "x": 1420,
+                    "y": 760,
+                    "label": "Cafe Terminal",
+                    "required_ability": "ESPIONAGE",
+                    "message": "Receipts and messages recovered."
+                }
+            ],
+            "colliders": [
+                { "collider_id": "park_cafe_wall_left", "x": 60, "y": 620, "width": 120, "height": 520 },
+                { "collider_id": "park_cafe_wall_right", "x": 1740, "y": 620, "width": 120, "height": 520 }
+            ],
+            "exits": []
+        },
+        {
+            "location_id": "park_cabin_interior",
+            "display_name": "Ranger Cabin (Interior)",
+            "world_width": 1800,
+            "world_height": 1080,
+            "theme": "interior_house",
+            "spawn_points": {
+                "entry": { "x": 320, "y": 760 }
+            },
+            "npc_spawns": [
+                { "npc_id": "npc_guard", "x": 620, "y": 760 },
+                { "npc_id": "npc_investigator", "x": 980, "y": 760 }
+            ],
+            "props": [
+                { "prop_id": "park_cabin_crate", "type": "crate", "x": 720, "y": 760, "label": "", "collides": true, "width": 140, "height": 120 },
+                { "prop_id": "park_cabin_bench", "type": "bench", "x": 1160, "y": 760, "label": "", "collides": true, "width": 260, "height": 120 },
+                { "prop_id": "park_cabin_sign", "type": "sign", "x": 520, "y": 760, "label": "Cabin Notes", "message": "Notes: report unusual noises near the shed." }
+            ],
+            "doors": [
+                {
+                    "door_id": "door_park_cabin_exit",
+                    "label": "Exit to Park",
+                    "x": 220,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "park_district",
+                    "target_spawn_point": "cabin"
+                }
+            ],
+            "interactables": [
+                {
+                    "interactable_id": "cabin_radio",
+                    "type": "quest_target",
+                    "x": 1420,
+                    "y": 760,
+                    "label": "Ranger Radio",
+                    "required_ability": "ENGINEERING"
+                }
+            ],
+            "colliders": [
+                { "collider_id": "park_cabin_wall_left", "x": 60, "y": 620, "width": 120, "height": 520 },
+                { "collider_id": "park_cabin_wall_right", "x": 1740, "y": 620, "width": 120, "height": 520 }
+            ],
+            "exits": []
+        },
+        {
+            "location_id": "park_shed_interior",
+            "display_name": "Sealed Shed (Interior)",
+            "world_width": 1600,
+            "world_height": 1080,
+            "theme": "interior_secret",
+            "spawn_points": {
+                "entry": { "x": 320, "y": 760 }
+            },
+            "npc_spawns": [],
+            "props": [
+                { "prop_id": "park_shed_crate_1", "type": "crate", "x": 720, "y": 760, "label": "", "collides": true, "width": 140, "height": 120 },
+                { "prop_id": "park_shed_crate_2", "type": "crate", "x": 920, "y": 760, "label": "", "collides": true, "width": 140, "height": 120 }
+            ],
+            "doors": [
+                {
+                    "door_id": "door_park_shed_exit",
+                    "label": "Exit to Park",
+                    "x": 220,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "park_district",
+                    "target_spawn_point": "shed"
+                }
+            ],
+            "interactables": [
+                {
+                    "interactable_id": "item_park_artifact",
+                    "type": "pickup",
+                    "x": 1260,
+                    "y": 760,
+                    "label": "Strange Artifact"
+                },
+                {
+                    "interactable_id": "shed_terminal",
+                    "type": "terminal",
+                    "x": 1420,
+                    "y": 760,
+                    "label": "Hidden Terminal",
+                    "required_ability": "ESPIONAGE",
+                    "message": "Hidden logs extracted."
+                }
+            ],
+            "colliders": [
+                { "collider_id": "park_shed_wall_left", "x": 60, "y": 620, "width": 120, "height": 520 },
+                { "collider_id": "park_shed_wall_right", "x": 1540, "y": 620, "width": 120, "height": 520 }
+            ],
+            "exits": []
         },
         {
             "location_id": "town_shop_interior",
