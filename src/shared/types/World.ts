@@ -108,6 +108,8 @@ export type DoorDefinition = {
     targetLocationId: string;
     targetSpawnPoint: string;
     requiredWorldFlag?: string;
+    requiredItemId?: string;
+    requiredItemQty?: number;
 };
 
 export type SecretDefinition = {

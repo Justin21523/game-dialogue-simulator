@@ -140,6 +140,8 @@ type RawLocations = {
             target_location_id: string;
             target_spawn_point: string;
             required_world_flag?: string;
+            required_item_id?: string;
+            required_item_qty?: number;
         }>;
         secrets?: Array<{
             secret_id: string;
@@ -446,7 +448,9 @@ for (const entry of rawLocations.locations) {
               height: d.height,
               targetLocationId: d.target_location_id,
               targetSpawnPoint: d.target_spawn_point,
-              requiredWorldFlag: typeof d.required_world_flag === 'string' ? d.required_world_flag : undefined
+              requiredWorldFlag: typeof d.required_world_flag === 'string' ? d.required_world_flag : undefined,
+              requiredItemId: typeof d.required_item_id === 'string' ? d.required_item_id : undefined,
+              requiredItemQty: typeof d.required_item_qty === 'number' && Number.isFinite(d.required_item_qty) ? Math.max(1, Math.floor(d.required_item_qty)) : undefined
           }))
         : undefined;
 
