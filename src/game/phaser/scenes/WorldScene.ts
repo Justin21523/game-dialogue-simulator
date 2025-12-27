@@ -6,6 +6,7 @@ import { getLocation, getNpc } from '../../../shared/data/gameData';
 import { eventBus } from '../../../shared/eventBus';
 import { EVENTS } from '../../../shared/eventNames';
 import { ObjectiveType, type Objective } from '../../../shared/quests/objective';
+import { getObjectiveTargetHint } from '../../../shared/quests/objectiveTargets';
 import { SKILL_EXPLORATION_FLIGHT } from '../../../shared/skills/skillIds';
 import { companionManager } from '../../../shared/systems/companionManager';
 import { worldStateManager } from '../../../shared/systems/worldStateManager';
@@ -1063,39 +1064,37 @@ export class WorldScene extends Phaser.Scene {
     }
 
     private resolveObjectiveTarget(objective: Objective): { x: number; y: number; height: number } | null {
-        const conditions = objective.conditions ?? [];
-
-        const findString = (keys: string[]): string | null => {
-            for (const cond of conditions) {
-                for (const key of keys) {
-                    const raw = cond[key];
-                    if (typeof raw === 'string' && raw.trim().length > 0) return raw;
-                }
-            }
-            return null;
-        };
-
-        const targetLocationId = findString(['location_id', 'location']);
-        if (targetLocationId && targetLocationId !== this.locationId) {
-            return this.findTravelMarker(targetLocationId);
-        }
+        const hint = getObjectiveTargetHint(objective);
 
         if (objective.type === ObjectiveType.GO_TO_LOCATION) {
-            const destination = targetLocationId ?? findString(['target_location_id', 'destination_location_id']);
+            const destination = hint.locationId ?? null;
             if (!destination) return null;
             if (destination === this.locationId) return null;
             return this.findTravelMarker(destination);
         }
 
         if (objective.type === ObjectiveType.TALK || objective.type === ObjectiveType.DELIVER) {
-            const npcId = findString(['npc_id', 'target', 'target_npc', 'targetNpcId']);
+            const npcId = hint.npcId;
             if (!npcId) return null;
             const npc = this.npcs.find((n) => n.npcId === npcId);
             if (!npc) return null;
             return { x: npc.sprite.x, y: npc.sprite.y, height: npc.sprite.displayHeight };
         }
 
-        const targetId = findString(['target_id', 'target', 'action_target']);
+        if (objective.type === ObjectiveType.COLLECT) {
+            const itemId = hint.itemId;
+            if (!itemId) return null;
+            const obj = this.interactables.find((o) => o.id === itemId);
+            if (obj) {
+                return { x: obj.sprite.x, y: obj.sprite.y, height: obj.sprite.displayHeight };
+            }
+        }
+
+        if (hint.locationId && hint.locationId !== this.locationId) {
+            return this.findTravelMarker(hint.locationId);
+        }
+
+        const targetId = hint.targetId;
         if (targetId) {
             const obj = this.interactables.find((o) => o.id === targetId);
             if (obj) {

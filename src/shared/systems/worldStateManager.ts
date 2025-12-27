@@ -1,13 +1,14 @@
 import { getQuestTemplate } from '../data/gameData.js';
 import { eventBus } from '../eventBus.js';
 import { EVENTS } from '../eventNames.js';
-import type { PlayerSaveState, WorldState, WorldStateV1, WorldStateV2 } from '../types/World.js';
+import type { PlayerSaveState, WorldState, WorldStateV1, WorldStateV2, WorldStateV3 } from '../types/World.js';
 
-const STORAGE_KEY = 'sws:world:v2';
+const STORAGE_KEY = 'sws:world:v3';
 
-const DEFAULT_STATE: WorldStateV2 = {
-    version: 2,
+const DEFAULT_STATE: WorldStateV3 = {
+    version: 3,
     unlockedLocations: ['base_airport', 'town_district', 'warehouse_district'],
+    discoveredLocations: ['base_airport'],
     worldFlags: [],
     completedQuestTemplates: [],
     inventory: {},
@@ -27,7 +28,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export class WorldStateManager {
     private initialized = false;
     private listenersRegistered = false;
-    private state: WorldStateV2 = { ...DEFAULT_STATE };
+    private state: WorldStateV3 = { ...DEFAULT_STATE };
 
     initialize(): void {
         if (this.initialized) return;
@@ -36,7 +37,7 @@ export class WorldStateManager {
         this.registerListeners();
     }
 
-    getState(): WorldStateV2 {
+    getState(): WorldStateV3 {
         this.initialize();
         return this.state;
     }
@@ -53,6 +54,21 @@ export class WorldStateManager {
         this.state = { ...this.state, unlockedLocations: next };
         this.persist();
         eventBus.emit(EVENTS.WORLD_STATE_CHANGED, { state: this.state });
+    }
+
+    isLocationDiscovered(locationId: string): boolean {
+        this.initialize();
+        return this.state.discoveredLocations.includes(locationId);
+    }
+
+    discoverLocation(locationId: string): void {
+        this.initialize();
+        if (!locationId) return;
+        if (this.state.discoveredLocations.includes(locationId)) return;
+        this.state = { ...this.state, discoveredLocations: uniq([...this.state.discoveredLocations, locationId]) };
+        this.persist();
+        eventBus.emit(EVENTS.WORLD_STATE_CHANGED, { state: this.state });
+        eventBus.emit(EVENTS.LOCATION_DISCOVERED, { locationId });
     }
 
     isQuestTemplateCompleted(templateId: string): boolean {
@@ -167,7 +183,8 @@ export class WorldStateManager {
         try {
             const raw =
                 globalThis.localStorage?.getItem(STORAGE_KEY) ??
-                // Backwards compatibility (pre-v2 saves).
+                // Backwards compatibility (pre-v3 saves).
+                globalThis.localStorage?.getItem('sws:world:v2') ??
                 globalThis.localStorage?.getItem('sws:world:v1');
             if (!raw) return;
             const parsed = JSON.parse(raw) as unknown;
@@ -181,6 +198,60 @@ export class WorldStateManager {
             const completed = Array.isArray(parsed.completedQuestTemplates)
                 ? parsed.completedQuestTemplates.filter((v): v is string => typeof v === 'string')
                 : [];
+
+            if (version === 3) {
+                const inventoryRaw = isRecord(parsed.inventory) ? parsed.inventory : {};
+                const inventory: Record<string, number> = {};
+                for (const [key, value] of Object.entries(inventoryRaw)) {
+                    if (typeof key !== 'string' || !key) continue;
+                    const n = typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+                    if (n > 0) inventory[key] = n;
+                }
+
+                const unlockedCompanions = Array.isArray(parsed.unlockedCompanions)
+                    ? parsed.unlockedCompanions.filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+                    : [];
+                const unlockedSkills = Array.isArray(parsed.unlockedSkills)
+                    ? parsed.unlockedSkills.filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+                    : [];
+
+                const discoveredLocations = Array.isArray((parsed as { discoveredLocations?: unknown }).discoveredLocations)
+                    ? ((parsed as { discoveredLocations?: unknown }).discoveredLocations as unknown[]).filter(
+                          (v): v is string => typeof v === 'string' && v.trim().length > 0
+                      )
+                    : [];
+
+                const lastPlayerState: PlayerSaveState | null = isRecord(parsed.lastPlayerState)
+                    ? {
+                          locationId: String(parsed.lastPlayerState.locationId ?? ''),
+                          spawnPoint: String(parsed.lastPlayerState.spawnPoint ?? 'default'),
+                          x: Number(parsed.lastPlayerState.x ?? 0),
+                          y: Number(parsed.lastPlayerState.y ?? 0),
+                          movementMode:
+                              parsed.lastPlayerState.movementMode === 'hover'
+                                  ? 'hover'
+                                  : parsed.lastPlayerState.movementMode === 'walk'
+                                    ? 'walk'
+                                    : undefined
+                      }
+                    : null;
+
+                this.state = {
+                    version: 3,
+                    unlockedLocations: uniq([...DEFAULT_STATE.unlockedLocations, ...unlocked]),
+                    discoveredLocations: uniq([...DEFAULT_STATE.discoveredLocations, ...discoveredLocations]),
+                    worldFlags: uniq(flags),
+                    completedQuestTemplates: uniq(completed),
+                    inventory,
+                    unlockedCompanions: uniq(unlockedCompanions),
+                    unlockedSkills: uniq(unlockedSkills),
+                    lastPlayerState:
+                        lastPlayerState && lastPlayerState.locationId && Number.isFinite(lastPlayerState.x) && Number.isFinite(lastPlayerState.y)
+                            ? lastPlayerState
+                            : null
+                };
+                return;
+            }
 
             if (version === 2) {
                 const inventoryRaw = isRecord(parsed.inventory) ? parsed.inventory : {};
@@ -214,8 +285,9 @@ export class WorldStateManager {
                     : null;
 
                 this.state = {
-                    version: 2,
+                    version: 3,
                     unlockedLocations: uniq([...DEFAULT_STATE.unlockedLocations, ...unlocked]),
+                    discoveredLocations: uniq([...DEFAULT_STATE.discoveredLocations, ...unlocked]),
                     worldFlags: uniq(flags),
                     completedQuestTemplates: uniq(completed),
                     inventory,
@@ -240,6 +312,7 @@ export class WorldStateManager {
             this.state = {
                 ...DEFAULT_STATE,
                 unlockedLocations: v1.unlockedLocations,
+                discoveredLocations: uniq([...DEFAULT_STATE.discoveredLocations, ...v1.unlockedLocations]),
                 worldFlags: v1.worldFlags,
                 completedQuestTemplates: v1.completedQuestTemplates
             };
@@ -259,6 +332,13 @@ export class WorldStateManager {
     private registerListeners(): void {
         if (this.listenersRegistered) return;
         this.listenersRegistered = true;
+
+        eventBus.on(EVENTS.LOCATION_ENTERED, (payload: unknown) => {
+            if (!payload || typeof payload !== 'object') return;
+            const data = payload as Partial<{ locationId: string }>;
+            if (typeof data.locationId !== 'string' || !data.locationId) return;
+            this.discoverLocation(data.locationId);
+        });
 
         eventBus.on(EVENTS.ITEM_COLLECTED, (payload: unknown) => {
             if (!payload || typeof payload !== 'object') return;

@@ -1,0 +1,75 @@
+.map-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.map-panel__section h4 {
+    margin: 0 0 10px 0;
+}
+
+.map-panel__current {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+}
+
+.map-panel__objective-title {
+    margin-bottom: 6px;
+}
+
+.map-panel__objective-detail {
+    line-height: 1.4;
+}
+
+.map-panel__list {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.map-panel__locked {
+    color: var(--color-warning);
+    font-weight: 600;
+}
+
+.map-panel__grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+}
+
+.map-panel__loc {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-card);
+    padding: 10px 12px;
+}
+
+.map-panel__loc--locked {
+    opacity: 0.65;
+    filter: grayscale(0.25);
+}
+
+.map-panel__loc--here {
+    border-color: rgba(0, 234, 255, 0.6);
+    box-shadow: 0 0 0 2px rgba(0, 234, 255, 0.18);
+}
+
+.map-panel__loc-name {
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.map-panel__loc-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
