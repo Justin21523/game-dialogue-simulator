@@ -28,6 +28,7 @@ type SpawnedInteractable = {
     kind: 'interactable' | 'door' | 'prop';
     interactableType?: InteractableDefinition['type'] | 'door' | 'prop';
     requiredAbility?: CompanionAbility;
+    requiredWorldFlag?: string;
     targetLocationId?: string;
     targetSpawnPoint?: string;
     message?: string;
@@ -451,15 +452,20 @@ export class WorldScene extends Phaser.Scene {
 
     private createDoors(doors: DoorDefinition[]): void {
         for (const door of doors) {
+            const isLocked = Boolean(door.requiredWorldFlag && !worldStateManager.hasWorldFlag(door.requiredWorldFlag));
             const sprite = this.add.sprite(door.x, door.y, 'world-door').setOrigin(0.5, 1).setDepth(25);
             sprite.setDisplaySize(door.width, door.height);
+            if (isLocked) {
+                sprite.setTint(0x999999);
+                sprite.setAlpha(0.7);
+            }
 
             const label = this.add
-                .text(door.x, door.y - door.height - 10, door.label, {
+                .text(door.x, door.y - door.height - 10, isLocked ? `${door.label} (Locked)` : door.label, {
                     fontFamily: 'Segoe UI, system-ui, sans-serif',
                     fontSize: '16px',
                     fontStyle: '900',
-                    color: '#00eaff',
+                    color: isLocked ? '#ff9800' : '#00eaff',
                     stroke: '#000000',
                     strokeThickness: 6
                 })
@@ -470,6 +476,7 @@ export class WorldScene extends Phaser.Scene {
                 id: door.doorId,
                 kind: 'door',
                 interactableType: 'door',
+                requiredWorldFlag: door.requiredWorldFlag,
                 targetLocationId: door.targetLocationId,
                 targetSpawnPoint: door.targetSpawnPoint,
                 sprite,
@@ -778,7 +785,11 @@ export class WorldScene extends Phaser.Scene {
 
         if (target.kind === 'npc') return `Press E to talk to ${target.name}`;
         if (target.kind === 'exit') return 'Press E to travel';
-        if (target.kind === 'door') return `Press E to enter`;
+        if (target.kind === 'door') {
+            const obj = this.interactables.find((o) => o.id === target.id);
+            if (obj?.requiredWorldFlag && !worldStateManager.hasWorldFlag(obj.requiredWorldFlag)) return 'Locked door';
+            return 'Press E to enter';
+        }
         if (target.kind === 'interactable') return 'Press E to interact';
         if (target.kind === 'prop') return target.label ? `Press E to read` : 'Press E';
         return null;
@@ -807,8 +818,12 @@ export class WorldScene extends Phaser.Scene {
         if (!obj || obj.state === 'completed') return;
 
         if (target.kind === 'door') {
+            if (obj.requiredWorldFlag && !worldStateManager.hasWorldFlag(obj.requiredWorldFlag)) {
+                this.flashPrompt('Locked. Find a clue to open this door.');
+                return;
+            }
             if (obj.targetLocationId) {
-                this.transitionToLocation(obj.targetLocationId, obj.targetSpawnPoint ?? 'default');
+                this.transitionToLocation(obj.targetLocationId, obj.targetSpawnPoint ?? 'default', { via: 'door', doorId: obj.id });
             }
             return;
         }
@@ -824,7 +839,7 @@ export class WorldScene extends Phaser.Scene {
         }
 
         if (obj.kind === 'interactable' && obj.targetLocationId && obj.targetSpawnPoint) {
-            this.transitionToLocation(obj.targetLocationId, obj.targetSpawnPoint);
+            this.transitionToLocation(obj.targetLocationId, obj.targetSpawnPoint, { via: 'interactable', interactableId: obj.id });
             return;
         }
 
@@ -859,7 +874,42 @@ export class WorldScene extends Phaser.Scene {
         }
     }
 
-    private transitionToLocation(locationId: string, spawnPoint: string): void {
+    private transitionToLocation(locationId: string, spawnPoint: string): void;
+    private transitionToLocation(
+        locationId: string,
+        spawnPoint: string,
+        meta: { via: 'door' | 'exit' | 'interactable' | 'unknown'; doorId?: string; interactableId?: string }
+    ): void;
+    private transitionToLocation(
+        locationId: string,
+        spawnPoint: string,
+        meta?: { via: 'door' | 'exit' | 'interactable' | 'unknown'; doorId?: string; interactableId?: string }
+    ): void {
+        const transitionMeta = meta ?? { via: 'unknown' };
+        const fromLocation = this.locationId;
+        const fromTheme = this.location.theme ?? null;
+        const toTheme = getLocation(locationId)?.theme ?? null;
+
+        const fromInterior = Boolean(fromTheme && fromTheme.startsWith('interior_'));
+        const toInterior = Boolean(toTheme && toTheme.startsWith('interior_'));
+
+        if (transitionMeta.via === 'door' && !fromInterior && toInterior) {
+            eventBus.emit(EVENTS.BUILDING_ENTERED, {
+                buildingId: locationId,
+                fromLocationId: fromLocation,
+                actorId: this.charId,
+                doorId: transitionMeta.doorId
+            });
+        }
+        if (transitionMeta.via === 'door' && fromInterior && !toInterior) {
+            eventBus.emit(EVENTS.BUILDING_EXITED, {
+                buildingId: fromLocation,
+                toLocationId: locationId,
+                actorId: this.charId,
+                doorId: transitionMeta.doorId
+            });
+        }
+
         this.cameras.main.fadeOut(220, 0, 0, 0);
         this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
             this.scene.start('WorldScene', { charId: this.charId, locationId, spawnPoint });
