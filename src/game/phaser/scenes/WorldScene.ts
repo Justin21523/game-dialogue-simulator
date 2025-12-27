@@ -30,6 +30,8 @@ type SpawnedInteractable = {
     interactableType?: InteractableDefinition['type'] | 'door' | 'prop';
     requiredAbility?: CompanionAbility;
     requiredWorldFlag?: string;
+    requiredItemId?: string;
+    requiredItemQty?: number;
     targetLocationId?: string;
     targetSpawnPoint?: string;
     message?: string;
@@ -456,7 +458,11 @@ export class WorldScene extends Phaser.Scene {
 
     private createDoors(doors: DoorDefinition[]): void {
         for (const door of doors) {
-            const isLocked = Boolean(door.requiredWorldFlag && !worldStateManager.hasWorldFlag(door.requiredWorldFlag));
+            const missingFlag = Boolean(door.requiredWorldFlag && !worldStateManager.hasWorldFlag(door.requiredWorldFlag));
+            const missingItem = Boolean(
+                door.requiredItemId && !worldStateManager.hasItem(door.requiredItemId, door.requiredItemQty ?? 1)
+            );
+            const isLocked = missingFlag || missingItem;
             const sprite = this.add.sprite(door.x, door.y, 'world-door').setOrigin(0.5, 1).setDepth(25);
             sprite.setDisplaySize(door.width, door.height);
             if (isLocked) {
@@ -464,8 +470,9 @@ export class WorldScene extends Phaser.Scene {
                 sprite.setAlpha(0.7);
             }
 
+            const lockSuffix = missingFlag ? ' (Locked)' : missingItem ? ' (Key Required)' : '';
             const label = this.add
-                .text(door.x, door.y - door.height - 10, isLocked ? `${door.label} (Locked)` : door.label, {
+                .text(door.x, door.y - door.height - 10, `${door.label}${lockSuffix}`, {
                     fontFamily: 'Segoe UI, system-ui, sans-serif',
                     fontSize: '16px',
                     fontStyle: '900',
@@ -481,6 +488,8 @@ export class WorldScene extends Phaser.Scene {
                 kind: 'door',
                 interactableType: 'door',
                 requiredWorldFlag: door.requiredWorldFlag,
+                requiredItemId: door.requiredItemId,
+                requiredItemQty: door.requiredItemQty,
                 targetLocationId: door.targetLocationId,
                 targetSpawnPoint: door.targetSpawnPoint,
                 sprite,
@@ -792,6 +801,7 @@ export class WorldScene extends Phaser.Scene {
         if (target.kind === 'door') {
             const obj = this.interactables.find((o) => o.id === target.id);
             if (obj?.requiredWorldFlag && !worldStateManager.hasWorldFlag(obj.requiredWorldFlag)) return 'Locked door';
+            if (obj?.requiredItemId && !worldStateManager.hasItem(obj.requiredItemId, obj.requiredItemQty ?? 1)) return 'Key required';
             return 'Press E to enter';
         }
         if (target.kind === 'interactable') return 'Press E to interact';
@@ -824,6 +834,10 @@ export class WorldScene extends Phaser.Scene {
         if (target.kind === 'door') {
             if (obj.requiredWorldFlag && !worldStateManager.hasWorldFlag(obj.requiredWorldFlag)) {
                 this.flashPrompt('Locked. Find a clue to open this door.');
+                return;
+            }
+            if (obj.requiredItemId && !worldStateManager.hasItem(obj.requiredItemId, obj.requiredItemQty ?? 1)) {
+                this.flashPrompt('Locked. You need a key item to open this door.');
                 return;
             }
             if (obj.targetLocationId) {
@@ -866,7 +880,6 @@ export class WorldScene extends Phaser.Scene {
 
             if (obj.kind === 'interactable' && obj.interactableType === 'pickup') {
                 eventBus.emit(EVENTS.ITEM_COLLECTED, { itemId: obj.id, quantity: 1, actorId: this.charId });
-                worldStateManager.addItem(obj.id, 1);
                 obj.sprite.setVisible(false);
                 obj.label.setText('Collected');
                 obj.label.setAlpha(0.65);
