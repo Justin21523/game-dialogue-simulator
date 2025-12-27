@@ -16,6 +16,12 @@ export function getBackendAvailability(): BackendAvailability {
     return backendAvailability;
 }
 
+export function isOfflineBackendError(err: unknown): boolean {
+    if (!err || typeof err !== 'object') return false;
+    const maybe = err as Partial<HttpError>;
+    return maybe.status === 0;
+}
+
 function getApiBase(): string {
     const base = import.meta.env.VITE_API_BASE || 'http://localhost:8001/api/v1';
     return base.replace(/\/+$/, '');
