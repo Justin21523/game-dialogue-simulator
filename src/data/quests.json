@@ -399,6 +399,53 @@
                 "required_world_flags": [],
                 "completed_quest_templates": ["qt_main_town_welcome"]
             }
+        },
+        {
+            "template_id": "qt_side_secret_stash",
+            "title": "Hidden Alley Stash",
+            "description": "A hidden back room contains an encrypted terminal and a sealed dossier. Call an espionage companion to decrypt it.",
+            "type": "side",
+            "destination_location_id": "town_secret_interior",
+            "repeatable": false,
+            "steps": [
+                {
+                    "id": "enter_secret_room",
+                    "type": "go_to_location",
+                    "title": "Enter the hidden room",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "town_secret_interior" }]
+                },
+                {
+                    "id": "decrypt_terminal",
+                    "type": "investigate",
+                    "title": "Decrypt the terminal (requires Espionage)",
+                    "required_count": 1,
+                    "conditions": [{ "target_id": "secret_terminal", "required_ability": "ESPIONAGE" }]
+                },
+                {
+                    "id": "collect_dossier",
+                    "type": "collect",
+                    "title": "Collect the sealed dossier",
+                    "required_count": 1,
+                    "conditions": [{ "item_id": "item_secret_dossier" }]
+                },
+                {
+                    "id": "report_informant",
+                    "type": "talk",
+                    "title": "Report back to the Informant",
+                    "required_count": 1,
+                    "conditions": [{ "npc_id": "npc_informant" }]
+                }
+            ],
+            "rewards": {
+                "currency": 240,
+                "exp": 110,
+                "unlock_locations": []
+            },
+            "prerequisites": {
+                "required_world_flags": ["secret_alley_found"],
+                "completed_quest_templates": ["qt_main_town_welcome"]
+            }
         }
     ]
 }

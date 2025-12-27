@@ -74,7 +74,15 @@ export type ParallaxDefinition = {
     layers: ParallaxLayerDefinition[];
 };
 
-export type LocationTheme = 'airport_base' | 'warehouse' | 'town_outdoor' | 'interior_house' | 'interior_shop' | 'interior_garage' | 'park_outdoor';
+export type LocationTheme =
+    | 'airport_base'
+    | 'warehouse'
+    | 'town_outdoor'
+    | 'interior_house'
+    | 'interior_shop'
+    | 'interior_garage'
+    | 'interior_secret'
+    | 'park_outdoor';
 
 export type PropType = 'sign' | 'crate' | 'lamp' | 'fence' | 'bench' | 'decor';
 

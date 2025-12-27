@@ -370,6 +370,43 @@
                     ]
                 }
             ]
+        },
+        {
+            "dialogue_id": "dlg_informant_root",
+            "npc_id": "npc_informant",
+            "start_node_id": "start",
+            "nodes": [
+                {
+                    "node_id": "start",
+                    "speaker_name": "Informant",
+                    "lines": [
+                        {
+                            "text": "Keep your eyes open. There's talk of a hidden alley stash somewhere in town.",
+                            "if": { "flags_none": ["secret_alley_found"] }
+                        },
+                        {
+                            "text": "You found the hidden stash. That key might open a back room nearby.",
+                            "if": { "flags_all": ["secret_alley_found"], "has_items": ["item_mysterious_key"] }
+                        },
+                        {
+                            "text": "Nice work finding the alley. If you're curious, there's a hidden door worth checking.",
+                            "if": { "flags_all": ["secret_alley_found"], "missing_items": ["item_mysterious_key"] }
+                        }
+                    ],
+                    "choices": [
+                        {
+                            "choice_id": "start_secret_stash",
+                            "text": "I'll investigate the hidden room.",
+                            "if": { "flags_all": ["secret_alley_found"], "quest_not_active": "qt_side_secret_stash", "quest_not_completed": "qt_side_secret_stash" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_side_secret_stash" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
+                        { "choice_id": "close", "text": "Thanks.", "actions": [{ "type": "close_dialogue" }] }
+                    ]
+                }
+            ]
         }
     ]
 }
