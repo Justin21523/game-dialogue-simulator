@@ -82,6 +82,7 @@ type GameAction =
     | { type: 'FLIGHT_COMPLETE'; result: FlightResult }
     | { type: 'MISSION_COMPLETE_FROM_EXPLORATION'; mission: Mission; actorId: string }
     | { type: 'QUEST_COMPLETE'; questId: string; title: string; description: string; location: string; actorId: string; rewards: { money: number; exp: number } }
+    | { type: 'GRANT_REWARD'; actorId: string; money: number; exp: number; reason: string }
     | { type: 'CLOSE_EXPLORATION_DEBRIEF' }
     | { type: 'CLEAR_PENDING_EXPLORATION_QUEST' }
     | { type: 'TICK_PLAYTIME'; nowIso: string; deltaSeconds: number }
@@ -276,6 +277,51 @@ function GameRootInner() {
             eventBus.off(EVENTS.QUEST_COMPLETED, onQuestCompleted);
         };
     }, []);
+
+    React.useEffect(() => {
+        const onRewardGranted = (payload: unknown) => {
+            if (!payload || typeof payload !== 'object') return;
+            const data = payload as Partial<{
+                actorId: string;
+                money: number;
+                exp: number;
+                itemId: string | null;
+                itemQty: number;
+                message: string;
+                source: string;
+            }>;
+
+            const actorId = typeof data.actorId === 'string' && data.actorId ? data.actorId : stateRef.current.selectedCharacterId;
+            const money = typeof data.money === 'number' && Number.isFinite(data.money) ? Math.max(0, Math.floor(data.money)) : 0;
+            const exp = typeof data.exp === 'number' && Number.isFinite(data.exp) ? Math.max(0, Math.floor(data.exp)) : 0;
+            const itemId = typeof data.itemId === 'string' && data.itemId ? data.itemId : null;
+            const itemQty = typeof data.itemQty === 'number' && Number.isFinite(data.itemQty) ? Math.max(0, Math.floor(data.itemQty)) : 0;
+            const message = typeof data.message === 'string' && data.message ? data.message : null;
+            const source = typeof data.source === 'string' && data.source ? data.source : 'reward';
+
+            if (money > 0 || exp > 0) {
+                dispatch({ type: 'GRANT_REWARD', actorId, money, exp, reason: source });
+            }
+
+            if (money > 0) audioManager.playSound('coin');
+            if (exp > 0) audioManager.playSound('success');
+
+            if (message) {
+                toast.show(message, 'success', 6500);
+            } else if (money > 0 || exp > 0 || itemId) {
+                const parts: string[] = [];
+                if (money > 0) parts.push(`💰 +${money}`);
+                if (exp > 0) parts.push(`⭐ +${exp}`);
+                if (itemId) parts.push(itemQty > 1 ? `📦 ${itemId} x${itemQty}` : `📦 ${itemId}`);
+                toast.show(`Reward granted: ${parts.join(' · ')}`, 'success', 6500);
+            }
+        };
+
+        eventBus.on(EVENTS.REWARD_GRANTED, onRewardGranted);
+        return () => {
+            eventBus.off(EVENTS.REWARD_GRANTED, onRewardGranted);
+        };
+    }, [dispatch, toast]);
 
     React.useEffect(() => {
         if (state.screen !== 'exploration') return;
@@ -1035,6 +1081,35 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 activeMission: null,
                 flightParams: null
             };
+        }
+
+        case 'GRANT_REWARD': {
+            const moneyGain = Math.max(0, Math.floor(action.money));
+            const expGain = Math.max(0, Math.floor(action.exp));
+            if (moneyGain <= 0 && expGain <= 0) return state;
+
+            let nextResources = state.resources;
+            let nextStatistics = state.statistics;
+            if (moneyGain > 0) {
+                nextResources = { ...state.resources, money: state.resources.money + moneyGain };
+                nextStatistics = recordMoneyBalance(nextStatistics, nextResources.money);
+            }
+
+            let nextCharacters = state.characters;
+            if (expGain > 0) {
+                const char = state.characters.find((c) => c.id === action.actorId);
+                if (char) {
+                    const baseChar: CharacterState = { ...char };
+                    const nextChar = applyExp(baseChar, expGain);
+                    const levelUps = Math.max(0, nextChar.level - baseChar.level);
+                    for (let i = 0; i < levelUps; i += 1) {
+                        nextStatistics = recordLevelUp(nextStatistics, nextChar.level);
+                    }
+                    nextCharacters = state.characters.map((c) => (c.id === nextChar.id ? nextChar : c));
+                }
+            }
+
+            return { ...state, resources: nextResources, characters: nextCharacters, statistics: nextStatistics };
         }
 
         case 'CLOSE_EXPLORATION_DEBRIEF':

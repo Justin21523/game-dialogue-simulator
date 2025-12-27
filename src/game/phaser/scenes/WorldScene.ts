@@ -994,6 +994,21 @@ export class WorldScene extends Phaser.Scene {
                 worldStateManager.addItem(secret.rewardItemId, 1);
             }
             const rewardText = secret.message ?? 'Secret discovered!';
+            const money = typeof secret.rewardCurrency === 'number' && Number.isFinite(secret.rewardCurrency) ? Math.max(0, secret.rewardCurrency) : 0;
+            const exp = typeof secret.rewardExp === 'number' && Number.isFinite(secret.rewardExp) ? Math.max(0, secret.rewardExp) : 0;
+
+            if (money > 0 || exp > 0 || secret.rewardItemId) {
+                eventBus.emit(EVENTS.REWARD_GRANTED, {
+                    actorId: this.charId,
+                    money,
+                    exp,
+                    itemId: secret.rewardItemId ?? null,
+                    itemQty: secret.rewardItemId ? 1 : 0,
+                    source: 'secret',
+                    sourceId: secret.secretId,
+                    message: rewardText
+                });
+            }
             this.flashPrompt(rewardText);
         }
     }
