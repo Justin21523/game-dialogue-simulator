@@ -5,6 +5,7 @@ import { GAME_HEIGHT, GAME_WIDTH } from '../../../shared/constants';
 import { getLocation, getNpc } from '../../../shared/data/gameData';
 import { eventBus } from '../../../shared/eventBus';
 import { EVENTS } from '../../../shared/eventNames';
+import { ObjectiveType, type Objective } from '../../../shared/quests/objective';
 import { SKILL_EXPLORATION_FLIGHT } from '../../../shared/skills/skillIds';
 import { companionManager } from '../../../shared/systems/companionManager';
 import { worldStateManager } from '../../../shared/systems/worldStateManager';
@@ -95,6 +96,8 @@ export class WorldScene extends Phaser.Scene {
     private flightTransition: 'none' | 'takeoff' | 'landing' = 'none';
     private flightEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
 
+    private objectiveMarker?: Phaser.GameObjects.Sprite;
+
     constructor() {
         super({ key: 'WorldScene' });
     }
@@ -181,6 +184,7 @@ export class WorldScene extends Phaser.Scene {
         this.updatePrompt();
         this.updateHighlight(timeMs);
         this.checkSecrets(this.location.secrets ?? []);
+        this.updateObjectiveMarker(timeMs);
 
         if (this.keys) {
             this.updatePlayerMovement();
@@ -1013,6 +1017,95 @@ export class WorldScene extends Phaser.Scene {
         }
     }
 
+    private updateObjectiveMarker(timeMs: number): void {
+        const quest = missionManager.getActiveMainQuest();
+        const objective = quest?.objectives?.find((o) => o.status === 'active') ?? null;
+        if (!objective) {
+            this.objectiveMarker?.setVisible(false);
+            return;
+        }
+
+        const target = this.resolveObjectiveTarget(objective);
+        if (!target) {
+            this.objectiveMarker?.setVisible(false);
+            return;
+        }
+
+        if (!this.objectiveMarker) {
+            this.objectiveMarker = this.add
+                .sprite(target.x, target.y, 'world-marker')
+                .setOrigin(0.5, 1)
+                .setDepth(2600)
+                .setBlendMode(Phaser.BlendModes.ADD);
+        }
+
+        const bob = Math.sin(timeMs / 180) * 10;
+        const pulse = 1 + Math.sin(timeMs / 260) * 0.06;
+        const y = target.y - target.height - 24 + bob;
+
+        this.objectiveMarker.setPosition(target.x, y);
+        this.objectiveMarker.setScale(pulse);
+        this.objectiveMarker.setVisible(true);
+    }
+
+    private resolveObjectiveTarget(objective: Objective): { x: number; y: number; height: number } | null {
+        const conditions = objective.conditions ?? [];
+
+        const findString = (keys: string[]): string | null => {
+            for (const cond of conditions) {
+                for (const key of keys) {
+                    const raw = cond[key];
+                    if (typeof raw === 'string' && raw.trim().length > 0) return raw;
+                }
+            }
+            return null;
+        };
+
+        const targetLocationId = findString(['location_id', 'location']);
+        if (targetLocationId && targetLocationId !== this.locationId) {
+            return this.findTravelMarker(targetLocationId);
+        }
+
+        if (objective.type === ObjectiveType.GO_TO_LOCATION) {
+            const destination = targetLocationId ?? findString(['target_location_id', 'destination_location_id']);
+            if (!destination) return null;
+            if (destination === this.locationId) return null;
+            return this.findTravelMarker(destination);
+        }
+
+        if (objective.type === ObjectiveType.TALK || objective.type === ObjectiveType.DELIVER) {
+            const npcId = findString(['npc_id', 'target', 'target_npc', 'targetNpcId']);
+            if (!npcId) return null;
+            const npc = this.npcs.find((n) => n.npcId === npcId);
+            if (!npc) return null;
+            return { x: npc.sprite.x, y: npc.sprite.y, height: npc.sprite.displayHeight };
+        }
+
+        const targetId = findString(['target_id', 'target', 'action_target']);
+        if (targetId) {
+            const obj = this.interactables.find((o) => o.id === targetId);
+            if (obj) {
+                return { x: obj.sprite.x, y: obj.sprite.y, height: obj.sprite.displayHeight };
+            }
+        }
+
+        return null;
+    }
+
+    private findTravelMarker(locationId: string): { x: number; y: number; height: number } | null {
+        const exit = this.exits.find((e) => e.targetLocationId === locationId);
+        if (exit) {
+            return { x: exit.zone.x, y: exit.zone.y, height: exit.zone.height };
+        }
+
+        const door = this.interactables.find((o) => o.kind === 'door' && o.targetLocationId === locationId);
+        if (door) {
+            return { x: door.sprite.x, y: door.sprite.y, height: door.sprite.displayHeight };
+        }
+
+        return null;
+    }
+
     private registerUiLocks(): void {
         const onOpened = (payload: unknown) => {
             if (!isRecord(payload)) return;
@@ -1096,6 +1189,25 @@ export class WorldScene extends Phaser.Scene {
             g.fillStyle(0xffd700, 0.9);
             g.fillCircle(96, 110, 8);
             g.generateTexture('world-door', 120, 220);
+            g.destroy();
+        }
+
+        if (!this.textures.exists('world-marker')) {
+            const g = this.add.graphics({ x: 0, y: 0 });
+            g.fillStyle(0xffd700, 0.95);
+            g.beginPath();
+            g.moveTo(32, 0);
+            g.lineTo(64, 48);
+            g.lineTo(44, 48);
+            g.lineTo(44, 90);
+            g.lineTo(20, 90);
+            g.lineTo(20, 48);
+            g.lineTo(0, 48);
+            g.closePath();
+            g.fillPath();
+            g.lineStyle(6, 0xffffff, 0.6);
+            g.strokePath();
+            g.generateTexture('world-marker', 64, 96);
             g.destroy();
         }
 
