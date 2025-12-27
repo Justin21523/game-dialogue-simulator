@@ -95,6 +95,15 @@
             "interaction_radius": 170
         },
         {
+            "npc_id": "npc_informant",
+            "display_name": "Informant",
+            "character_id": "jerome",
+            "portrait": "profile",
+            "dialogue_id": "dlg_informant_root",
+            "idle_animation": "bob",
+            "interaction_radius": 170
+        },
+        {
             "npc_id": "npc_digger",
             "display_name": "Digger",
             "character_id": "todd",

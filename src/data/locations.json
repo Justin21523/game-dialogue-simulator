@@ -99,7 +99,8 @@
                 "gate": { "x": 320, "y": 760 },
                 "shop": { "x": 1420, "y": 760 },
                 "house": { "x": 2060, "y": 760 },
-                "garage": { "x": 2740, "y": 760 }
+                "garage": { "x": 2740, "y": 760 },
+                "secret": { "x": 3460, "y": 760 }
             },
             "parallax": {
                 "layers": [
@@ -115,7 +116,8 @@
                 { "npc_id": "npc_shopkeeper", "x": 1320, "y": 760 },
                 { "npc_id": "npc_mechanic", "x": 2500, "y": 760 },
                 { "npc_id": "npc_investigator", "x": 1700, "y": 760 },
-                { "npc_id": "npc_digger", "x": 3160, "y": 760 }
+                { "npc_id": "npc_digger", "x": 3160, "y": 760 },
+                { "npc_id": "npc_informant", "x": 3380, "y": 760 }
             ],
             "props": [
                 { "prop_id": "town_welcome_sign", "type": "sign", "x": 520, "y": 760, "label": "Welcome", "message": "Welcome to the Town District." },
@@ -153,6 +155,17 @@
                     "height": 240,
                     "target_location_id": "town_garage_interior",
                     "target_spawn_point": "entry"
+                },
+                {
+                    "door_id": "door_secret",
+                    "label": "Hidden Door",
+                    "x": 3460,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "town_secret_interior",
+                    "target_spawn_point": "entry",
+                    "required_world_flag": "secret_alley_found"
                 }
             ],
             "interactables": [
@@ -382,6 +395,59 @@
             "colliders": [
                 { "collider_id": "garage_wall_left", "x": 60, "y": 620, "width": 120, "height": 520 },
                 { "collider_id": "garage_wall_right", "x": 1940, "y": 620, "width": 120, "height": 520 }
+            ],
+            "exits": []
+        },
+        {
+            "location_id": "town_secret_interior",
+            "display_name": "Hidden Alley (Interior)",
+            "world_width": 1800,
+            "world_height": 1080,
+            "theme": "interior_secret",
+            "spawn_points": {
+                "entry": { "x": 320, "y": 760 }
+            },
+            "npc_spawns": [
+                { "npc_id": "npc_informant", "x": 860, "y": 760 },
+                { "npc_id": "npc_guard", "x": 1280, "y": 760 }
+            ],
+            "props": [
+                { "prop_id": "secret_crate_stack", "type": "crate", "x": 1020, "y": 760, "label": "", "collides": true, "width": 200, "height": 160 },
+                { "prop_id": "secret_sign", "type": "sign", "x": 520, "y": 760, "label": "Warning", "message": "Restricted storage. Authorized access only." }
+            ],
+            "doors": [
+                {
+                    "door_id": "door_secret_exit",
+                    "label": "Back to Town",
+                    "x": 220,
+                    "y": 760,
+                    "width": 140,
+                    "height": 240,
+                    "target_location_id": "town_district",
+                    "target_spawn_point": "secret"
+                }
+            ],
+            "interactables": [
+                {
+                    "interactable_id": "secret_terminal",
+                    "type": "terminal",
+                    "x": 1280,
+                    "y": 760,
+                    "label": "Encrypted Terminal",
+                    "required_ability": "ESPIONAGE",
+                    "message": "Terminal decrypted."
+                },
+                {
+                    "interactable_id": "item_secret_dossier",
+                    "type": "pickup",
+                    "x": 1420,
+                    "y": 760,
+                    "label": "Sealed Dossier"
+                }
+            ],
+            "colliders": [
+                { "collider_id": "secret_wall_left", "x": 60, "y": 620, "width": 120, "height": 520 },
+                { "collider_id": "secret_wall_right", "x": 1740, "y": 620, "width": 120, "height": 520 }
             ],
             "exits": []
         }
