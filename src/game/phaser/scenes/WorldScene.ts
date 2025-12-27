@@ -13,6 +13,7 @@ import { worldStateManager } from '../../../shared/systems/worldStateManager';
 import { missionManager } from '../../../shared/quests/missionManager';
 import type { CompanionAbility } from '../../../shared/types/Companion';
 import type { ColliderDefinition, DoorDefinition, InteractableDefinition, LocationDefinition, PropDefinition, SecretDefinition } from '../../../shared/types/World';
+import { NpcBarkSystem } from '../systems/NpcBarkSystem';
 import { NpcBehaviorSystem, type SpawnedNpc } from '../systems/NpcBehaviorSystem';
 import { ParallaxSystem } from '../systems/ParallaxSystem';
 
@@ -71,6 +72,7 @@ export class WorldScene extends Phaser.Scene {
 
     private parallax = new ParallaxSystem(this);
     private npcBehavior = new NpcBehaviorSystem();
+    private npcBarks = new NpcBarkSystem();
 
     private player!: Phaser.Physics.Arcade.Sprite;
     private npcs: SpawnedNpc[] = [];
@@ -192,6 +194,7 @@ export class WorldScene extends Phaser.Scene {
 
         this.parallax.update(this.cameras.main);
         this.npcBehavior.update(this.npcs, timeMs, dt);
+        this.npcBarks.update(this, this.npcs, this.player, timeMs, this.inputLocked);
         this.updatePrompt();
         this.updateHighlight(timeMs);
         this.checkSecrets(this.location.secrets ?? []);

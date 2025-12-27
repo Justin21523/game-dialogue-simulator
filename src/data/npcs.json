@@ -13,7 +13,12 @@
                 "max_x": 1020,
                 "speed": 26
             },
-            "idle_animation": "bob",
+            "idle_animation": "bob_slow",
+            "barks": [
+                "Check the board for new jobs.",
+                { "text": "Town services need help. Head to the gate when ready.", "if": { "quest_active": "qt_main_town_welcome" } },
+                { "text": "Good work restoring the relay. Keep exploring!", "if": { "quest_completed": "qt_main_town_relay" } }
+            ],
             "interaction_radius": 170
         },
         {
@@ -28,6 +33,11 @@
                 "speed": 34
             },
             "idle_animation": "none",
+            "barks": [
+                "Nice weather for a walk.",
+                "Have you tried the cafe at the park?",
+                { "text": "I heard there's a hidden cache near the fences.", "if": { "flags_none": ["park_cache_found"] } }
+            ],
             "interaction_radius": 160
         },
         {
@@ -44,6 +54,11 @@
                 ]
             },
             "idle_animation": "none",
+            "barks": [
+                "Stay alert. Keep moving.",
+                { "text": "If you find that missing poster, bring it to me.", "if": { "quest_active": "qt_side_missing_poster" } },
+                { "text": "Thanks for helping the kid. Town morale matters.", "if": { "quest_completed": "qt_side_missing_poster" } }
+            ],
             "interaction_radius": 170
         },
         {
@@ -59,7 +74,12 @@
                     { "x": 1400, "wait_ms": 700 }
                 ]
             },
-            "idle_animation": "bob",
+            "idle_animation": "bob_slow",
+            "barks": [
+                "Fresh stock arrives when the roads behave.",
+                { "text": "Power is unstable. We need that cell delivered.", "if": { "quest_active": "qt_main_town_power" } },
+                { "text": "Business is back! The shelves are humming again.", "if": { "quest_completed": "qt_main_town_relay" } }
+            ],
             "interaction_radius": 160
         },
         {
@@ -75,7 +95,12 @@
                     { "x": 2600, "wait_ms": 700 }
                 ]
             },
-            "idle_animation": "none",
+            "idle_animation": "bob_fast",
+            "barks": [
+                "Tools ready. Just bring me parts.",
+                { "text": "If you find a power cell, bring it here.", "if": { "quest_active": "qt_main_town_power" } },
+                { "text": "Relay fixed? Perfect. I can breathe again.", "if": { "quest_completed": "qt_main_town_relay" } }
+            ],
             "interaction_radius": 170
         },
         {
@@ -92,6 +117,11 @@
                 ]
             },
             "idle_animation": "none",
+            "barks": [
+                "Clues don't find themselves.",
+                { "text": "The terminal logs might tell us everything.", "if": { "quest_active": "qt_side_terminal_logs" } },
+                { "text": "That cache key could unlock more than it seems.", "if": { "flags_all": ["park_cache_found"] } }
+            ],
             "interaction_radius": 170
         },
         {
@@ -100,7 +130,11 @@
             "character_id": "jerome",
             "portrait": "profile",
             "dialogue_id": "dlg_informant_root",
-            "idle_animation": "bob",
+            "idle_animation": "bob_slow",
+            "barks": [
+                "I know a shortcut or two.",
+                { "text": "Some doors open with the right item.", "if": { "flags_any": ["secret_alley_found", "park_cache_found"] } }
+            ],
             "interaction_radius": 170
         },
         {
@@ -116,7 +150,11 @@
                     { "x": 3220, "wait_ms": 500 }
                 ]
             },
-            "idle_animation": "none",
+            "idle_animation": "bob_fast",
+            "barks": [
+                "Soil tells a story.",
+                { "text": "If you need something recovered, call Digging support.", "if": { "quest_active": "qt_side_buried_cache" } }
+            ],
             "interaction_radius": 170
         },
         {
@@ -125,7 +163,8 @@
             "character_id": "paul",
             "portrait": "grid",
             "dialogue_id": "dlg_customer_root",
-            "idle_animation": "bob",
+            "idle_animation": "bob_slow",
+            "barks": ["I ordered this ages ago...", "Maybe the park cafe has better luck."],
             "interaction_radius": 160
         },
         {
@@ -134,7 +173,8 @@
             "character_id": "flip",
             "portrait": "grid",
             "dialogue_id": "dlg_resident_root",
-            "idle_animation": "none",
+            "idle_animation": "bob_slow",
+            "barks": ["The park is peaceful... until it isn't.", "Watch for hidden paths by the fences."],
             "interaction_radius": 160
         },
         {
@@ -143,7 +183,11 @@
             "character_id": "jett",
             "portrait": "grid",
             "dialogue_id": "dlg_kid_root",
-            "idle_animation": "bob",
+            "idle_animation": "bob_fast",
+            "barks": [
+                "Zoom! But... I lost something.",
+                { "text": "My poster is missing. Can you help?", "if": { "quest_active": "qt_side_missing_poster" } }
+            ],
             "interaction_radius": 160
         },
         {
@@ -152,7 +196,11 @@
             "character_id": "chase",
             "portrait": "profile",
             "dialogue_id": "dlg_officer_root",
-            "idle_animation": "none",
+            "idle_animation": "bob_slow",
+            "barks": [
+                "All clear so far.",
+                { "text": "If you see trouble, call Police support.", "if": { "quest_active": "qt_side_garage_clearance" } }
+            ],
             "interaction_radius": 160
         }
     ]

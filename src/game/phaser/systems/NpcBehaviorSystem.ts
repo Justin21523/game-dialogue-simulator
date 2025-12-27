@@ -22,8 +22,13 @@ export class NpcBehaviorSystem {
     }
 
     private updateSingle(npc: SpawnedNpc, timeMs: number, dt: number): void {
-        if (npc.def.idleAnimation === 'bob') {
+        const idle = npc.def.idleAnimation ?? 'none';
+        if (idle === 'bob') {
             npc.sprite.y = npc.baseY + Math.sin(timeMs / 500) * 3;
+        } else if (idle === 'bob_slow') {
+            npc.sprite.y = npc.baseY + Math.sin(timeMs / 900) * 2.25;
+        } else if (idle === 'bob_fast') {
+            npc.sprite.y = npc.baseY + Math.sin(timeMs / 320) * 3.8;
         } else {
             npc.sprite.y = npc.baseY;
         }
