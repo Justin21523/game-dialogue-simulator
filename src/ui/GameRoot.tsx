@@ -15,6 +15,7 @@ import { generateMission } from '../shared/api/missionsApi';
 import { endMissionSession, startMissionSession } from '../shared/api/missionSessionsApi';
 import { generateNarration } from '../shared/api/narrationApi';
 import { generateLocalMissions } from '../shared/missionGenerator';
+import { resolveMissionQuestBridge } from '../shared/missions/missionBridge';
 import { checkForNewUnlocks, createDefaultAchievementState, getAllAchievementDefinitions } from '../shared/progress/achievements';
 import {
     createDefaultStatistics,
@@ -65,6 +66,8 @@ type GameState = {
     explorationDebrief: MissionResult | null;
     inboundFlight: FlightResult | null;
     pendingExplorationQuestTemplateId: string | null;
+    explorationStartLocationId: string | null;
+    explorationSpawnPoint: string | null;
     statistics: StatisticsState;
     achievements: AchievementState;
 };
@@ -79,7 +82,7 @@ type GameAction =
     | { type: 'CLEAR_ACTIVE_SESSION' }
     | { type: 'CANCEL_MISSION'; screen: ScreenId }
     | { type: 'ABORT_FLIGHT'; screen: ScreenId }
-    | { type: 'FLIGHT_COMPLETE'; result: FlightResult }
+    | { type: 'FLIGHT_COMPLETE'; result: FlightResult; bridge?: { questTemplateId: string; startLocationId: string; spawnPoint: string } }
     | { type: 'MISSION_COMPLETE_FROM_EXPLORATION'; mission: Mission; actorId: string }
     | { type: 'QUEST_COMPLETE'; questId: string; title: string; description: string; location: string; actorId: string; rewards: { money: number; exp: number } }
     | { type: 'GRANT_REWARD'; actorId: string; money: number; exp: number; reason: string }
@@ -204,7 +207,9 @@ function GameRootInner() {
               ? {
                     mode: 'exploration',
                     exploration: {
-                        charId: state.selectedCharacterId
+                        charId: state.selectedCharacterId,
+                        startLocationId: state.explorationStartLocationId ?? undefined,
+                        spawnPoint: state.explorationSpawnPoint ?? undefined
                     }
                 }
               : undefined
@@ -217,11 +222,18 @@ function GameRootInner() {
         const onFlightComplete = (event: Event) => {
             const detail = (event as CustomEvent<FlightResult>).detail;
             if (detail?.success) {
-                const locationId = 'warehouse_district';
-                const spawnPoint = 'entry';
-                const location = getLocation(locationId);
-                const spawn = location?.spawnPoints?.[spawnPoint] ?? location?.spawnPoints?.default ?? { x: 320, y: 760 };
-                worldStateManager.setLastPlayerState({ locationId, spawnPoint, x: spawn.x, y: spawn.y, movementMode: 'walk' });
+                const bridge = resolveMissionQuestBridge(stateRef.current.activeMission);
+                const location = getLocation(bridge.startLocationId);
+                const spawn = location?.spawnPoints?.[bridge.spawnPoint] ?? location?.spawnPoints?.default ?? { x: 320, y: 760 };
+                worldStateManager.setLastPlayerState({
+                    locationId: bridge.startLocationId,
+                    spawnPoint: bridge.spawnPoint,
+                    x: spawn.x,
+                    y: spawn.y,
+                    movementMode: 'walk'
+                });
+                dispatch({ type: 'FLIGHT_COMPLETE', result: detail, bridge });
+                return;
             }
             dispatch({ type: 'FLIGHT_COMPLETE', result: detail });
         };
@@ -373,7 +385,7 @@ function GameRootInner() {
 
     React.useEffect(() => {
         if (!state.activeSessionId) return;
-        if (state.screen === 'flight' || state.screen === 'briefing') return;
+        if (state.activeMission) return;
 
         void endMissionSession(state.activeSessionId)
             .catch((err: unknown) => {
@@ -382,7 +394,7 @@ function GameRootInner() {
             .finally(() => {
                 dispatch({ type: 'CLEAR_ACTIVE_SESSION' });
             });
-    }, [dispatch, state.activeSessionId, state.screen]);
+    }, [dispatch, state.activeMission, state.activeSessionId]);
 
     const handleRefuelAll = React.useCallback(() => {
         const missing = GAME_CONFIG.MAX_FUEL - state.resources.fuel;
@@ -489,7 +501,7 @@ function GameRootInner() {
             })
                 .then((res) => {
                     const current = stateRef.current;
-                    if ((current.screen === 'flight' || current.screen === 'briefing') && current.activeMission?.id === mission.id) {
+                    if (current.activeMission?.id === mission.id) {
                         dispatch({ type: 'SET_ACTIVE_SESSION', missionId: mission.id, sessionId: res.session_id });
                         return;
                     }
@@ -690,12 +702,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 explorationDebrief: null,
                 inboundFlight: null,
                 pendingExplorationQuestTemplateId: null,
+                explorationStartLocationId: null,
+                explorationSpawnPoint: null,
                 flightParams: { missionId: action.mission.id, missionType: action.mission.type, charId: action.charId }
             };
         }
 
         case 'SET_ACTIVE_SESSION':
-            if (state.screen !== 'flight' && state.screen !== 'briefing') return state;
             if (state.activeMission?.id !== action.missionId) return state;
             return { ...state, activeSessionId: action.sessionId };
 
@@ -707,7 +720,16 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             const mission = state.activeMission;
             const flightParams = state.flightParams;
             if (!mission || !flightParams) {
-                return { ...state, screen: action.screen, activeMission: null, flightParams: null, inboundFlight: null, pendingExplorationQuestTemplateId: null };
+                return {
+                    ...state,
+                    screen: action.screen,
+                    activeMission: null,
+                    flightParams: null,
+                    inboundFlight: null,
+                    pendingExplorationQuestTemplateId: null,
+                    explorationStartLocationId: null,
+                    explorationSpawnPoint: null
+                };
             }
 
             const refundFuel = Math.ceil(mission.fuelCost * GAME_CONFIG.FUEL_COST_MULTIPLIER);
@@ -725,7 +747,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 flightParams: null,
                 lastResult: null,
                 inboundFlight: null,
-                pendingExplorationQuestTemplateId: null
+                pendingExplorationQuestTemplateId: null,
+                explorationStartLocationId: null,
+                explorationSpawnPoint: null
             };
         }
 
@@ -742,7 +766,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 activeMission: null,
                 flightParams: null,
                 inboundFlight: null,
-                pendingExplorationQuestTemplateId: null
+                pendingExplorationQuestTemplateId: null,
+                explorationStartLocationId: null,
+                explorationSpawnPoint: null
             };
         }
 
@@ -765,7 +791,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                     lastResult: null,
                     explorationDebrief: null,
                     inboundFlight: action.result,
-                    pendingExplorationQuestTemplateId: 'qt_repair_relay_field'
+                    pendingExplorationQuestTemplateId: action.bridge?.questTemplateId ?? 'qt_repair_relay_field',
+                    explorationStartLocationId: action.bridge?.startLocationId ?? 'warehouse_district',
+                    explorationSpawnPoint: action.bridge?.spawnPoint ?? 'entry'
                 };
             }
 
@@ -1196,6 +1224,8 @@ function createDefaultState(): GameState {
         explorationDebrief: null,
         inboundFlight: null,
         pendingExplorationQuestTemplateId: null,
+        explorationStartLocationId: null,
+        explorationSpawnPoint: null,
         statistics: createDefaultStatistics(),
         achievements: createDefaultAchievementState()
     };
@@ -1334,6 +1364,10 @@ function coerceMission(value: unknown): Mission | null {
     const campaignId = typeof value.campaignId === 'string' || value.campaignId === null ? value.campaignId : undefined;
     const campaignTheme = typeof value.campaignTheme === 'string' || value.campaignTheme === null ? value.campaignTheme : undefined;
 
+    const questTemplateId = typeof value.questTemplateId === 'string' ? value.questTemplateId : undefined;
+    const explorationStartLocationId = typeof value.explorationStartLocationId === 'string' ? value.explorationStartLocationId : undefined;
+    const explorationSpawnPoint = typeof value.explorationSpawnPoint === 'string' ? value.explorationSpawnPoint : undefined;
+
     return {
         id,
         title,
@@ -1344,7 +1378,10 @@ function coerceMission(value: unknown): Mission | null {
         rewardMoney,
         rewardExp,
         campaignId,
-        campaignTheme
+        campaignTheme,
+        questTemplateId,
+        explorationStartLocationId,
+        explorationSpawnPoint
     };
 }
 
