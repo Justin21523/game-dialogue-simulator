@@ -866,6 +866,7 @@ export class WorldScene extends Phaser.Scene {
 
             if (obj.kind === 'interactable' && obj.interactableType === 'pickup') {
                 eventBus.emit(EVENTS.ITEM_COLLECTED, { itemId: obj.id, quantity: 1, actorId: this.charId });
+                worldStateManager.addItem(obj.id, 1);
                 obj.sprite.setVisible(false);
                 obj.label.setText('Collected');
                 obj.label.setAlpha(0.65);
