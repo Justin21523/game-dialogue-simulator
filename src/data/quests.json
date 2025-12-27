@@ -193,7 +193,7 @@
             "rewards": {
                 "currency": 400,
                 "exp": 240,
-                "unlock_locations": ["warehouse_district"]
+                "unlock_locations": ["warehouse_district", "park_district", "park_cafe_interior", "park_cabin_interior"]
             },
             "prerequisites": {
                 "required_world_flags": [],
@@ -445,6 +445,234 @@
             "prerequisites": {
                 "required_world_flags": ["secret_alley_found"],
                 "completed_quest_templates": ["qt_main_town_welcome"]
+            }
+        },
+        {
+            "template_id": "qt_main_park_watch",
+            "title": "Park District Watch",
+            "description": "The park security network is unstable. Travel to the Park District, investigate the terminals, stabilize the generator, and secure the gate controls.",
+            "type": "main",
+            "destination_location_id": "park_district",
+            "repeatable": false,
+            "steps": [
+                {
+                    "id": "go_park",
+                    "type": "go_to_location",
+                    "title": "Travel to the Park District",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_district" }]
+                },
+                {
+                    "id": "enter_cafe",
+                    "type": "go_to_location",
+                    "title": "Enter the Park Cafe",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_cafe_interior" }]
+                },
+                {
+                    "id": "check_cafe_terminal",
+                    "type": "investigate",
+                    "title": "Check the Cafe Terminal (requires Espionage)",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_cafe_interior", "target_id": "cafe_terminal", "required_ability": "ESPIONAGE" }]
+                },
+                {
+                    "id": "stabilize_generator",
+                    "type": "fix_build",
+                    "title": "Stabilize the Park Generator (requires Engineering)",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_district", "target_id": "park_generator", "required_ability": "ENGINEERING" }]
+                },
+                {
+                    "id": "secure_gate",
+                    "type": "clear_manage",
+                    "title": "Secure the Gate Controls (requires Police)",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_district", "target_id": "park_security_gate", "required_ability": "POLICE" }]
+                },
+                {
+                    "id": "return_base",
+                    "type": "go_to_location",
+                    "title": "Return to the Airport Base",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "base_airport" }]
+                }
+            ],
+            "rewards": {
+                "currency": 520,
+                "exp": 320,
+                "unlock_locations": ["park_district", "park_cafe_interior", "park_cabin_interior"]
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": ["qt_main_town_relay"]
+            }
+        },
+        {
+            "template_id": "qt_side_park_lost_map",
+            "title": "Lost Map in the Park",
+            "description": "A resident misplaced a map near the park. Find it and bring it back.",
+            "type": "side",
+            "destination_location_id": "park_district",
+            "repeatable": true,
+            "steps": [
+                {
+                    "id": "talk_resident",
+                    "type": "talk",
+                    "title": "Talk to the Resident",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_district", "npc_id": "npc_resident" }]
+                },
+                {
+                    "id": "collect_map",
+                    "type": "collect",
+                    "title": "Find the Lost Map",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_district", "item_id": "item_lost_map" }]
+                },
+                {
+                    "id": "deliver_map",
+                    "type": "deliver",
+                    "title": "Return the map to the Resident",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_district", "item_id": "item_lost_map", "npc_id": "npc_resident" }]
+                }
+            ],
+            "rewards": {
+                "currency": 180,
+                "exp": 90,
+                "unlock_locations": []
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": ["qt_main_town_relay"]
+            }
+        },
+        {
+            "template_id": "qt_side_park_generator",
+            "title": "Generator Tune-Up",
+            "description": "The park generator needs a quick tune-up. Call Engineering support and stabilize it.",
+            "type": "side",
+            "destination_location_id": "park_district",
+            "repeatable": true,
+            "steps": [
+                {
+                    "id": "talk_guard",
+                    "type": "talk",
+                    "title": "Talk to the Guard",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_district", "npc_id": "npc_guard" }]
+                },
+                {
+                    "id": "fix_generator",
+                    "type": "fix_build",
+                    "title": "Stabilize the generator (requires Engineering)",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_district", "target_id": "park_generator", "required_ability": "ENGINEERING" }]
+                },
+                {
+                    "id": "return_guard",
+                    "type": "talk",
+                    "title": "Report back to the Guard",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_district", "npc_id": "npc_guard" }]
+                }
+            ],
+            "rewards": {
+                "currency": 220,
+                "exp": 110,
+                "unlock_locations": []
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": ["qt_main_town_relay"]
+            }
+        },
+        {
+            "template_id": "qt_side_park_gate_control",
+            "title": "Gate Control Override",
+            "description": "The park gate controls keep locking. Call Police support to secure the control panel.",
+            "type": "side",
+            "destination_location_id": "park_district",
+            "repeatable": true,
+            "steps": [
+                {
+                    "id": "talk_guard",
+                    "type": "talk",
+                    "title": "Talk to the Guard",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_district", "npc_id": "npc_guard" }]
+                },
+                {
+                    "id": "secure_gate",
+                    "type": "clear_manage",
+                    "title": "Secure the gate panel (requires Police)",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_district", "target_id": "park_security_gate", "required_ability": "POLICE" }]
+                },
+                {
+                    "id": "return_guard",
+                    "type": "talk",
+                    "title": "Confirm the override",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_district", "npc_id": "npc_guard" }]
+                }
+            ],
+            "rewards": {
+                "currency": 240,
+                "exp": 120,
+                "unlock_locations": []
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": ["qt_main_town_relay"]
+            }
+        },
+        {
+            "template_id": "qt_side_park_shed_artifact",
+            "title": "Sealed Shed Artifact",
+            "description": "A sealed shed in the park hides an unusual artifact. Find a way inside, recover it, and bring it to the investigator.",
+            "type": "side",
+            "destination_location_id": "park_shed_interior",
+            "repeatable": false,
+            "steps": [
+                {
+                    "id": "talk_investigator",
+                    "type": "talk",
+                    "title": "Talk to the Investigator",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_cabin_interior", "npc_id": "npc_investigator" }]
+                },
+                {
+                    "id": "enter_shed",
+                    "type": "go_to_location",
+                    "title": "Enter the Sealed Shed",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_shed_interior" }]
+                },
+                {
+                    "id": "collect_artifact",
+                    "type": "collect",
+                    "title": "Recover the artifact",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_shed_interior", "item_id": "item_park_artifact" }]
+                },
+                {
+                    "id": "deliver_artifact",
+                    "type": "deliver",
+                    "title": "Deliver the artifact to the Investigator",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "park_cabin_interior", "item_id": "item_park_artifact", "npc_id": "npc_investigator" }]
+                }
+            ],
+            "rewards": {
+                "currency": 360,
+                "exp": 180,
+                "unlock_locations": []
+            },
+            "prerequisites": {
+                "required_world_flags": [],
+                "completed_quest_templates": ["qt_main_town_relay"]
             }
         }
     ]
