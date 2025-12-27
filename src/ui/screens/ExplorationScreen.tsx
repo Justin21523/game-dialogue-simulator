@@ -2,6 +2,7 @@ import React from 'react';
 
 import { DialogueBox } from '../DialogueBox';
 import { CompanionPanel } from '../CompanionPanel';
+import { MapPanel } from '../MapPanel';
 import { QuestJournal } from '../QuestJournal';
 import { QuestTracker } from '../QuestTracker';
 import { SkillsPanel } from '../SkillsPanel';
@@ -26,6 +27,7 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
     const [companionOpen, setCompanionOpen] = React.useState(false);
     const [journalOpen, setJournalOpen] = React.useState(false);
     const [skillsOpen, setSkillsOpen] = React.useState(false);
+    const [mapOpen, setMapOpen] = React.useState(false);
 
     React.useEffect(() => {
         void missionManager.initialize({ mainCharacter: actorId });
@@ -62,6 +64,10 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
                 e.preventDefault();
                 setSkillsOpen((v) => !v);
             }
+            if (e.key.toLowerCase() === 'm') {
+                e.preventDefault();
+                setMapOpen((v) => !v);
+            }
         };
         window.addEventListener('keydown', onKeyDown);
         return () => {
@@ -89,6 +95,9 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
                 <button className="btn btn-outline" type="button" onClick={() => setSkillsOpen(true)}>
                     🧩 Skills (K)
                 </button>
+                <button className="btn btn-outline" type="button" onClick={() => setMapOpen(true)}>
+                    🗺️ Map (M)
+                </button>
                 <button className="btn btn-secondary" type="button" onClick={onBackToHangar}>
                     ◀ Back to Hangar
                 </button>
@@ -97,6 +106,7 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
             <CompanionPanel open={companionOpen} actorId={actorId} onClose={() => setCompanionOpen(false)} />
             <QuestJournal open={journalOpen} onClose={() => setJournalOpen(false)} />
             <SkillsPanel open={skillsOpen} onClose={() => setSkillsOpen(false)} />
+            <MapPanel open={mapOpen} currentLocationId={locationId} onClose={() => setMapOpen(false)} />
             <DialogueBox />
 
             <Modal

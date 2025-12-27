@@ -176,4 +176,16 @@ export type WorldStateV2 = {
     lastPlayerState: PlayerSaveState | null;
 };
 
-export type WorldState = WorldStateV1 | WorldStateV2;
+export type WorldStateV3 = {
+    version: 3;
+    unlockedLocations: string[];
+    discoveredLocations: string[];
+    worldFlags: string[];
+    completedQuestTemplates: string[];
+    inventory: Record<string, number>;
+    unlockedCompanions: string[];
+    unlockedSkills: string[];
+    lastPlayerState: PlayerSaveState | null;
+};
+
+export type WorldState = WorldStateV1 | WorldStateV2 | WorldStateV3;
