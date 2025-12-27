@@ -131,7 +131,16 @@
             "props": [
                 { "prop_id": "town_welcome_sign", "type": "sign", "x": 520, "y": 760, "label": "Welcome", "message": "Welcome to the Town District." },
                 { "prop_id": "town_lamp_1", "type": "lamp", "x": 940, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_lamp_2", "type": "lamp", "x": 1640, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_lamp_3", "type": "lamp", "x": 2300, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_lamp_4", "type": "lamp", "x": 3000, "y": 760, "label": "", "collides": false },
                 { "prop_id": "town_bench_1", "type": "bench", "x": 1200, "y": 760, "label": "", "collides": true, "width": 220, "height": 90 },
+                { "prop_id": "town_bench_2", "type": "bench", "x": 1880, "y": 760, "label": "", "collides": true, "width": 220, "height": 90 },
+                { "prop_id": "town_crate_1", "type": "crate", "x": 1560, "y": 760, "label": "", "collides": true, "width": 140, "height": 120 },
+                { "prop_id": "town_building_shop", "type": "building", "x": 1420, "y": 760, "label": "Shop", "collides": false, "width": 520, "height": 560 },
+                { "prop_id": "town_building_house", "type": "building", "x": 2060, "y": 760, "label": "House", "collides": false, "width": 520, "height": 560 },
+                { "prop_id": "town_building_garage", "type": "building", "x": 2740, "y": 760, "label": "Garage", "collides": false, "width": 520, "height": 560 },
+                { "prop_id": "town_building_secret", "type": "building", "x": 3460, "y": 760, "label": "Storage", "collides": false, "width": 520, "height": 560 },
                 { "prop_id": "town_fence_1", "type": "fence", "x": 3360, "y": 760, "label": "", "collides": true, "width": 280, "height": 110 }
             ],
             "doors": [
@@ -309,9 +318,9 @@
                 { "prop_id": "park_lamp_1", "type": "lamp", "x": 780, "y": 760, "label": "", "collides": false },
                 { "prop_id": "park_bench_1", "type": "bench", "x": 980, "y": 760, "label": "", "collides": true, "width": 220, "height": 90 },
                 { "prop_id": "park_fence_1", "type": "fence", "x": 1960, "y": 760, "label": "", "collides": true, "width": 320, "height": 110 },
-                { "prop_id": "park_decor_cafe", "type": "decor", "x": 1480, "y": 760, "label": "Cafe", "collides": true, "width": 520, "height": 360 },
-                { "prop_id": "park_decor_cabin", "type": "decor", "x": 2560, "y": 760, "label": "Cabin", "collides": true, "width": 520, "height": 360 },
-                { "prop_id": "park_decor_shed", "type": "decor", "x": 3400, "y": 760, "label": "Shed", "collides": true, "width": 460, "height": 300 },
+                { "prop_id": "park_decor_cafe", "type": "building", "x": 1480, "y": 760, "label": "Cafe", "collides": false, "width": 520, "height": 560 },
+                { "prop_id": "park_decor_cabin", "type": "building", "x": 2560, "y": 760, "label": "Cabin", "collides": false, "width": 520, "height": 560 },
+                { "prop_id": "park_decor_shed", "type": "building", "x": 3400, "y": 760, "label": "Shed", "collides": false, "width": 460, "height": 420 },
                 { "prop_id": "park_crate_stack", "type": "crate", "x": 3660, "y": 760, "label": "", "collides": true, "width": 160, "height": 120 }
             ],
             "doors": [

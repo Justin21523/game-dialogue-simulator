@@ -84,7 +84,7 @@ export type LocationTheme =
     | 'interior_secret'
     | 'park_outdoor';
 
-export type PropType = 'sign' | 'crate' | 'lamp' | 'fence' | 'bench' | 'decor';
+export type PropType = 'sign' | 'crate' | 'lamp' | 'fence' | 'bench' | 'decor' | 'building';
 
 export type PropDefinition = {
     propId: string;
