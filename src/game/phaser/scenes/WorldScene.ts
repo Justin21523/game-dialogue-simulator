@@ -1175,8 +1175,13 @@ export class WorldScene extends Phaser.Scene {
             const npcId = hint.npcId;
             if (!npcId) return null;
             const npc = this.npcs.find((n) => n.npcId === npcId);
-            if (!npc) return null;
-            return { x: npc.sprite.x, y: npc.sprite.y, height: npc.sprite.displayHeight };
+            if (npc) {
+                return { x: npc.sprite.x, y: npc.sprite.y, height: npc.sprite.displayHeight };
+            }
+            if (hint.locationId && hint.locationId !== this.locationId) {
+                return this.findTravelMarker(hint.locationId);
+            }
+            return null;
         }
 
         if (objective.type === ObjectiveType.COLLECT) {
