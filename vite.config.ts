@@ -47,6 +47,11 @@ function serveDevStaticDirs(): Plugin {
                     if (!req.url) return next();
 
                     const url = new URL(req.url, 'http://localhost');
+                    // Let Vite handle module-style imports like `/data/foo.json?import`.
+                    // Serving those as raw JSON triggers strict MIME errors in the browser.
+                    if (url.searchParams.has('import') || url.searchParams.has('raw') || url.searchParams.has('url')) {
+                        return next();
+                    }
                     const rel = url.pathname.replace(/^\/+/, '');
                     const filePath = path.resolve(dir, rel);
 
