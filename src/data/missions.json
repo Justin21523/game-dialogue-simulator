@@ -1,0 +1,109 @@
+{
+    "mission_scripts": [
+        {
+            "script_id": "ms_repair_relay",
+            "title": "Emergency Relay Repair",
+            "mission_type": "Repair",
+            "description": "A critical signal relay is down. Deploy to the Warehouse District, call Engineering support, and restore communications.",
+            "location_name": "Warehouse District",
+            "fuel_cost": 12,
+            "rewards": { "money": 180, "exp": 90 },
+            "quest_template_id": "qt_repair_relay_field",
+            "exploration_start": { "location_id": "warehouse_district", "spawn_point": "entry" },
+            "phases": [
+                { "phase_id": "dispatch", "label": "Dispatch" },
+                { "phase_id": "launch", "label": "Launch" },
+                { "phase_id": "flight", "label": "Flight" },
+                { "phase_id": "arrival", "label": "Arrival" },
+                { "phase_id": "landing", "label": "Landing" },
+                {
+                    "phase_id": "solve",
+                    "label": "Repair",
+                    "hooks": [
+                        { "type": "require_ability", "ability": "ENGINEERING", "target_id": "relay_001", "message": "Call Engineering support to repair the relay." }
+                    ]
+                },
+                { "phase_id": "return", "label": "Return" },
+                { "phase_id": "debrief", "label": "Debrief" }
+            ]
+        },
+        {
+            "script_id": "ms_town_power_cell",
+            "title": "Power Cell Delivery",
+            "mission_type": "Delivery",
+            "description": "Town services are unstable. Recover a power cell in the Town District and deliver it to the mechanic inside the garage.",
+            "location_name": "Town District",
+            "fuel_cost": 14,
+            "rewards": { "money": 260, "exp": 160 },
+            "quest_template_id": "qt_main_town_power",
+            "exploration_start": { "location_id": "town_district", "spawn_point": "gate" },
+            "phases": [
+                { "phase_id": "dispatch", "label": "Dispatch" },
+                { "phase_id": "launch", "label": "Launch" },
+                { "phase_id": "flight", "label": "Flight" },
+                { "phase_id": "arrival", "label": "Arrival" },
+                { "phase_id": "landing", "label": "Landing" },
+                { "phase_id": "solve", "label": "Deliver" },
+                { "phase_id": "return", "label": "Return" },
+                { "phase_id": "debrief", "label": "Debrief" }
+            ]
+        },
+        {
+            "script_id": "ms_park_watch",
+            "title": "Park District Watch",
+            "mission_type": "Security",
+            "description": "The park network is unstable. Investigate the cafe terminal, stabilize the generator, and secure the gate controls with the right companions.",
+            "location_name": "Park District",
+            "fuel_cost": 16,
+            "rewards": { "money": 520, "exp": 320 },
+            "quest_template_id": "qt_main_park_watch",
+            "exploration_start": { "location_id": "park_district", "spawn_point": "town_gate" },
+            "phases": [
+                { "phase_id": "dispatch", "label": "Dispatch" },
+                { "phase_id": "launch", "label": "Launch" },
+                { "phase_id": "flight", "label": "Flight" },
+                { "phase_id": "arrival", "label": "Arrival" },
+                { "phase_id": "landing", "label": "Landing" },
+                {
+                    "phase_id": "solve",
+                    "label": "Stabilize",
+                    "hooks": [
+                        { "type": "require_ability", "ability": "ESPIONAGE", "target_id": "cafe_terminal", "message": "Use Espionage support to access the cafe terminal." },
+                        { "type": "require_ability", "ability": "ENGINEERING", "target_id": "park_generator", "message": "Use Engineering support to stabilize the generator." },
+                        { "type": "require_ability", "ability": "POLICE", "target_id": "park_security_gate", "message": "Use Police support to secure the gate controls." }
+                    ]
+                },
+                { "phase_id": "return", "label": "Return" },
+                { "phase_id": "debrief", "label": "Debrief" }
+            ]
+        },
+        {
+            "script_id": "ms_secret_stash",
+            "title": "Hidden Room Investigation",
+            "mission_type": "Investigation",
+            "description": "A hidden back room contains an encrypted terminal and a sealed dossier. Enter the secret room and decrypt the terminal with Espionage support.",
+            "location_name": "Town District (Secret)",
+            "fuel_cost": 10,
+            "rewards": { "money": 240, "exp": 110 },
+            "quest_template_id": "qt_side_secret_stash",
+            "exploration_start": { "location_id": "town_district", "spawn_point": "secret" },
+            "phases": [
+                { "phase_id": "dispatch", "label": "Dispatch" },
+                { "phase_id": "launch", "label": "Launch" },
+                { "phase_id": "flight", "label": "Flight" },
+                { "phase_id": "arrival", "label": "Arrival" },
+                { "phase_id": "landing", "label": "Landing" },
+                {
+                    "phase_id": "solve",
+                    "label": "Decrypt",
+                    "hooks": [
+                        { "type": "gate_world_flag", "flag": "secret_alley_found", "message": "Find the hidden alley stash to access the secret room." },
+                        { "type": "require_ability", "ability": "ESPIONAGE", "target_id": "secret_terminal", "message": "Use Espionage support to decrypt the terminal." }
+                    ]
+                },
+                { "phase_id": "return", "label": "Return" },
+                { "phase_id": "debrief", "label": "Debrief" }
+            ]
+        }
+    ]
+}

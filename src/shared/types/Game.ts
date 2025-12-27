@@ -42,6 +42,7 @@ export type Mission = {
     rewardExp: number;
     campaignId?: string | null;
     campaignTheme?: string | null;
+    missionScriptId?: string | null;
     questTemplateId?: string | null;
     explorationStartLocationId?: string | null;
     explorationSpawnPoint?: string | null;

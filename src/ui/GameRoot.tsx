@@ -14,8 +14,8 @@ import { worldStateManager } from '../shared/systems/worldStateManager';
 import { generateMission } from '../shared/api/missionsApi';
 import { endMissionSession, startMissionSession } from '../shared/api/missionSessionsApi';
 import { generateNarration } from '../shared/api/narrationApi';
-import { generateLocalMissions } from '../shared/missionGenerator';
 import { resolveMissionQuestBridge } from '../shared/missions/missionBridge';
+import { generateScriptMissions } from '../shared/missions/missionScriptGenerator';
 import { checkForNewUnlocks, createDefaultAchievementState, getAllAchievementDefinitions } from '../shared/progress/achievements';
 import {
     createDefaultStatistics,
@@ -426,14 +426,14 @@ function GameRootInner() {
             return;
         }
 
-        dispatch({
-            type: 'SET_RESOURCES',
-            resources: { ...state.resources, money: state.resources.money - 50 },
-            spending: { amount: 50, reason: 'refresh_mission_board' }
-        });
-        dispatch({ type: 'SET_MISSIONS', missions: generateLocalMissions(15, 1) });
-        toast.show('Missions Refreshed!', 'success');
-    }, [dispatch, state.resources, toast]);
+            dispatch({
+                type: 'SET_RESOURCES',
+                resources: { ...state.resources, money: state.resources.money - 50 },
+                spending: { amount: 50, reason: 'refresh_mission_board' }
+            });
+            dispatch({ type: 'SET_MISSIONS', missions: generateScriptMissions(15, 1) });
+            toast.show('Missions Refreshed!', 'success');
+        }, [dispatch, state.resources, toast]);
 
     const handleAiGenerateMissions = React.useCallback(async (): Promise<void> => {
         const level = 1;
@@ -466,8 +466,8 @@ function GameRootInner() {
             toast.show(`Generated ${generated.length} missions via backend.`, 'success');
         } catch (err: unknown) {
             console.error(err);
-            dispatch({ type: 'SET_MISSIONS', missions: generateLocalMissions(15, 1) });
-            toast.show('Backend mission generation failed; using local missions.', 'warning');
+            dispatch({ type: 'SET_MISSIONS', missions: generateScriptMissions(15, 1) });
+            toast.show('Backend mission generation failed; using local mission scripts.', 'warning');
         }
     }, [dispatch, toast]);
 
@@ -1216,7 +1216,7 @@ function createDefaultState(): GameState {
         },
         characters,
         selectedCharacterId,
-        missions: generateLocalMissions(15, 1),
+        missions: generateScriptMissions(15, 1),
         flightParams: null,
         activeMission: null,
         activeSessionId: null,
@@ -1364,6 +1364,7 @@ function coerceMission(value: unknown): Mission | null {
     const campaignId = typeof value.campaignId === 'string' || value.campaignId === null ? value.campaignId : undefined;
     const campaignTheme = typeof value.campaignTheme === 'string' || value.campaignTheme === null ? value.campaignTheme : undefined;
 
+    const missionScriptId = typeof value.missionScriptId === 'string' ? value.missionScriptId : undefined;
     const questTemplateId = typeof value.questTemplateId === 'string' ? value.questTemplateId : undefined;
     const explorationStartLocationId = typeof value.explorationStartLocationId === 'string' ? value.explorationStartLocationId : undefined;
     const explorationSpawnPoint = typeof value.explorationSpawnPoint === 'string' ? value.explorationSpawnPoint : undefined;
@@ -1379,6 +1380,7 @@ function coerceMission(value: unknown): Mission | null {
         rewardExp,
         campaignId,
         campaignTheme,
+        missionScriptId,
         questTemplateId,
         explorationStartLocationId,
         explorationSpawnPoint
