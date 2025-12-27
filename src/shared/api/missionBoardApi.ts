@@ -8,18 +8,59 @@ export type TutorialHintResponse = {
     character_id?: string | null;
 };
 
+function buildLocalGuide(params: { topic: string; content: string; tips?: string[]; characterId?: string | null }): TutorialHintResponse {
+    return {
+        topic: params.topic,
+        content: params.content,
+        tips: params.tips ?? [],
+        related_topics: [],
+        character_id: params.characterId ?? null
+    };
+}
+
 export async function fetchCharacterGuide(params: { characterId: string; language?: 'en' | 'zh' }): Promise<TutorialHintResponse> {
     const query = new URLSearchParams();
     if (params.language) query.set('language', params.language);
     const path = `/tutorial/character/${encodeURIComponent(params.characterId)}${query.toString() ? `?${query}` : ''}`;
-    return getJson<TutorialHintResponse>(path, { timeoutMs: 60000 });
+    try {
+        return await getJson<TutorialHintResponse>(path, { timeoutMs: 60000 });
+    } catch (err) {
+        if (isOfflineBackendError(err)) {
+            return buildLocalGuide({
+                topic: `Character: ${params.characterId}`,
+                content: 'Offline guide: This character is ready for missions and exploration.',
+                tips: ['Pick a mission that matches the objective.', 'Refuel before dispatching.', 'Use companions in exploration to solve skill-gated tasks.'],
+                characterId: params.characterId
+            });
+        }
+        throw err;
+    }
 }
 
 export async function fetchMissionTypeGuide(params: { missionType: string; language?: 'en' | 'zh' }): Promise<TutorialHintResponse> {
     const query = new URLSearchParams();
     if (params.language) query.set('language', params.language);
     const path = `/tutorial/mission-type/${encodeURIComponent(params.missionType)}${query.toString() ? `?${query}` : ''}`;
-    return getJson<TutorialHintResponse>(path, { timeoutMs: 60000 });
+    try {
+        return await getJson<TutorialHintResponse>(path, { timeoutMs: 60000 });
+    } catch (err) {
+        if (isOfflineBackendError(err)) {
+            const type = params.missionType.toLowerCase();
+            const tips: string[] = [];
+            if (type.includes('delivery')) tips.push('Plan a safe route and keep speed stable.');
+            if (type.includes('rescue') || type.includes('animal')) tips.push('Prioritize safety and keep an eye on hazards.');
+            if (type.includes('construction') || type.includes('repair')) tips.push('Bring engineering support to unlock fixes.');
+            if (type.includes('exploration')) tips.push('Look for secrets and interactable hotspots.');
+            if (tips.length === 0) tips.push('Focus on the mission objective and keep fuel in reserve.');
+
+            return buildLocalGuide({
+                topic: `Mission Type: ${params.missionType}`,
+                content: 'Offline guide: Use the mission board to dispatch, then complete the flight and continue in exploration.',
+                tips
+            });
+        }
+        throw err;
+    }
 }
 
 export type DispatchRecommendation = {
@@ -188,17 +229,87 @@ export type PackageResult = {
     error_message?: string | null;
 };
 
+function scoreCharacterForMission(missionType: string, characterId: string): number {
+    const type = missionType.toLowerCase();
+    const id = characterId.toLowerCase();
+
+    let score = 1;
+
+    const prefers = (keywords: string[], preferred: string[]): boolean =>
+        keywords.some((k) => type.includes(k)) && preferred.some((p) => id.includes(p));
+
+    if (prefers(['repair', 'build', 'construction', 'signal', 'relay'], ['donnie', 'builder', 'engineer'])) score += 4;
+    if (prefers(['rescue', 'animal'], ['dizzy', 'rescue'])) score += 4;
+    if (prefers(['police', 'traffic', 'crowd', 'security'], ['paul', 'jerome', 'police'])) score += 3;
+    if (prefers(['mystery', 'investigate', 'spy', 'intel'], ['jerome', 'agent', 'spy'])) score += 3;
+    if (id.includes('jett')) score += 2;
+
+    return score;
+}
+
+function buildLocalRecommendation(params: {
+    missionType: string;
+    location: string;
+    problemDescription: string;
+    availableCharacters: string[];
+}): DispatchRecommendation {
+    const ranking = params.availableCharacters
+        .map((id) => ({ character_id: id, score: scoreCharacterForMission(params.missionType, id) }))
+        .sort((a, b) => b.score - a.score);
+    const best = ranking[0]?.character_id ?? params.availableCharacters[0] ?? 'jett';
+    const alternative = ranking[1]?.character_id ?? null;
+    const confidence = ranking.length > 0 ? Math.min(0.95, 0.5 + ranking[0]!.score / 10) : 0.5;
+
+    return {
+        recommended_character: best,
+        confidence,
+        reasoning: `Offline heuristic: matched mission keywords for "${params.missionType}".`,
+        alternative,
+        mission_tips: [`Location: ${params.location}`, `Problem: ${params.problemDescription}`],
+        explanation: 'Backend is unavailable; using local recommendations.'
+    };
+}
+
+function buildLocalBestForMissionType(params: { missionType: string; availableCharacters: string[] }): BestForMissionType {
+    const ranking = params.availableCharacters
+        .map((id) => ({ character_id: id, score: scoreCharacterForMission(params.missionType, id), reason: 'Offline heuristic score' }))
+        .sort((a, b) => b.score - a.score);
+    const best = ranking[0]?.character_id ?? params.availableCharacters[0] ?? 'jett';
+    return {
+        mission_type: params.missionType,
+        best_character: best,
+        ranking,
+        reasoning: 'Backend is unavailable; using offline heuristic ranking.'
+    };
+}
+
 export async function fetchTutorialHint(params: {
     currentSituation: string;
     characterId?: string | null;
     missionType?: string | null;
 }): Promise<TutorialHintResponse> {
-    return postJson<TutorialHintResponse>('/tutorial/hint', {
-        current_situation: params.currentSituation,
-        character_id: params.characterId ?? null,
-        mission_type: params.missionType ?? null,
-        player_progress: null
-    }, { timeoutMs: 60000 });
+    try {
+        return await postJson<TutorialHintResponse>(
+            '/tutorial/hint',
+            {
+                current_situation: params.currentSituation,
+                character_id: params.characterId ?? null,
+                mission_type: params.missionType ?? null,
+                player_progress: null
+            },
+            { timeoutMs: 60000 }
+        );
+    } catch (err) {
+        if (isOfflineBackendError(err)) {
+            return buildLocalGuide({
+                topic: 'Tip',
+                content: 'Offline tip: Use the mission board to dispatch, then explore and interact with NPCs to advance quests.',
+                tips: ['Press C in exploration to call companions.', 'Press J to open the quest journal.', 'Interact with doors to enter buildings.'],
+                characterId: params.characterId ?? null
+            });
+        }
+        throw err;
+    }
 }
 
 export async function recommendDispatch(params: {
@@ -208,13 +319,24 @@ export async function recommendDispatch(params: {
     urgency?: string;
     availableCharacters: string[];
 }): Promise<DispatchRecommendation> {
-    return postJson<DispatchRecommendation>('/dispatch/recommend', {
-        mission_type: params.missionType,
-        location: params.location,
-        problem_description: params.problemDescription,
-        urgency: params.urgency ?? 'normal',
-        available_characters: params.availableCharacters
-    }, { timeoutMs: 60000 });
+    try {
+        return await postJson<DispatchRecommendation>(
+            '/dispatch/recommend',
+            {
+                mission_type: params.missionType,
+                location: params.location,
+                problem_description: params.problemDescription,
+                urgency: params.urgency ?? 'normal',
+                available_characters: params.availableCharacters
+            },
+            { timeoutMs: 60000 }
+        );
+    } catch (err) {
+        if (isOfflineBackendError(err)) {
+            return buildLocalRecommendation(params);
+        }
+        throw err;
+    }
 }
 
 export async function bestForMissionType(params: {
@@ -226,7 +348,14 @@ export async function bestForMissionType(params: {
         query.set('available_characters', params.availableCharacters.join(','));
     }
     const path = `/dispatch/best-for/${encodeURIComponent(params.missionType)}${query.toString() ? `?${query}` : ''}`;
-    return getJson<BestForMissionType>(path, { timeoutMs: 30000 });
+    try {
+        return await getJson<BestForMissionType>(path, { timeoutMs: 30000 });
+    } catch (err) {
+        if (isOfflineBackendError(err)) {
+            return buildLocalBestForMissionType(params);
+        }
+        throw err;
+    }
 }
 
 export async function generateMissionEvent(params: {
@@ -319,25 +448,42 @@ export async function generateAssetPackage(params: {
     missionType: string;
     quality?: 'low' | 'medium' | 'high';
 }): Promise<PackageResult> {
-    return postJson<PackageResult>('/assets/generate/custom', {
-        mission_name: params.missionName,
-        main_character_id: params.mainCharacterId,
-        supporting_characters: [],
-        location: normalizeLocation(params.location),
-        sky_type: 'blue_sky',
-        time_of_day: 'day',
-        mission_type: normalizeMissionIcon(params.missionType),
-        include_portraits: true,
-        include_states: true,
-        include_expressions: false,
-        include_transformation: false,
-        include_scenes: true,
-        include_voice: false,
-        include_sounds: false,
-        include_animations: false,
-        quality: params.quality ?? 'medium',
-        dialogue_lines: [],
-        output_dir: null,
-        create_zip: false
-    }, { timeoutMs: 180000 });
+    try {
+        return await postJson<PackageResult>(
+            '/assets/generate/custom',
+            {
+                mission_name: params.missionName,
+                main_character_id: params.mainCharacterId,
+                supporting_characters: [],
+                location: normalizeLocation(params.location),
+                sky_type: 'blue_sky',
+                time_of_day: 'day',
+                mission_type: normalizeMissionIcon(params.missionType),
+                include_portraits: true,
+                include_states: true,
+                include_expressions: false,
+                include_transformation: false,
+                include_scenes: true,
+                include_voice: false,
+                include_sounds: false,
+                include_animations: false,
+                quality: params.quality ?? 'medium',
+                dialogue_lines: [],
+                output_dir: null,
+                create_zip: false
+            },
+            { timeoutMs: 180000 }
+        );
+    } catch (err) {
+        if (isOfflineBackendError(err)) {
+            return {
+                success: false,
+                package_id: 'offline',
+                mission_name: params.missionName,
+                output_dir: '',
+                error_message: 'Backend unavailable; asset packaging requires the FastAPI server.'
+            };
+        }
+        throw err;
+    }
 }
