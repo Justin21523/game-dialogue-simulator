@@ -15,6 +15,7 @@ export const EVENTS = {
     BUILDING_EXITED: 'BUILDING_EXITED',
     PORTAL_ENTERED: 'PORTAL_ENTERED',
     WORLD_STATE_CHANGED: 'WORLD_STATE_CHANGED',
+    REWARD_GRANTED: 'REWARD_GRANTED',
 
     // Quest / mission lifecycle
     MISSION_STARTED: 'MISSION_STARTED',
@@ -51,4 +52,3 @@ export const EVENTS = {
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
-
