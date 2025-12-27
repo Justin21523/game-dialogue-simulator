@@ -83,6 +83,15 @@
                             ]
                         },
                         {
+                            "choice_id": "park_watch",
+                            "text": "Any issues at the Park District?",
+                            "if": { "quest_completed": "qt_main_town_relay", "quest_not_active": "qt_main_park_watch", "quest_not_completed": "qt_main_park_watch" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_main_park_watch" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
+                        {
                             "choice_id": "close",
                             "text": "Maybe later.",
                             "actions": [{ "type": "close_dialogue" }]
@@ -133,6 +142,24 @@
                                     "event": "DELIVER_ITEM",
                                     "payload": { "itemId": "poster_missing", "npcId": "npc_guard", "quantity": 1 }
                                 },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
+                        {
+                            "choice_id": "start_park_generator",
+                            "text": "Any trouble in the park?",
+                            "if": { "quest_completed": "qt_main_town_relay", "quest_not_active": "qt_side_park_generator" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_side_park_generator" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
+                        {
+                            "choice_id": "start_park_gate",
+                            "text": "I can secure the park gate controls.",
+                            "if": { "quest_completed": "qt_main_town_relay", "quest_not_active": "qt_side_park_gate_control" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_side_park_gate_control" },
                                 { "type": "close_dialogue" }
                             ]
                         },
@@ -240,6 +267,28 @@
                                 { "type": "close_dialogue" }
                             ]
                         },
+                        {
+                            "choice_id": "start_shed_artifact",
+                            "text": "Need help investigating the sealed shed?",
+                            "if": { "quest_completed": "qt_main_town_relay", "quest_not_active": "qt_side_park_shed_artifact", "quest_not_completed": "qt_side_park_shed_artifact" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_side_park_shed_artifact" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
+                        {
+                            "choice_id": "deliver_artifact",
+                            "text": "Deliver the Park Artifact",
+                            "if": { "quest_active": "qt_side_park_shed_artifact", "has_items": ["item_park_artifact"] },
+                            "actions": [
+                                {
+                                    "type": "emit_event",
+                                    "event": "DELIVER_ITEM",
+                                    "payload": { "itemId": "item_park_artifact", "npcId": "npc_investigator", "quantity": 1 }
+                                },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
                         { "choice_id": "close", "text": "I'll check it.", "actions": [{ "type": "close_dialogue" }] }
                     ]
                 }
@@ -309,6 +358,28 @@
                             "if": { "quest_completed": "qt_main_town_welcome", "quest_not_active": "qt_side_animal_rescue" },
                             "actions": [
                                 { "type": "quest_start", "quest_template_id": "qt_side_animal_rescue" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
+                        {
+                            "choice_id": "start_lost_map",
+                            "text": "Did you lose something in the park?",
+                            "if": { "quest_completed": "qt_main_town_relay", "quest_not_active": "qt_side_park_lost_map" },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_side_park_lost_map" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
+                        {
+                            "choice_id": "deliver_map",
+                            "text": "Return the Lost Map",
+                            "if": { "quest_active": "qt_side_park_lost_map", "has_items": ["item_lost_map"] },
+                            "actions": [
+                                {
+                                    "type": "emit_event",
+                                    "event": "DELIVER_ITEM",
+                                    "payload": { "itemId": "item_lost_map", "npcId": "npc_resident", "quantity": 1 }
+                                },
                                 { "type": "close_dialogue" }
                             ]
                         },
