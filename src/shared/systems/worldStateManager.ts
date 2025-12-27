@@ -250,6 +250,7 @@ export class WorldStateManager {
                             ? lastPlayerState
                             : null
                 };
+                this.applyCompletedQuestUnlocks();
                 return;
             }
 
@@ -298,6 +299,7 @@ export class WorldStateManager {
                             ? lastPlayerState
                             : null
                 };
+                this.applyCompletedQuestUnlocks();
                 return;
             }
 
@@ -316,9 +318,26 @@ export class WorldStateManager {
                 worldFlags: v1.worldFlags,
                 completedQuestTemplates: v1.completedQuestTemplates
             };
+            this.applyCompletedQuestUnlocks();
         } catch {
             // Ignore corrupted state.
         }
+    }
+
+    private applyCompletedQuestUnlocks(): void {
+        const next = new Set(this.state.unlockedLocations);
+        for (const templateId of this.state.completedQuestTemplates) {
+            const template = getQuestTemplate(templateId);
+            if (!template) continue;
+            if (template.destinationLocationId) {
+                next.add(template.destinationLocationId);
+            }
+            for (const loc of template.rewards.unlockLocations ?? []) {
+                if (loc) next.add(loc);
+            }
+        }
+        if (next.size === this.state.unlockedLocations.length) return;
+        this.state = { ...this.state, unlockedLocations: Array.from(next) };
     }
 
     private persist(): void {
