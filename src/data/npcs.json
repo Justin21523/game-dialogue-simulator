@@ -33,11 +33,19 @@
                 "speed": 34
             },
             "idle_animation": "none",
-            "barks": [
-                "Nice weather for a walk.",
-                "Have you tried the cafe at the park?",
-                { "text": "I heard there's a hidden cache near the fences.", "if": { "flags_none": ["park_cache_found"] } }
-            ],
+            "idle_variants": ["none", "bob_slow"],
+            "barks": {
+                "chance": 0.58,
+                "cooldown_ms_min": 9000,
+                "cooldown_ms_max": 16000,
+                "initial_delay_ms_min": 1700,
+                "initial_delay_ms_max": 4200,
+                "lines": [
+                    "Nice weather for a walk.",
+                    "Have you tried the cafe at the park?",
+                    { "text": "I heard there's a hidden cache near the fences.", "if": { "flags_none": ["park_cache_found"] } }
+                ]
+            },
             "interaction_radius": 160
         },
         {
@@ -49,11 +57,12 @@
             "patrol_path": {
                 "speed": 42,
                 "points": [
-                    { "x": 980, "wait_ms": 600 },
-                    { "x": 1120, "wait_ms": 600 }
+                    { "x": 980, "wait_ms_min": 450, "wait_ms_max": 950 },
+                    { "x": 1120, "wait_ms_min": 450, "wait_ms_max": 1150 }
                 ]
             },
             "idle_animation": "none",
+            "idle_variants": ["none", "bob_slow"],
             "barks": [
                 "Stay alert. Keep moving.",
                 { "text": "If you find that missing poster, bring it to me.", "if": { "quest_active": "qt_side_missing_poster" } },

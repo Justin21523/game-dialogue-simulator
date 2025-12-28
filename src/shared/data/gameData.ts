@@ -14,7 +14,9 @@ import type {
     InteractableDefinition,
     LocationDefinition,
     LocationTheme,
+    NpcBarks,
     NpcDefinition,
+    NpcIdleAnimation,
     NpcPatrol,
     NpcPatrolPath,
     NpcSpawn,
@@ -44,10 +46,23 @@ type RawNpcs = {
         dialogue_id_active?: string;
         dialogue_id_repeat?: string;
         patrol?: { min_x: number; max_x: number; speed: number };
-        patrol_path?: { speed: number; points: Array<{ x: number; wait_ms?: number }> };
+        patrol_path?: {
+            speed: number;
+            points: Array<{ x: number; y?: number; wait_ms?: number; wait_ms_min?: number; wait_ms_max?: number }>;
+        };
         interaction_radius?: number;
         idle_animation?: string;
-        barks?: unknown[];
+        idle_variants?: string[];
+        barks?:
+            | unknown[]
+            | {
+                  lines?: unknown[];
+                  chance?: number;
+                  cooldown_ms_min?: number;
+                  cooldown_ms_max?: number;
+                  initial_delay_ms_min?: number;
+                  initial_delay_ms_max?: number;
+              };
     }>;
 };
 
@@ -218,6 +233,60 @@ function toLocationTheme(value: string | undefined): LocationTheme | undefined {
     return trimmed as LocationTheme;
 }
 
+function toIdleAnimation(value: string | undefined): NpcIdleAnimation | undefined {
+    if (!value) return undefined;
+    const trimmed = value.trim().toLowerCase();
+    if (!trimmed) return undefined;
+    const allowed: NpcIdleAnimation[] = ['none', 'bob', 'bob_slow', 'bob_fast'];
+    return (allowed as string[]).includes(trimmed) ? (trimmed as NpcIdleAnimation) : undefined;
+}
+
+function toBarkConfig(raw: RawNpcs['npcs'][number]['barks']): NpcBarks | undefined {
+    const clamp01 = (value: unknown): number | undefined => {
+        if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
+        return Math.min(1, Math.max(0, value));
+    };
+
+    const asMs = (value: unknown): number | undefined => {
+        if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
+        const ms = Math.max(0, Math.floor(value));
+        return ms > 0 ? ms : undefined;
+    };
+
+    const parseLines = (value: unknown): DialogueLine[] => {
+        if (!Array.isArray(value)) return [];
+        return value.map(toDialogueLine).filter((line): line is DialogueLine => Boolean(line));
+    };
+
+    if (Array.isArray(raw)) {
+        const lines = parseLines(raw);
+        return lines.length > 0 ? { lines } : undefined;
+    }
+
+    if (raw && typeof raw === 'object') {
+        const data = raw as Record<string, unknown>;
+        const lines = parseLines(data.lines);
+        if (lines.length === 0) return undefined;
+
+        const chance = clamp01(data.chance);
+        const cooldownMsMin = asMs(data.cooldown_ms_min);
+        const cooldownMsMax = asMs(data.cooldown_ms_max);
+        const initialDelayMsMin = asMs(data.initial_delay_ms_min);
+        const initialDelayMsMax = asMs(data.initial_delay_ms_max);
+
+        return {
+            lines,
+            chance,
+            cooldownMsMin,
+            cooldownMsMax,
+            initialDelayMsMin,
+            initialDelayMsMax
+        };
+    }
+
+    return undefined;
+}
+
 function toDialogueCondition(raw: unknown): DialogueCondition | undefined {
     if (!raw || typeof raw !== 'object') return undefined;
     const data = raw as Record<string, unknown>;
@@ -286,11 +355,19 @@ for (const entry of rawNpcs.npcs) {
                   points: entry.patrol_path.points
                       .map((p) => ({
                           x: p.x,
-                          waitMs: typeof p.wait_ms === 'number' ? p.wait_ms : undefined
+                          y: typeof p.y === 'number' && Number.isFinite(p.y) ? p.y : undefined,
+                          waitMs: typeof p.wait_ms === 'number' && Number.isFinite(p.wait_ms) ? p.wait_ms : undefined,
+                          waitMsMin: typeof p.wait_ms_min === 'number' && Number.isFinite(p.wait_ms_min) ? p.wait_ms_min : undefined,
+                          waitMsMax: typeof p.wait_ms_max === 'number' && Number.isFinite(p.wait_ms_max) ? p.wait_ms_max : undefined
                       }))
                       .filter((p) => Number.isFinite(p.x))
               }
             : undefined;
+
+    const idleAnimation = toIdleAnimation(entry.idle_animation);
+    const idleVariants = Array.isArray(entry.idle_variants)
+        ? entry.idle_variants.map((v) => toIdleAnimation(v)).filter((v): v is NpcIdleAnimation => Boolean(v))
+        : undefined;
 
     npcById.set(entry.npc_id, {
         npcId: entry.npc_id,
@@ -303,10 +380,9 @@ for (const entry of rawNpcs.npcs) {
         patrol,
         patrolPath,
         interactionRadius: typeof entry.interaction_radius === 'number' ? entry.interaction_radius : undefined,
-        idleAnimation: typeof entry.idle_animation === 'string' ? (entry.idle_animation as NpcDefinition['idleAnimation']) : undefined,
-        barks: Array.isArray(entry.barks)
-            ? entry.barks.map(toDialogueLine).filter((line): line is DialogueLine => Boolean(line))
-            : undefined
+        idleAnimation,
+        idleVariants: idleVariants && idleVariants.length > 0 ? idleVariants : undefined,
+        barks: toBarkConfig(entry.barks)
     });
 }
 
