@@ -1,12 +1,14 @@
 import Phaser from 'phaser';
 
 import { worldStateManager } from '../../../shared/systems/worldStateManager';
+import type { MissionSessionPhaseId } from '../../../shared/types/World';
 
 type FlightInit = {
     missionType?: string;
     charId?: string;
     missionId?: string;
     location?: string;
+    resumePhaseId?: MissionSessionPhaseId;
 };
 
 type ExplorationInit = {
@@ -48,7 +50,21 @@ export class BootScene extends Phaser.Scene {
         const missionId = init?.missionId ?? 'm_local';
         const location = init?.location ?? 'world_airport';
 
-        this.scene.start('LaunchScene', { missionType, charId, missionId, location });
+        const resumePhaseId = init?.resumePhaseId ?? null;
+        const payload = { missionType, charId, missionId, location };
+
+        if (resumePhaseId === 'flight') {
+            this.scene.start('FlightScene', payload);
+        } else if (resumePhaseId === 'arrival') {
+            this.scene.start('ArrivalScene', payload);
+        } else if (resumePhaseId === 'transform') {
+            this.scene.start('TransformationScene', payload);
+        } else if (resumePhaseId === 'landing') {
+            this.scene.start('LandingScene', payload);
+        } else {
+            // Default flow begins at launch.
+            this.scene.start('LaunchScene', payload);
+        }
         this.scene.launch('UIScene');
     }
 }

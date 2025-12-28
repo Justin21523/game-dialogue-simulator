@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 
 import { GAME_HEIGHT, GAME_WIDTH } from '../../../shared/constants';
+import type { MissionSessionPhaseId } from '../../../shared/types/World';
 import { ArrivalScene } from '../scenes/ArrivalScene';
 import { BaseLocationScene } from '../scenes/BaseLocationScene';
 import { BootScene } from '../scenes/BootScene';
@@ -18,6 +19,7 @@ export type InitialFlightParams = {
     charId: string;
     missionId?: string;
     location?: string;
+    resumePhaseId?: MissionSessionPhaseId;
 };
 
 export type InitialExplorationParams = {

@@ -5,7 +5,7 @@ import { eventBus } from '../shared/eventBus';
 import { EVENTS } from '../shared/eventNames';
 import { getMissionScript } from '../shared/missions/missionScripts';
 import { worldStateManager } from '../shared/systems/worldStateManager';
-import type { MissionLogEntry } from '../shared/types/World';
+import type { ActiveMissionSession, MissionHistoryEntry, MissionLogEntry } from '../shared/types/World';
 import { Modal } from './components/Modal';
 
 export type MissionTimelinePanelProps = {
@@ -46,7 +46,9 @@ function normalizeLines(text: string): string[] {
 export function MissionTimelinePanel(props: MissionTimelinePanelProps) {
     const { open, onClose } = props;
 
-    const [session, setSession] = React.useState(() => worldStateManager.getActiveMissionSession());
+    const [session, setSession] = React.useState<ActiveMissionSession | null>(() => worldStateManager.getActiveMissionSession());
+    const [history, setHistory] = React.useState<MissionHistoryEntry[]>(() => worldStateManager.getMissionHistory());
+    const [source, setSource] = React.useState<{ kind: 'active' } | { kind: 'history'; id: string }>(() => ({ kind: 'active' }));
     const [resolvingEventId, setResolvingEventId] = React.useState<string | null>(null);
     const [resolvedEventIds, setResolvedEventIds] = React.useState(() => new Set<string>());
 
@@ -55,6 +57,7 @@ export function MissionTimelinePanel(props: MissionTimelinePanelProps) {
 
         const sync = () => {
             setSession(worldStateManager.getActiveMissionSession());
+            setHistory(worldStateManager.getMissionHistory());
         };
         sync();
 
@@ -64,6 +67,14 @@ export function MissionTimelinePanel(props: MissionTimelinePanelProps) {
             eventBus.off(EVENTS.WORLD_STATE_CHANGED, onWorldStateChanged);
         };
     }, [open]);
+
+    React.useEffect(() => {
+        if (!open) return;
+        if (session && source.kind !== 'active') return;
+        if (!session && history.length > 0) {
+            setSource({ kind: 'history', id: history[history.length - 1]!.id });
+        }
+    }, [history, open, session, source.kind]);
 
     React.useEffect(() => {
         if (!open) return;
@@ -81,13 +92,16 @@ export function MissionTimelinePanel(props: MissionTimelinePanelProps) {
 
     if (!open) return null;
 
-    const missionTitle = session?.mission.title ?? 'Mission Timeline';
-    const script = session?.mission.missionScriptId ? getMissionScript(session.mission.missionScriptId) : null;
+    const activeHistoryEntry = source.kind === 'history' ? history.find((h) => h.id === source.id) ?? null : null;
+    const viewingHistory = Boolean(activeHistoryEntry);
+    const viewSession = viewingHistory ? activeHistoryEntry!.session : session;
+    const missionTitle = viewSession?.mission.title ?? 'Mission Timeline';
+    const script = viewSession?.mission.missionScriptId ? getMissionScript(viewSession.mission.missionScriptId) : null;
     const phases = script?.phases ?? [];
-    const entries = session?.log ?? [];
+    const entries = viewSession?.log ?? [];
 
     const handleResolveChoice = async (entry: MissionLogEntry, choiceIndex: number) => {
-        if (!session || !entry.eventId) return;
+        if (!session || viewingHistory || !entry.eventId) return;
         if (resolvingEventId) return;
         if (resolvedEventIds.has(entry.eventId)) return;
 
@@ -116,16 +130,50 @@ export function MissionTimelinePanel(props: MissionTimelinePanelProps) {
 
     return (
         <Modal open={open} title={missionTitle} onClose={onClose}>
-            {!session ? (
-                <p className="muted">No active mission session. Start a mission to populate the timeline.</p>
+            {!viewSession ? (
+                <p className="muted">No mission timeline available yet. Start a mission to populate the timeline.</p>
             ) : (
                 <>
+                    <div className="mission-timeline__header">
+                        <label className="mission-timeline__select">
+                            <span className="muted">Session</span>
+                            <select
+                                value={source.kind === 'active' ? 'active' : `history:${source.id}`}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === 'active') {
+                                        setSource({ kind: 'active' });
+                                        return;
+                                    }
+                                    if (value.startsWith('history:')) {
+                                        setSource({ kind: 'history', id: value.slice('history:'.length) });
+                                    }
+                                }}
+                            >
+                                {session ? <option value="active">Active: {session.mission.title}</option> : null}
+                                {history
+                                    .slice()
+                                    .reverse()
+                                    .map((entry) => (
+                                        <option key={entry.id} value={`history:${entry.id}`}>
+                                            {entry.outcome.toUpperCase()} · {entry.session.mission.title}
+                                        </option>
+                                    ))}
+                            </select>
+                        </label>
+                        {activeHistoryEntry ? (
+                            <div className="mission-timeline__meta muted">
+                                {activeHistoryEntry.outcome.toUpperCase()} · {formatTime(activeHistoryEntry.endedAt)}
+                            </div>
+                        ) : null}
+                    </div>
+
                     {phases.length > 0 ? (
                         <div className="mission-timeline__phases">
                             {phases.map((phase) => (
                                 <span
                                     key={phase.phaseId}
-                                    className={`mission-timeline__phase ${phase.phaseId === session.phaseId ? 'active' : ''}`}
+                                    className={`mission-timeline__phase ${viewSession && phase.phaseId === viewSession.phaseId ? 'active' : ''}`}
                                 >
                                     {phase.label}
                                 </span>
@@ -160,7 +208,7 @@ export function MissionTimelinePanel(props: MissionTimelinePanelProps) {
                                                     key={choice.id}
                                                     className="btn btn-outline"
                                                     type="button"
-                                                    disabled={Boolean(resolvingEventId) || resolvedEventIds.has(eventId)}
+                                                    disabled={viewingHistory || Boolean(resolvingEventId) || resolvedEventIds.has(eventId)}
                                                     onClick={() => void handleResolveChoice(entry, idx)}
                                                 >
                                                     {choice.text}

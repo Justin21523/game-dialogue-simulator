@@ -11,6 +11,7 @@ type ErrorBoundaryState = {
 const KNOWN_STORAGE_KEYS = [
     'sws:save:v1',
     'missionManagerState',
+    'sws:world:v3',
     'sws:world:v2',
     'sws:world:v1',
     'sws:companions:v2',

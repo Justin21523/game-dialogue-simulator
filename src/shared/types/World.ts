@@ -206,6 +206,7 @@ export type WorldStateV3 = {
     unlockedSkills: string[];
     lastPlayerState: PlayerSaveState | null;
     activeMissionSession: ActiveMissionSession | null;
+    missionHistory: MissionHistoryEntry[];
 };
 
 export type WorldState = WorldStateV1 | WorldStateV2 | WorldStateV3;
@@ -232,6 +233,15 @@ export type MissionLogEntry = {
     text: string;
     eventId?: string;
     choices?: Array<{ id: string; text: string; resolved?: boolean }>;
+};
+
+export type MissionOutcome = 'completed' | 'failed' | 'aborted' | 'canceled';
+
+export type MissionHistoryEntry = {
+    id: string;
+    endedAt: number;
+    outcome: MissionOutcome;
+    session: ActiveMissionSession;
 };
 
 export type ActiveMissionSession = {
