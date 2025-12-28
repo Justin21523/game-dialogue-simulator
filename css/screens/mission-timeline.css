@@ -1,0 +1,88 @@
+/*
+ * mission-timeline.css - Mission timeline modal styles
+ * Super Wings Simulator
+ */
+
+.mission-timeline__phases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.mission-timeline__phase {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    font-size: 0.85rem;
+    color: var(--text-main);
+}
+
+.mission-timeline__phase.active {
+    background: rgba(255, 215, 0, 0.22);
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.mission-timeline__entries {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.mission-timeline__entry {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: var(--shadow-sm);
+}
+
+.mission-timeline__entry-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.mission-timeline__time {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.mission-timeline__kind {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.mission-timeline__title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.mission-timeline__text p {
+    margin: 0 0 6px;
+    line-height: 1.4;
+}
+
+.mission-timeline__text p:last-child {
+    margin-bottom: 0;
+}
+
+.mission-timeline__choices {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+

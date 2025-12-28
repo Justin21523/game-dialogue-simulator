@@ -3,6 +3,7 @@ import React from 'react';
 import { DialogueBox } from '../DialogueBox';
 import { CompanionPanel } from '../CompanionPanel';
 import { MapPanel } from '../MapPanel';
+import { MissionTimelinePanel } from '../MissionTimelinePanel';
 import { QuestJournal } from '../QuestJournal';
 import { QuestTracker } from '../QuestTracker';
 import { SkillsPanel } from '../SkillsPanel';
@@ -30,6 +31,7 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
     const [journalOpen, setJournalOpen] = React.useState(false);
     const [skillsOpen, setSkillsOpen] = React.useState(false);
     const [mapOpen, setMapOpen] = React.useState(false);
+    const [timelineOpen, setTimelineOpen] = React.useState(false);
 
     React.useEffect(() => {
         void missionManager.initialize({ mainCharacter: actorId });
@@ -70,6 +72,10 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
                 e.preventDefault();
                 setMapOpen((v) => !v);
             }
+            if (e.key.toLowerCase() === 't') {
+                e.preventDefault();
+                setTimelineOpen((v) => !v);
+            }
         };
         window.addEventListener('keydown', onKeyDown);
         return () => {
@@ -107,6 +113,9 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
                 <button className="btn btn-outline" type="button" onClick={() => setMapOpen(true)}>
                     🗺️ Map (M)
                 </button>
+                <button className="btn btn-outline" type="button" onClick={() => setTimelineOpen(true)}>
+                    🧾 Timeline (T)
+                </button>
                 {activeMission ? (
                     <button className="btn btn-danger" type="button" onClick={handleAbortMission}>
                         ⛔ Abort Mission
@@ -121,6 +130,7 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
             <QuestJournal open={journalOpen} onClose={() => setJournalOpen(false)} />
             <SkillsPanel open={skillsOpen} onClose={() => setSkillsOpen(false)} />
             <MapPanel open={mapOpen} currentLocationId={locationId} onClose={() => setMapOpen(false)} />
+            <MissionTimelinePanel open={timelineOpen} onClose={() => setTimelineOpen(false)} />
             <DialogueBox />
 
             <Modal

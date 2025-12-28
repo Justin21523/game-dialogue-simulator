@@ -11,8 +11,10 @@ import { flightEventTarget, type FlightResult } from '../shared/flightEvents';
 import { GAME_CONFIG } from '../shared/gameConfig';
 import { getLocation } from '../shared/data/gameData';
 import { worldStateManager } from '../shared/systems/worldStateManager';
+import { generateDialogue } from '../shared/api/dialogueApi';
 import { generateMission } from '../shared/api/missionsApi';
 import { endMissionSession, startMissionSession } from '../shared/api/missionSessionsApi';
+import { generateMissionEvent } from '../shared/api/missionBoardApi';
 import { generateNarration } from '../shared/api/narrationApi';
 import { resolveMissionQuestBridge } from '../shared/missions/missionBridge';
 import { generateScriptMissions } from '../shared/missions/missionScriptGenerator';
@@ -108,12 +110,12 @@ type LoadedSnapshot = {
     achievements: AchievementState;
 };
 
-function deriveMissionPhaseId(screen: ScreenId): MissionSessionPhaseId {
+function deriveMissionPhaseId(screen: ScreenId, fallbackPhaseId: MissionSessionPhaseId = 'dispatch'): MissionSessionPhaseId {
     if (screen === 'briefing') return 'dispatch';
     if (screen === 'flight') return 'flight';
     if (screen === 'exploration') return 'solve';
     if (screen === 'story' || screen === 'results') return 'debrief';
-    return 'dispatch';
+    return fallbackPhaseId;
 }
 
 function GameRootInner() {
@@ -145,10 +147,10 @@ function GameRootInner() {
         }
 
         const actorId = state.flightParams?.charId ?? state.selectedCharacterId;
-        const phaseId = deriveMissionPhaseId(state.screen);
         const lastPlayer = worldStateManager.getLastPlayerState();
         const locationId = lastPlayer?.locationId ?? null;
         const prev = worldStateManager.getActiveMissionSession();
+        const phaseId = deriveMissionPhaseId(state.screen, prev?.phaseId ?? 'dispatch');
         const inboundFlight = state.inboundFlight;
         const sessionId = state.activeSessionId;
 
@@ -173,6 +175,134 @@ function GameRootInner() {
             log: prev?.log ?? []
         });
     }, [state.activeMission, state.activeSessionId, state.flightParams?.charId, state.inboundFlight, state.screen, state.selectedCharacterId]);
+
+    const missionTimelineKeyRef = React.useRef<string | null>(null);
+    React.useEffect(() => {
+        const mission = state.activeMission;
+        if (!mission) {
+            missionTimelineKeyRef.current = null;
+            return;
+        }
+
+        worldStateManager.initialize();
+        const session = worldStateManager.getActiveMissionSession();
+        if (!session) return;
+
+        const actorId = state.flightParams?.charId ?? state.selectedCharacterId;
+        const phaseId = deriveMissionPhaseId(state.screen, session.phaseId);
+        const key = `${mission.id}:${phaseId}`;
+        if (missionTimelineKeyRef.current === key) return;
+        missionTimelineKeyRef.current = key;
+
+        const hasLogKind = (kind: string) => session.log.some((e) => e.phaseId === phaseId && e.kind === kind);
+
+        if (phaseId === 'dispatch') {
+            if (!hasLogKind('system')) {
+                worldStateManager.appendMissionLog({
+                    phaseId,
+                    kind: 'system',
+                    title: 'Dispatch',
+                    text: `Mission accepted: ${mission.title}`
+                });
+            }
+            if (!hasLogKind('dialogue')) {
+                void generateDialogue({
+                    characterId: actorId,
+                    dialogueType: 'dispatch',
+                    situation: `Starting mission: ${mission.title}`,
+                    missionPhase: phaseId,
+                    emotion: 'happy',
+                    speakingTo: 'child',
+                    location: mission.location,
+                    problem: mission.description
+                })
+                    .then((res) => {
+                        worldStateManager.appendMissionLog({
+                            phaseId,
+                            kind: 'dialogue',
+                            title: 'Dispatch Call',
+                            text: res.dialogue
+                        });
+                    })
+                    .catch(() => {
+                        // Ignore dialogue failures (offline backend).
+                    });
+            }
+            return;
+        }
+
+        if (phaseId === 'flight') {
+            if (!hasLogKind('narration')) {
+                void generateNarration({
+                    characterId: actorId,
+                    phase: 'flying',
+                    location: mission.location,
+                    problem: mission.description,
+                    result: 'en_route'
+                })
+                    .then((res) => {
+                        worldStateManager.appendMissionLog({
+                            phaseId,
+                            kind: 'narration',
+                            title: 'In Flight',
+                            text: res.narration
+                        });
+                    })
+                    .catch(() => {
+                        // Ignore narration failures (offline backend).
+                    });
+            }
+            return;
+        }
+
+        if (phaseId === 'solve') {
+            if (!hasLogKind('narration')) {
+                void generateNarration({
+                    characterId: actorId,
+                    phase: 'arrival',
+                    location: mission.location,
+                    problem: mission.description,
+                    result: 'arrived'
+                })
+                    .then((res) => {
+                        worldStateManager.appendMissionLog({
+                            phaseId,
+                            kind: 'narration',
+                            title: 'Arrival',
+                            text: res.narration
+                        });
+                    })
+                    .catch(() => {
+                        // Ignore narration failures (offline backend).
+                    });
+            }
+
+            if (!hasLogKind('event')) {
+                void generateMissionEvent({
+                    characterId: actorId,
+                    location: mission.location,
+                    missionPhase: phaseId,
+                    originalProblem: mission.description
+                })
+                    .then((event) => {
+                        worldStateManager.appendMissionLog({
+                            phaseId,
+                            kind: 'event',
+                            title: event.name,
+                            text: `${event.description}\n\n${event.challenge}`,
+                            eventId: event.event_id,
+                            choices: event.choices.map((choice, idx) => ({
+                                id: `choice_${idx}`,
+                                text: choice.option
+                            }))
+                        });
+                    })
+                    .catch(() => {
+                        // Ignore event failures (offline backend).
+                    });
+            }
+        }
+    }, [state.activeMission, state.flightParams?.charId, state.screen, state.selectedCharacterId]);
 
     React.useEffect(() => {
         const unlock = () => {
@@ -417,9 +547,9 @@ function GameRootInner() {
                 missionTimeoutHandledRef.current = null;
             } else if (current.activeMission.missionScriptId) {
                 const script = getMissionScript(current.activeMission.missionScriptId);
-                const phaseId = deriveMissionPhaseId(current.screen);
-                const limitMs = script?.phases.find((p) => p.phaseId === phaseId)?.timeLimitMs;
                 const session = worldStateManager.getActiveMissionSession();
+                const phaseId = deriveMissionPhaseId(current.screen, session?.phaseId ?? 'dispatch');
+                const limitMs = script?.phases.find((p) => p.phaseId === phaseId)?.timeLimitMs;
                 const phaseStartedAt = session?.phaseStartedAt ?? session?.startedAt;
 
                 if (
