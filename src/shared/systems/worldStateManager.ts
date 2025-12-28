@@ -7,8 +7,10 @@ import type { Mission } from '../types/Game.js';
 import type {
     ActiveMissionSession,
     InteractableDefinition,
+    MissionHistoryEntry,
     MissionLogEntry,
     MissionLogKind,
+    MissionOutcome,
     MissionSessionPhaseId,
     PlayerSaveState,
     WorldState,
@@ -29,7 +31,8 @@ const DEFAULT_STATE: WorldStateV3 = {
     unlockedCompanions: [],
     unlockedSkills: [],
     lastPlayerState: null,
-    activeMissionSession: null
+    activeMissionSession: null,
+    missionHistory: []
 };
 
 function uniq(values: string[]): string[] {
@@ -238,6 +241,23 @@ function coerceActiveMissionSession(value: unknown): ActiveMissionSession | null
     };
 }
 
+function coerceMissionOutcome(value: unknown): MissionOutcome | null {
+    if (typeof value !== 'string') return null;
+    const lowered = value.trim().toLowerCase();
+    const allowed: MissionOutcome[] = ['completed', 'failed', 'aborted', 'canceled'];
+    return (allowed as string[]).includes(lowered) ? (lowered as MissionOutcome) : null;
+}
+
+function coerceMissionHistoryEntry(value: unknown): MissionHistoryEntry | null {
+    if (!isRecord(value)) return null;
+    const id = coerceString(value.id);
+    const endedAt = coerceNumber(value.endedAt);
+    const outcome = coerceMissionOutcome(value.outcome);
+    const session = coerceActiveMissionSession(value.session);
+    if (!id || endedAt === null || !outcome || !session) return null;
+    return { id, endedAt, outcome, session };
+}
+
 export class WorldStateManager {
     private initialized = false;
     private listenersRegistered = false;
@@ -408,6 +428,31 @@ export class WorldStateManager {
         this.setActiveMissionSession(null);
     }
 
+    getMissionHistory(): MissionHistoryEntry[] {
+        this.initialize();
+        return this.state.missionHistory ?? [];
+    }
+
+    archiveActiveMissionSession(outcome: MissionOutcome): MissionHistoryEntry | null {
+        this.initialize();
+        const current = this.state.activeMissionSession;
+        if (!current) return null;
+
+        const endedAt = Date.now();
+        const entry: MissionHistoryEntry = {
+            id: `mh_${current.mission.id}_${current.startedAt}`,
+            endedAt,
+            outcome,
+            session: current
+        };
+
+        const nextHistory = [...(this.state.missionHistory ?? []), entry].slice(-25);
+        this.state = { ...this.state, activeMissionSession: null, missionHistory: nextHistory };
+        this.persist();
+        eventBus.emit(EVENTS.WORLD_STATE_CHANGED, { state: this.state });
+        return entry;
+    }
+
     updateActiveMissionSession(patch: Partial<ActiveMissionSession>): void {
         this.initialize();
         const current = this.state.activeMissionSession;
@@ -506,23 +551,30 @@ export class WorldStateManager {
                       }
                     : null;
 
-                const activeMissionSession = coerceActiveMissionSession((parsed as { activeMissionSession?: unknown }).activeMissionSession);
+	                const activeMissionSession = coerceActiveMissionSession((parsed as { activeMissionSession?: unknown }).activeMissionSession);
+	                const missionHistory = Array.isArray((parsed as { missionHistory?: unknown }).missionHistory)
+	                    ? ((parsed as { missionHistory?: unknown }).missionHistory as unknown[])
+	                          .map(coerceMissionHistoryEntry)
+	                          .filter((e): e is MissionHistoryEntry => Boolean(e))
+	                          .slice(-25)
+	                    : [];
 
-                this.state = {
-                    version: 3,
-                    unlockedLocations: uniq([...DEFAULT_STATE.unlockedLocations, ...unlocked]),
-                    discoveredLocations: uniq([...DEFAULT_STATE.discoveredLocations, ...discoveredLocations]),
-                    worldFlags: uniq(flags),
-                    completedQuestTemplates: uniq(completed),
-                    inventory,
-                    unlockedCompanions: uniq(unlockedCompanions),
-                    unlockedSkills: uniq(unlockedSkills),
-                    lastPlayerState:
-                        lastPlayerState && lastPlayerState.locationId && Number.isFinite(lastPlayerState.x) && Number.isFinite(lastPlayerState.y)
-                            ? lastPlayerState
-                            : null,
-                    activeMissionSession
-                };
+	                this.state = {
+	                    version: 3,
+	                    unlockedLocations: uniq([...DEFAULT_STATE.unlockedLocations, ...unlocked]),
+	                    discoveredLocations: uniq([...DEFAULT_STATE.discoveredLocations, ...discoveredLocations]),
+	                    worldFlags: uniq(flags),
+	                    completedQuestTemplates: uniq(completed),
+	                    inventory,
+	                    unlockedCompanions: uniq(unlockedCompanions),
+	                    unlockedSkills: uniq(unlockedSkills),
+	                    lastPlayerState:
+	                        lastPlayerState && lastPlayerState.locationId && Number.isFinite(lastPlayerState.x) && Number.isFinite(lastPlayerState.y)
+	                            ? lastPlayerState
+	                            : null,
+	                    activeMissionSession,
+	                    missionHistory
+	                };
                 this.applyCompletedQuestUnlocks();
                 return;
             }
@@ -558,21 +610,22 @@ export class WorldStateManager {
                       }
                     : null;
 
-                this.state = {
-                    version: 3,
-                    unlockedLocations: uniq([...DEFAULT_STATE.unlockedLocations, ...unlocked]),
-                    discoveredLocations: uniq([...DEFAULT_STATE.discoveredLocations, ...unlocked]),
-                    worldFlags: uniq(flags),
-                    completedQuestTemplates: uniq(completed),
-                    inventory,
-                    unlockedCompanions: uniq(unlockedCompanions),
-                    unlockedSkills: uniq(unlockedSkills),
-                    lastPlayerState:
-                        lastPlayerState && lastPlayerState.locationId && Number.isFinite(lastPlayerState.x) && Number.isFinite(lastPlayerState.y)
-                            ? lastPlayerState
-                            : null,
-                    activeMissionSession: null
-                };
+	                this.state = {
+	                    version: 3,
+	                    unlockedLocations: uniq([...DEFAULT_STATE.unlockedLocations, ...unlocked]),
+	                    discoveredLocations: uniq([...DEFAULT_STATE.discoveredLocations, ...unlocked]),
+	                    worldFlags: uniq(flags),
+	                    completedQuestTemplates: uniq(completed),
+	                    inventory,
+	                    unlockedCompanions: uniq(unlockedCompanions),
+	                    unlockedSkills: uniq(unlockedSkills),
+	                    lastPlayerState:
+	                        lastPlayerState && lastPlayerState.locationId && Number.isFinite(lastPlayerState.x) && Number.isFinite(lastPlayerState.y)
+	                            ? lastPlayerState
+	                            : null,
+	                    activeMissionSession: null,
+	                    missionHistory: []
+	                };
                 this.applyCompletedQuestUnlocks();
                 return;
             }
