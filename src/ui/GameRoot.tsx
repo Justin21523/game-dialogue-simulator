@@ -17,6 +17,7 @@ import { endMissionSession, startMissionSession } from '../shared/api/missionSes
 import { generateMissionEvent } from '../shared/api/missionBoardApi';
 import { generateNarration } from '../shared/api/narrationApi';
 import { resolveMissionQuestBridge } from '../shared/missions/missionBridge';
+import { applyMissionPhaseHooks } from '../shared/missions/missionPhaseHooks';
 import { generateScriptMissions } from '../shared/missions/missionScriptGenerator';
 import { getMissionScript } from '../shared/missions/missionScripts';
 import { checkForNewUnlocks, createDefaultAchievementState, getAllAchievementDefinitions } from '../shared/progress/achievements';
@@ -220,6 +221,7 @@ function GameRootInner() {
 	        const inboundFlight = state.inboundFlight;
 	        const sessionId = state.activeSessionId;
 	        const missionQuestId = prev?.missionQuestId ?? null;
+	        const spawnedInteractables = prev?.spawnedInteractables ?? [];
 
 	        const syncKey = [sessionId ?? '', actorId, phaseId, locationId ?? '', mission.id, inboundFlight?.score ?? 0, missionQuestId ?? ''].join('|');
 	        if (missionSessionSyncKeyRef.current === syncKey) return;
@@ -233,6 +235,7 @@ function GameRootInner() {
 	            sessionId,
 	            actorId,
 	            missionQuestId,
+	            spawnedInteractables,
 	            phaseId,
 	            phaseStartedAt,
 	            locationId,
@@ -270,11 +273,13 @@ function GameRootInner() {
             flightPhaseOverride: state.flightPhaseOverride,
             fallbackPhaseId: session.phaseId
         });
-        const key = `${mission.id}:${phaseId}`;
-        if (missionTimelineKeyRef.current === key) return;
-        missionTimelineKeyRef.current = key;
+	        const key = `${mission.id}:${phaseId}`;
+	        if (missionTimelineKeyRef.current === key) return;
+	        missionTimelineKeyRef.current = key;
 
-        const hasLogKind = (kind: string) => session.log.some((e) => e.phaseId === phaseId && e.kind === kind);
+	        applyMissionPhaseHooks({ mission, phaseId });
+
+	        const hasLogKind = (kind: string) => session.log.some((e) => e.phaseId === phaseId && e.kind === kind);
 
         if (phaseId === 'dispatch') {
             if (!hasLogKind('system')) {
