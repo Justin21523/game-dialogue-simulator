@@ -11,6 +11,7 @@ import { SKILL_EXPLORATION_FLIGHT } from '../../../shared/skills/skillIds';
 import { companionManager } from '../../../shared/systems/companionManager';
 import { worldStateManager } from '../../../shared/systems/worldStateManager';
 import { missionManager } from '../../../shared/quests/missionManager';
+import { getPrimaryQuest } from '../../../shared/quests/primaryQuest';
 import type { CompanionAbility } from '../../../shared/types/Companion';
 import type {
     ColliderDefinition,
@@ -1316,7 +1317,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     private updateObjectiveMarker(timeMs: number): void {
-        const quest = missionManager.getActiveMainQuest();
+        const quest = getPrimaryQuest();
         const objective = quest?.objectives?.find((o) => o.status === 'active') ?? null;
         if (!objective) {
             this.objectiveMarker?.setVisible(false);

@@ -6,6 +6,7 @@ import { getCharacterGridPortraitSrc } from '../shared/characterAssets';
 import { eventBus } from '../shared/eventBus';
 import { EVENTS } from '../shared/eventNames';
 import { missionManager } from '../shared/quests/missionManager';
+import { getPrimaryQuest } from '../shared/quests/primaryQuest';
 import { startQuestFromTemplate } from '../shared/quests/questRuntime';
 import { companionManager } from '../shared/systems/companionManager';
 import { worldStateManager } from '../shared/systems/worldStateManager';
@@ -41,7 +42,7 @@ function pickDialogueId(payload: DialogueOpenPayload): string | null {
     const npc = getNpc(payload.npcId);
     if (!npc) return null;
 
-    const active = missionManager.getActiveMainQuest();
+    const active = getPrimaryQuest();
     if (active && npc.dialogueIdActive) return npc.dialogueIdActive;
 
     const hasAnyCompleted = Array.from(missionManager.quests.values()).some((q) => q.status === 'completed');

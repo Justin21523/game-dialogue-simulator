@@ -2,11 +2,11 @@ import React from 'react';
 
 import { eventBus } from '../shared/eventBus';
 import { EVENTS } from '../shared/eventNames';
-import { missionManager } from '../shared/quests/missionManager';
 import type { Quest } from '../shared/quests/quest';
+import { getPrimaryQuest } from '../shared/quests/primaryQuest';
 
 function getActiveQuest(): Quest | null {
-    return missionManager.getActiveMainQuest();
+    return getPrimaryQuest();
 }
 
 export function QuestTracker() {

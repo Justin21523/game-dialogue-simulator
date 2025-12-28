@@ -161,6 +161,7 @@ function coerceActiveMissionSession(value: unknown): ActiveMissionSession | null
     if (!actorId || !phaseId || !mission) return null;
 
     const sessionId = typeof value.sessionId === 'string' && value.sessionId ? value.sessionId : null;
+    const missionQuestId = coerceString(value.missionQuestId) ?? null;
     const locationId = typeof value.locationId === 'string' && value.locationId ? value.locationId : null;
     const startedAt = coerceNumber(value.startedAt);
     const updatedAt = coerceNumber(value.updatedAt);
@@ -175,6 +176,7 @@ function coerceActiveMissionSession(value: unknown): ActiveMissionSession | null
     return {
         sessionId,
         actorId,
+        missionQuestId,
         phaseId,
         phaseStartedAt,
         locationId,

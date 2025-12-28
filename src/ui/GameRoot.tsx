@@ -114,7 +114,12 @@ type LoadedSnapshot = {
 
 function deriveMissionPhaseId(screen: ScreenId, fallbackPhaseId: MissionSessionPhaseId = 'dispatch'): MissionSessionPhaseId {
     if (screen === 'briefing') return 'dispatch';
-    if (screen === 'exploration') return 'solve';
+    if (screen === 'exploration') {
+        if (fallbackPhaseId === 'return' || fallbackPhaseId === 'debrief') {
+            return fallbackPhaseId;
+        }
+        return 'solve';
+    }
     if (screen === 'story' || screen === 'results') return 'debrief';
     return fallbackPhaseId;
 }
@@ -212,24 +217,26 @@ function GameRootInner() {
             flightPhaseOverride: state.flightPhaseOverride,
             fallbackPhaseId: prev?.phaseId ?? 'dispatch'
         });
-        const inboundFlight = state.inboundFlight;
-        const sessionId = state.activeSessionId;
+	        const inboundFlight = state.inboundFlight;
+	        const sessionId = state.activeSessionId;
+	        const missionQuestId = prev?.missionQuestId ?? null;
 
-        const syncKey = [sessionId ?? '', actorId, phaseId, locationId ?? '', mission.id, inboundFlight?.score ?? 0].join('|');
-        if (missionSessionSyncKeyRef.current === syncKey) return;
-        missionSessionSyncKeyRef.current = syncKey;
+	        const syncKey = [sessionId ?? '', actorId, phaseId, locationId ?? '', mission.id, inboundFlight?.score ?? 0, missionQuestId ?? ''].join('|');
+	        if (missionSessionSyncKeyRef.current === syncKey) return;
+	        missionSessionSyncKeyRef.current = syncKey;
 
         const now = Date.now();
         const startedAt = prev?.startedAt ?? now;
         const phaseStartedAt = prev && prev.phaseId === phaseId ? prev.phaseStartedAt : now;
 
-        worldStateManager.setActiveMissionSession({
-            sessionId,
-            actorId,
-            phaseId,
-            phaseStartedAt,
-            locationId,
-            mission,
+	        worldStateManager.setActiveMissionSession({
+	            sessionId,
+	            actorId,
+	            missionQuestId,
+	            phaseId,
+	            phaseStartedAt,
+	            locationId,
+	            mission,
             inboundFlight,
             startedAt,
             updatedAt: now,
@@ -245,8 +252,8 @@ function GameRootInner() {
         state.selectedCharacterId
     ]);
 
-    const missionTimelineKeyRef = React.useRef<string | null>(null);
-    React.useEffect(() => {
+	    const missionTimelineKeyRef = React.useRef<string | null>(null);
+	    React.useEffect(() => {
         const mission = state.activeMission;
         if (!mission) {
             missionTimelineKeyRef.current = null;
@@ -446,12 +453,40 @@ function GameRootInner() {
                 });
             }
         }
-    }, [state.activeMission, state.flightParams?.charId, state.flightPhaseOverride, state.screen, state.selectedCharacterId]);
+	    }, [state.activeMission, state.flightParams?.charId, state.flightPhaseOverride, state.screen, state.selectedCharacterId]);
 
-    React.useEffect(() => {
-        const unlock = () => {
-            void audioManager.resume().finally(() => setAudioUnlocked(true));
-        };
+	    const missionReturnHandledRef = React.useRef<string | null>(null);
+	    React.useEffect(() => {
+	        const onLocationChanged = (payload: unknown) => {
+	            if (!payload || typeof payload !== 'object') return;
+	            const data = payload as Partial<{ locationId: string }>;
+	            if (data.locationId !== 'base_airport') return;
+
+	            const current = stateRef.current;
+	            const mission = current.activeMission;
+	            if (!mission) return;
+
+	            worldStateManager.initialize();
+	            const session = worldStateManager.getActiveMissionSession();
+	            if (!session) return;
+	            if (session.mission.id !== mission.id) return;
+	            if (session.phaseId !== 'return') return;
+	            if (missionReturnHandledRef.current === mission.id) return;
+
+	            missionReturnHandledRef.current = mission.id;
+	            worldStateManager.updateActiveMissionSession({ phaseId: 'debrief', phaseStartedAt: Date.now() });
+	        };
+
+	        eventBus.on(EVENTS.LOCATION_CHANGED, onLocationChanged);
+	        return () => {
+	            eventBus.off(EVENTS.LOCATION_CHANGED, onLocationChanged);
+	        };
+	    }, []);
+
+	    React.useEffect(() => {
+	        const unlock = () => {
+	            void audioManager.resume().finally(() => setAudioUnlocked(true));
+	        };
 
         window.addEventListener('pointerdown', unlock, { once: true });
         window.addEventListener('keydown', unlock, { once: true });
@@ -587,11 +622,11 @@ function GameRootInner() {
         };
     }, []);
 
-    React.useEffect(() => {
-        const onQuestCompleted = (payload: unknown) => {
-            const current = stateRef.current;
-            if (current.screen !== 'exploration') return;
-            if (!payload || typeof payload !== 'object') return;
+	    React.useEffect(() => {
+	        const onQuestCompleted = (payload: unknown) => {
+	            const current = stateRef.current;
+	            if (current.screen !== 'exploration') return;
+	            if (!payload || typeof payload !== 'object') return;
 
             const data = payload as Partial<{
                 quest: Quest;
@@ -609,20 +644,41 @@ function GameRootInner() {
             const location = typeof quest.destination === 'string' && quest.destination ? quest.destination : 'world_airport';
 
             const leader = quest.participants?.find((p) => p.role === 'leader')?.characterId;
-            const actorId = leader || current.selectedCharacterId;
+	            const actorId = leader || current.selectedCharacterId;
 
-            audioManager.playSound('mission_complete');
+	            audioManager.playSound('mission_complete');
 
-            if (current.activeMission && quest.type === 'main') {
-                const inbound = current.inboundFlight;
-                const bonus = inbound ? Math.max(0, Math.floor(inbound.score)) : 0;
-                const money = Math.max(0, Math.floor(current.activeMission.rewardMoney + bonus));
-                const exp = Math.max(0, Math.floor(current.activeMission.rewardExp));
+	            worldStateManager.initialize();
+	            const session = worldStateManager.getActiveMissionSession();
+	            const missionQuestId = session?.missionQuestId ?? null;
+	            const questMatchesMission =
+	                Boolean(current.activeMission) &&
+	                (missionQuestId ? missionQuestId === questId : quest.templateId && quest.templateId === current.activeMission?.questTemplateId);
 
-                dispatch({ type: 'MISSION_COMPLETE_FROM_EXPLORATION', mission: current.activeMission, actorId });
-                eventBus.emit(EVENTS.REWARD_GRANTED, { actorId, money, exp, source: 'mission_reward' });
-                return;
-            }
+	            if (questMatchesMission && current.activeMission) {
+	                worldStateManager.updateActiveMissionSession({ phaseId: 'return', phaseStartedAt: Date.now() });
+	                worldStateManager.appendMissionLog({
+	                    phaseId: 'return',
+	                    kind: 'system',
+	                    title: 'Return',
+	                    text: 'Objective complete. Returning to base.'
+	                });
+	                eventBus.emit(EVENTS.UI_TRAVEL_REQUESTED, {
+	                    actorId: null,
+	                    locationId: 'base_airport',
+	                    spawnPoint: 'default',
+	                    via: 'mission'
+	                });
+
+	                const inbound = current.inboundFlight;
+	                const bonus = inbound ? Math.max(0, Math.floor(inbound.score)) : 0;
+	                const money = Math.max(0, Math.floor(current.activeMission.rewardMoney + bonus));
+	                const exp = Math.max(0, Math.floor(current.activeMission.rewardExp));
+
+	                dispatch({ type: 'MISSION_COMPLETE_FROM_EXPLORATION', mission: current.activeMission, actorId });
+	                eventBus.emit(EVENTS.REWARD_GRANTED, { actorId, money, exp, source: 'mission_reward' });
+	                return;
+	            }
 
             const money = Math.max(0, Math.floor(rewards.money));
             const exp = Math.max(0, Math.floor(rewards.exp));
@@ -690,16 +746,21 @@ function GameRootInner() {
         };
     }, [dispatch, toast]);
 
-    React.useEffect(() => {
-        if (state.screen !== 'exploration') return;
-        const templateId = state.pendingExplorationQuestTemplateId;
-        if (!templateId) return;
+	    React.useEffect(() => {
+	        if (state.screen !== 'exploration') return;
+	        const templateId = state.pendingExplorationQuestTemplateId;
+	        if (!templateId) return;
 
-        dispatch({ type: 'CLEAR_PENDING_EXPLORATION_QUEST' });
-        startQuestFromTemplate(templateId, { actorId: state.selectedCharacterId, type: 'main' }).catch((err: unknown) => {
-            console.warn('[exploration] auto-start quest failed', err);
-        });
-    }, [dispatch, state.pendingExplorationQuestTemplateId, state.screen, state.selectedCharacterId]);
+	        dispatch({ type: 'CLEAR_PENDING_EXPLORATION_QUEST' });
+	        startQuestFromTemplate(templateId, { actorId: state.selectedCharacterId, type: state.activeMission ? 'sub' : 'main' })
+	            .then((questId) => {
+	                if (!stateRef.current.activeMission) return;
+	                worldStateManager.updateActiveMissionSession({ missionQuestId: questId });
+	            })
+	            .catch((err: unknown) => {
+	                console.warn('[exploration] auto-start quest failed', err);
+	            });
+	    }, [dispatch, state.pendingExplorationQuestTemplateId, state.screen, state.selectedCharacterId]);
 
     React.useEffect(() => {
         persistSnapshot(state);
@@ -969,7 +1030,12 @@ function GameRootInner() {
                         debriefResult={state.explorationDebrief}
                         onCloseDebrief={() => dispatch({ type: 'CLOSE_EXPLORATION_DEBRIEF' })}
                         onAbortMission={() => dispatch({ type: 'ABORT_ACTIVE_MISSION', screen: 'hangar', reason: 'abort' })}
-                        onBackToHangar={() => dispatch({ type: 'NAVIGATE', screen: 'hangar' })}
+                        onBackToHangar={() => {
+                            if (stateRef.current.explorationDebrief) {
+                                dispatch({ type: 'CLOSE_EXPLORATION_DEBRIEF' });
+                            }
+                            dispatch({ type: 'NAVIGATE', screen: 'hangar' });
+                        }}
                     />
                 ) : null}
 
@@ -1300,9 +1366,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                     characters: nextCharacters,
                     statistics: nextStatistics,
                     achievements: nextAchievements,
-                    activeMission: null,
                     flightParams: null,
-                    inboundFlight: null,
                     pendingExplorationQuestTemplateId: null
                 };
             }
@@ -1452,8 +1516,32 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             return { ...state, resources: nextResources, characters: nextCharacters, statistics: nextStatistics, achievements: nextAchievements };
         }
 
-        case 'CLOSE_EXPLORATION_DEBRIEF':
-            return { ...state, explorationDebrief: null };
+        case 'CLOSE_EXPLORATION_DEBRIEF': {
+            const isMissionDebrief =
+                Boolean(state.activeMission) &&
+                Boolean(state.explorationDebrief) &&
+                state.explorationDebrief?.mission.id === state.activeMission?.id;
+
+            if (!isMissionDebrief) {
+                return { ...state, explorationDebrief: null };
+            }
+
+            const actorId = state.flightParams?.charId ?? state.selectedCharacterId;
+            const nextCharacters = state.characters.map((c): CharacterState => (c.id === actorId ? { ...c, status: 'IDLE' } : c));
+
+            return {
+                ...state,
+                explorationDebrief: null,
+                characters: nextCharacters,
+                activeMission: null,
+                flightParams: null,
+                inboundFlight: null,
+                pendingExplorationQuestTemplateId: null,
+                explorationStartLocationId: null,
+                explorationSpawnPoint: null,
+                flightPhaseOverride: null
+            };
+        }
 
         case 'CLEAR_PENDING_EXPLORATION_QUEST':
             return { ...state, pendingExplorationQuestTemplateId: null };
