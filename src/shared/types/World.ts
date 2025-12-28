@@ -223,6 +223,7 @@ export type ActiveMissionSession = {
     sessionId: string | null;
     actorId: string;
     phaseId: MissionSessionPhaseId;
+    phaseStartedAt: number;
     locationId: string | null;
     mission: Mission;
     inboundFlight: FlightResult | null;

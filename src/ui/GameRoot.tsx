@@ -16,6 +16,7 @@ import { endMissionSession, startMissionSession } from '../shared/api/missionSes
 import { generateNarration } from '../shared/api/narrationApi';
 import { resolveMissionQuestBridge } from '../shared/missions/missionBridge';
 import { generateScriptMissions } from '../shared/missions/missionScriptGenerator';
+import { getMissionScript } from '../shared/missions/missionScripts';
 import { checkForNewUnlocks, createDefaultAchievementState, getAllAchievementDefinitions } from '../shared/progress/achievements';
 import {
     createDefaultStatistics,
@@ -83,6 +84,7 @@ type GameAction =
     | { type: 'CLEAR_ACTIVE_SESSION' }
     | { type: 'CANCEL_MISSION'; screen: ScreenId }
     | { type: 'ABORT_FLIGHT'; screen: ScreenId }
+    | { type: 'ABORT_ACTIVE_MISSION'; screen: ScreenId; reason?: 'abort' | 'timeout' }
     | { type: 'FLIGHT_COMPLETE'; result: FlightResult; bridge?: { questTemplateId: string; startLocationId: string; spawnPoint: string } }
     | { type: 'MISSION_COMPLETE_FROM_EXPLORATION'; mission: Mission; actorId: string }
     | { type: 'QUEST_COMPLETE'; questId: string; title: string; description: string; location: string; actorId: string; rewards: { money: number; exp: number } }
@@ -123,6 +125,7 @@ function GameRootInner() {
     const bgmTrackRef = React.useRef<BgmTrack | null>(null);
     const [audioUnlocked, setAudioUnlocked] = React.useState(false);
     const [flightNarration, setFlightNarration] = React.useState<string | null>(null);
+    const missionTimeoutHandledRef = React.useRef<string | null>(null);
 
     React.useEffect(() => {
         stateRef.current = state;
@@ -153,15 +156,20 @@ function GameRootInner() {
         if (missionSessionSyncKeyRef.current === syncKey) return;
         missionSessionSyncKeyRef.current = syncKey;
 
+        const now = Date.now();
+        const startedAt = prev?.startedAt ?? now;
+        const phaseStartedAt = prev && prev.phaseId === phaseId ? prev.phaseStartedAt : now;
+
         worldStateManager.setActiveMissionSession({
             sessionId,
             actorId,
             phaseId,
+            phaseStartedAt,
             locationId,
             mission,
             inboundFlight,
-            startedAt: prev?.startedAt ?? Date.now(),
-            updatedAt: Date.now(),
+            startedAt,
+            updatedAt: now,
             log: prev?.log ?? []
         });
     }, [state.activeMission, state.activeSessionId, state.flightParams?.charId, state.inboundFlight, state.screen, state.selectedCharacterId]);
@@ -403,13 +411,38 @@ function GameRootInner() {
             const nowMs = Date.now();
             const deltaSeconds = (nowMs - lastTickMs) / 1000;
             lastTickMs = nowMs;
+
+            const current = stateRef.current;
+            if (!current.activeMission) {
+                missionTimeoutHandledRef.current = null;
+            } else if (current.activeMission.missionScriptId) {
+                const script = getMissionScript(current.activeMission.missionScriptId);
+                const phaseId = deriveMissionPhaseId(current.screen);
+                const limitMs = script?.phases.find((p) => p.phaseId === phaseId)?.timeLimitMs;
+                const session = worldStateManager.getActiveMissionSession();
+                const phaseStartedAt = session?.phaseStartedAt ?? session?.startedAt;
+
+                if (
+                    typeof limitMs === 'number' &&
+                    limitMs > 0 &&
+                    typeof phaseStartedAt === 'number' &&
+                    Number.isFinite(phaseStartedAt) &&
+                    nowMs - phaseStartedAt > limitMs &&
+                    missionTimeoutHandledRef.current !== current.activeMission.id
+                ) {
+                    missionTimeoutHandledRef.current = current.activeMission.id;
+                    toast.show('Mission failed: time limit exceeded.', 'error', 7000);
+                    dispatch({ type: 'ABORT_ACTIVE_MISSION', screen: 'hangar', reason: 'timeout' });
+                }
+            }
+
             dispatch({ type: 'TICK_PLAYTIME', nowIso: new Date().toISOString(), deltaSeconds });
         }, 1000);
 
         return () => {
             window.clearInterval(timer);
         };
-    }, [dispatch]);
+    }, [dispatch, toast]);
 
     const prevAchievementIdsRef = React.useRef<string[]>(state.achievements.unlocked);
     React.useEffect(() => {
@@ -628,8 +661,10 @@ function GameRootInner() {
                 {state.screen === 'exploration' ? (
                     <ExplorationScreen
                         actorId={state.selectedCharacterId}
+                        activeMission={state.activeMission}
                         debriefResult={state.explorationDebrief}
                         onCloseDebrief={() => dispatch({ type: 'CLOSE_EXPLORATION_DEBRIEF' })}
+                        onAbortMission={() => dispatch({ type: 'ABORT_ACTIVE_MISSION', screen: 'hangar', reason: 'abort' })}
                         onBackToHangar={() => dispatch({ type: 'NAVIGATE', screen: 'hangar' })}
                     />
                 ) : null}
@@ -813,6 +848,30 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 activeMission: null,
                 flightParams: null,
                 inboundFlight: null,
+                lastResult: null,
+                explorationDebrief: null,
+                pendingExplorationQuestTemplateId: null,
+                explorationStartLocationId: null,
+                explorationSpawnPoint: null
+            };
+        }
+
+        case 'ABORT_ACTIVE_MISSION': {
+            const mission = state.activeMission;
+            const actorId = state.flightParams?.charId ?? state.selectedCharacterId;
+            const nextCharacters = state.characters.map((c): CharacterState => (c.id === actorId ? { ...c, status: 'IDLE' } : c));
+            const nextStatistics = mission ? recordMissionFailed(state.statistics) : state.statistics;
+
+            return {
+                ...state,
+                screen: action.screen,
+                characters: nextCharacters,
+                statistics: nextStatistics,
+                activeMission: null,
+                flightParams: null,
+                inboundFlight: null,
+                lastResult: null,
+                explorationDebrief: null,
                 pendingExplorationQuestTemplateId: null,
                 explorationStartLocationId: null,
                 explorationSpawnPoint: null
