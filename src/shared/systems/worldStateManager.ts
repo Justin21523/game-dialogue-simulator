@@ -2,9 +2,11 @@ import { getQuestTemplate } from '../data/gameData.js';
 import { eventBus } from '../eventBus.js';
 import { EVENTS } from '../eventNames.js';
 import type { FlightResult } from '../flightEvents.js';
+import { CompanionAbility, type CompanionAbility as CompanionAbilityType } from '../types/Companion.js';
 import type { Mission } from '../types/Game.js';
 import type {
     ActiveMissionSession,
+    InteractableDefinition,
     MissionLogEntry,
     MissionLogKind,
     MissionSessionPhaseId,
@@ -44,6 +46,13 @@ function coerceString(value: unknown): string | null {
 
 function coerceNumber(value: unknown): number | null {
     return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function coerceAbility(value: unknown): CompanionAbilityType | undefined {
+    if (typeof value !== 'string') return undefined;
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    return (Object.values(CompanionAbility) as string[]).includes(trimmed) ? (trimmed as CompanionAbilityType) : undefined;
 }
 
 function coerceMissionPhaseId(value: unknown): MissionSessionPhaseId | null {
@@ -152,6 +161,40 @@ function coerceMissionLogEntry(value: unknown): MissionLogEntry | null {
     return { id, timestamp, phaseId, kind, title, text, eventId, choices };
 }
 
+function coerceSpawnedInteractable(value: unknown): { locationId: string; interactable: InteractableDefinition } | null {
+    if (!isRecord(value)) return null;
+
+    const locationId = coerceString(value.locationId);
+    const raw = isRecord(value.interactable) ? value.interactable : null;
+    if (!locationId || !raw) return null;
+
+    const interactableId = coerceString(raw.interactableId);
+    const type = coerceString(raw.type);
+    const x = coerceNumber(raw.x);
+    const y = coerceNumber(raw.y);
+    const label = coerceString(raw.label);
+    if (!interactableId || !type || x === null || y === null || !label) return null;
+
+    const requiredAbility = coerceAbility(raw.requiredAbility);
+    const targetLocationId = coerceString(raw.targetLocationId) ?? undefined;
+    const targetSpawnPoint = coerceString(raw.targetSpawnPoint) ?? undefined;
+    const message = coerceString(raw.message) ?? undefined;
+
+    const interactable: InteractableDefinition = {
+        interactableId,
+        type: type as InteractableDefinition['type'],
+        x,
+        y,
+        label,
+        requiredAbility,
+        targetLocationId,
+        targetSpawnPoint,
+        message
+    };
+
+    return { locationId, interactable };
+}
+
 function coerceActiveMissionSession(value: unknown): ActiveMissionSession | null {
     if (!isRecord(value)) return null;
 
@@ -169,6 +212,12 @@ function coerceActiveMissionSession(value: unknown): ActiveMissionSession | null
 
     const phaseStartedAt = coerceNumber(value.phaseStartedAt) ?? startedAt;
     const inboundFlight = value.inboundFlight ? coerceFlightResult(value.inboundFlight) : null;
+    const spawnedInteractables = Array.isArray(value.spawnedInteractables)
+        ? value.spawnedInteractables
+              .map(coerceSpawnedInteractable)
+              .filter((v): v is { locationId: string; interactable: InteractableDefinition } => Boolean(v))
+              .slice(-40)
+        : [];
     const log = Array.isArray(value.log)
         ? value.log.map(coerceMissionLogEntry).filter((e): e is MissionLogEntry => Boolean(e)).slice(-200)
         : [];
@@ -177,6 +226,7 @@ function coerceActiveMissionSession(value: unknown): ActiveMissionSession | null
         sessionId,
         actorId,
         missionQuestId,
+        spawnedInteractables,
         phaseId,
         phaseStartedAt,
         locationId,

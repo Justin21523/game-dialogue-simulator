@@ -221,6 +221,7 @@ export class WorldScene extends Phaser.Scene {
         this.createProps(this.location.props ?? []);
         this.createDoors(this.location.doors ?? []);
         this.createInteractables(this.location.interactables);
+        this.spawnMissionInteractablesFromSession();
         this.createExits(this.location.exits);
         this.createNpcs();
         this.createColliders(this.location.colliders ?? []);
@@ -235,6 +236,7 @@ export class WorldScene extends Phaser.Scene {
 
         this.registerUiLocks();
         this.registerTravelRequests();
+        this.registerMissionSpawns();
         this.persistPlayerState(this.time.now);
 
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -686,47 +688,64 @@ export class WorldScene extends Phaser.Scene {
 
     private createInteractables(defs: InteractableDefinition[]): void {
         for (const def of defs) {
-            const texture =
-                def.type === 'quest_target'
-                    ? 'world-relay'
-                    : def.type === 'exit_hint'
-                      ? 'world-exit'
-                      : def.type === 'pickup'
-                        ? 'world-item'
-                        : def.type === 'terminal'
-                          ? 'world-terminal'
-                          : def.type === 'sign'
-                            ? 'world-sign'
-                            : def.type === 'door'
-                              ? 'world-door'
-                              : 'world-item';
+            this.spawnInteractable(def);
+        }
+    }
 
-            const sprite = this.add.sprite(def.x, def.y, texture).setOrigin(0.5, 1).setDepth(Math.floor(def.y) + 1);
+    private spawnInteractable(def: InteractableDefinition): void {
+        if (this.interactables.some((o) => o.id === def.interactableId)) return;
 
-            const label = this.add
-                .text(sprite.x, sprite.y - sprite.displayHeight - 10, def.label, {
-                    fontFamily: 'Segoe UI, system-ui, sans-serif',
-                    fontSize: '18px',
-                    fontStyle: '800',
-                    color: '#ffffff',
-                    stroke: '#000000',
-                    strokeThickness: 6
-                })
-                .setOrigin(0.5, 1)
-                .setDepth(2000);
+        const texture =
+            def.type === 'quest_target'
+                ? 'world-relay'
+                : def.type === 'exit_hint'
+                  ? 'world-exit'
+                  : def.type === 'pickup'
+                    ? 'world-item'
+                    : def.type === 'terminal'
+                      ? 'world-terminal'
+                      : def.type === 'sign'
+                        ? 'world-sign'
+                        : def.type === 'door'
+                          ? 'world-door'
+                          : 'world-item';
 
-            this.interactables.push({
-                id: def.interactableId,
-                kind: 'interactable',
-                interactableType: def.type,
-                requiredAbility: def.requiredAbility,
-                targetLocationId: def.targetLocationId,
-                targetSpawnPoint: def.targetSpawnPoint,
-                message: def.message,
-                sprite,
-                label,
-                state: 'idle'
-            });
+        const sprite = this.add.sprite(def.x, def.y, texture).setOrigin(0.5, 1).setDepth(Math.floor(def.y) + 1);
+
+        const label = this.add
+            .text(sprite.x, sprite.y - sprite.displayHeight - 10, def.label, {
+                fontFamily: 'Segoe UI, system-ui, sans-serif',
+                fontSize: '18px',
+                fontStyle: '800',
+                color: '#ffffff',
+                stroke: '#000000',
+                strokeThickness: 6
+            })
+            .setOrigin(0.5, 1)
+            .setDepth(2000);
+
+        this.interactables.push({
+            id: def.interactableId,
+            kind: 'interactable',
+            interactableType: def.type,
+            requiredAbility: def.requiredAbility,
+            targetLocationId: def.targetLocationId,
+            targetSpawnPoint: def.targetSpawnPoint,
+            message: def.message,
+            sprite,
+            label,
+            state: 'idle'
+        });
+    }
+
+    private spawnMissionInteractablesFromSession(): void {
+        const session = worldStateManager.getActiveMissionSession();
+        const entries = session?.spawnedInteractables ?? [];
+        if (entries.length === 0) return;
+
+        for (const entry of entries) {
+            if (entry.locationId !== this.locationId) continue;
+            this.spawnInteractable(entry.interactable);
         }
     }
 
@@ -1457,6 +1476,48 @@ export class WorldScene extends Phaser.Scene {
         eventBus.on(EVENTS.UI_TRAVEL_REQUESTED, onRequested);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             eventBus.off(EVENTS.UI_TRAVEL_REQUESTED, onRequested);
+        });
+    }
+
+    private registerMissionSpawns(): void {
+        const onSpawned = (payload: unknown) => {
+            if (!isRecord(payload)) return;
+            const locationId = payload.locationId;
+            if (typeof locationId !== 'string' || locationId !== this.locationId) return;
+
+            const interactable = payload.interactable;
+            if (!isRecord(interactable)) return;
+            const interactableId = interactable.interactableId;
+            const type = interactable.type;
+            const x = interactable.x;
+            const y = interactable.y;
+            const label = interactable.label;
+            if (typeof interactableId !== 'string' || !interactableId) return;
+            if (typeof type !== 'string' || !type) return;
+            if (typeof x !== 'number' || !Number.isFinite(x)) return;
+            if (typeof y !== 'number' || !Number.isFinite(y)) return;
+            if (typeof label !== 'string' || !label) return;
+
+            this.spawnInteractable({
+                interactableId,
+                type: type as InteractableDefinition['type'],
+                x,
+                y,
+                label,
+                requiredAbility:
+                    typeof interactable.requiredAbility === 'string' &&
+                    ['ENGINEERING', 'POLICE', 'ESPIONAGE', 'DIGGING', 'ANIMAL_RESCUE'].includes(interactable.requiredAbility)
+                        ? (interactable.requiredAbility as CompanionAbility)
+                        : undefined,
+                targetLocationId: typeof interactable.targetLocationId === 'string' ? interactable.targetLocationId : undefined,
+                targetSpawnPoint: typeof interactable.targetSpawnPoint === 'string' ? interactable.targetSpawnPoint : undefined,
+                message: typeof interactable.message === 'string' ? interactable.message : undefined
+            });
+        };
+
+        eventBus.on(EVENTS.MISSION_INTERACTABLE_SPAWNED, onSpawned);
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            eventBus.off(EVENTS.MISSION_INTERACTABLE_SPAWNED, onSpawned);
         });
     }
 

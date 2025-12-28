@@ -22,7 +22,19 @@ export type MissionPhaseHook =
     | { type: 'require_ability'; ability: string; targetId?: string; message?: string }
     | { type: 'gate_world_flag'; flag: string; message?: string }
     | { type: 'gate_item'; itemId: string; quantity: number; message?: string }
-    | { type: 'spawn_interactable'; locationId: string; interactableId: string };
+    | {
+          type: 'spawn_interactable';
+          locationId: string;
+          interactableId: string;
+          interactableType?: string;
+          x?: number;
+          y?: number;
+          label?: string;
+          requiredAbility?: string;
+          targetLocationId?: string;
+          targetSpawnPoint?: string;
+          message?: string;
+      };
 
 export type MissionScriptRewards = {
     money: number;
@@ -114,7 +126,28 @@ function toPhaseHook(raw: unknown): MissionPhaseHook | null {
         const locationId = String(raw.location_id ?? '').trim();
         const interactableId = String(raw.interactable_id ?? '').trim();
         if (!locationId || !interactableId) return null;
-        return { type: 'spawn_interactable', locationId, interactableId };
+        const interactableType = typeof raw.interactable_type === 'string' && raw.interactable_type.trim().length > 0 ? raw.interactable_type.trim() : undefined;
+        const x = typeof raw.x === 'number' && Number.isFinite(raw.x) ? raw.x : undefined;
+        const y = typeof raw.y === 'number' && Number.isFinite(raw.y) ? raw.y : undefined;
+        const label = typeof raw.label === 'string' && raw.label.trim().length > 0 ? raw.label.trim() : undefined;
+        const requiredAbility = typeof raw.required_ability === 'string' && raw.required_ability.trim().length > 0 ? raw.required_ability.trim() : undefined;
+        const targetLocationId = typeof raw.target_location_id === 'string' && raw.target_location_id.trim().length > 0 ? raw.target_location_id.trim() : undefined;
+        const targetSpawnPoint = typeof raw.target_spawn_point === 'string' && raw.target_spawn_point.trim().length > 0 ? raw.target_spawn_point.trim() : undefined;
+        const message = typeof raw.message === 'string' && raw.message.trim().length > 0 ? raw.message.trim() : undefined;
+
+        return {
+            type: 'spawn_interactable',
+            locationId,
+            interactableId,
+            interactableType,
+            x,
+            y,
+            label,
+            requiredAbility,
+            targetLocationId,
+            targetSpawnPoint,
+            message
+        };
     }
 
     return null;

@@ -238,6 +238,7 @@ export type ActiveMissionSession = {
     sessionId: string | null;
     actorId: string;
     missionQuestId: string | null;
+    spawnedInteractables: Array<{ locationId: string; interactable: InteractableDefinition }>;
     phaseId: MissionSessionPhaseId;
     phaseStartedAt: number;
     locationId: string | null;
