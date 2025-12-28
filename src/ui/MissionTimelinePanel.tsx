@@ -29,6 +29,8 @@ function kindLabel(kind: MissionLogEntry['kind']): string {
             return 'Narration';
         case 'event':
             return 'Event';
+        case 'system':
+            return 'System';
         default:
             return 'Log';
     }
