@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 
 import { audioManager } from '../../../shared/audio/audioManager';
 import { GAME_HEIGHT, GAME_WIDTH } from '../../../shared/constants';
+import { eventBus } from '../../../shared/eventBus';
+import { EVENTS } from '../../../shared/eventNames';
 import { GAME_CONFIG, type CharacterId } from '../../../shared/gameConfig';
 import { emitHudUpdate } from '../../../shared/hudEvents';
 import type { HudState } from '../../../shared/types/Scene';
@@ -56,6 +58,7 @@ export class ArrivalScene extends Phaser.Scene {
     }
 
     create() {
+        eventBus.emit(EVENTS.MISSION_PHASE_CHANGED, { phaseId: 'arrival', missionId: this.missionId, actorId: this.charId });
         const hudState: HudState = {
             score: this.score,
             distance: 0,
