@@ -17,6 +17,7 @@ export class NpcBehaviorSystem {
     update(npcs: SpawnedNpc[], timeMs: number, dt: number): void {
         for (const npc of npcs) {
             this.updateSingle(npc, timeMs, dt);
+            npc.sprite.setDepth(Math.floor(npc.sprite.y) + 2);
             npc.label.setPosition(npc.sprite.x, npc.sprite.y - npc.sprite.displayHeight - 10);
         }
     }

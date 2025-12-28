@@ -394,7 +394,7 @@ export class WorldScene extends Phaser.Scene {
         this.player.setOrigin(0.5, 1);
         this.player.setCollideWorldBounds(true);
         this.setSpriteDisplayHeight(this.player, 520);
-        this.player.setDepth(100);
+        this.player.setDepth(Math.floor(this.player.y) + 3);
 
         const body = this.player.body as Phaser.Physics.Arcade.Body;
         body.setAllowGravity(false);
@@ -414,7 +414,7 @@ export class WorldScene extends Phaser.Scene {
             sprite.setImmovable(true);
             sprite.setCollideWorldBounds(true);
             this.setSpriteDisplayHeight(sprite, 420);
-            sprite.setDepth(90);
+            sprite.setDepth(Math.floor(sprite.y) + 2);
 
             const body = sprite.body as Phaser.Physics.Arcade.Body;
             body.setAllowGravity(false);
@@ -450,7 +450,7 @@ export class WorldScene extends Phaser.Scene {
             const themed = this.themedPropAssets.get(def.propId) ?? null;
             const canUseThemed = Boolean(themed && this.textures.exists(themed.textureKey));
             const texture = canUseThemed ? themed!.textureKey : this.getPropTexture(def.type);
-            const sprite = this.add.sprite(def.x, def.y, texture).setOrigin(0.5, 1).setDepth(20);
+            const sprite = this.add.sprite(def.x, def.y, texture).setOrigin(0.5, 1).setDepth(Math.floor(def.y));
 
             if (typeof def.width === 'number' && Number.isFinite(def.width) && typeof def.height === 'number' && Number.isFinite(def.height)) {
                 sprite.setDisplaySize(def.width, def.height);
@@ -569,7 +569,7 @@ export class WorldScene extends Phaser.Scene {
                 door.requiredItemId && !worldStateManager.hasItem(door.requiredItemId, door.requiredItemQty ?? 1)
             );
             const isLocked = missingFlag || missingItem;
-            const sprite = this.add.sprite(door.x, door.y, 'world-door').setOrigin(0.5, 1).setDepth(25);
+            const sprite = this.add.sprite(door.x, door.y, 'world-door').setOrigin(0.5, 1).setDepth(Math.floor(door.y) + 1);
             sprite.setDisplaySize(door.width, door.height);
             if (isLocked) {
                 sprite.setTint(0x999999);
@@ -622,7 +622,7 @@ export class WorldScene extends Phaser.Scene {
                               ? 'world-door'
                               : 'world-item';
 
-            const sprite = this.add.sprite(def.x, def.y, texture).setOrigin(0.5, 1).setDepth(22);
+            const sprite = this.add.sprite(def.x, def.y, texture).setOrigin(0.5, 1).setDepth(Math.floor(def.y) + 1);
 
             const label = this.add
                 .text(sprite.x, sprite.y - sprite.displayHeight - 10, def.label, {
@@ -708,7 +708,7 @@ export class WorldScene extends Phaser.Scene {
             .setDepth(5000)
             .setAlpha(0);
 
-        this.highlight = this.add.graphics().setDepth(95).setBlendMode(Phaser.BlendModes.ADD);
+        this.highlight = this.add.graphics().setDepth(2200).setBlendMode(Phaser.BlendModes.ADD);
     }
 
     private setupInput(): void {
@@ -741,11 +741,10 @@ export class WorldScene extends Phaser.Scene {
         const cursors = this.cursors;
         const rightDown = this.keys.d.isDown || (cursors?.right?.isDown ?? false);
         const leftDown = this.keys.a.isDown || (cursors?.left?.isDown ?? false);
+        const upDown = this.keys.w.isDown || (cursors?.up?.isDown ?? false);
+        const downDown = this.keys.s.isDown || (cursors?.down?.isDown ?? false);
         const body = this.player.body as Phaser.Physics.Arcade.Body;
         if (this.movementMode === 'hover') {
-            const upDown = this.keys.w.isDown || (cursors?.up?.isDown ?? false);
-            const downDown = this.keys.s.isDown || (cursors?.down?.isDown ?? false);
-
             const speedX = PLAYER_SPEED * 1.15;
             const speedY = PLAYER_SPEED * 0.85;
             const vx = rightDown ? speedX : leftDown ? -speedX : 0;
@@ -759,6 +758,7 @@ export class WorldScene extends Phaser.Scene {
             const minY = this.groundY - 520;
             const maxY = this.groundY - 120;
             this.player.y = Phaser.Math.Clamp(this.player.y, minY, maxY);
+            this.player.setDepth(Math.floor(this.player.y) + 3);
 
             if (this.flightEmitter) {
                 const intensity = Phaser.Math.Clamp(Math.abs(vx) / speedX, 0, 1);
@@ -768,12 +768,17 @@ export class WorldScene extends Phaser.Scene {
         }
 
         const velocity = rightDown ? PLAYER_SPEED : leftDown ? -PLAYER_SPEED : 0;
-        body.setVelocity(velocity, 0);
+        const walkSpeedY = PLAYER_SPEED * 0.55;
+        const vy = downDown ? walkSpeedY : upDown ? -walkSpeedY : 0;
+        body.setVelocity(velocity, vy);
         if (velocity !== 0) {
             this.player.setFlipX(velocity < 0);
         }
 
-        this.player.y = this.groundY;
+        const minY = this.groundY - 140;
+        const maxY = this.groundY;
+        this.player.y = Phaser.Math.Clamp(this.player.y, minY, maxY);
+        this.player.setDepth(Math.floor(this.player.y) + 3);
     }
 
     private createFlightVfx(): void {
