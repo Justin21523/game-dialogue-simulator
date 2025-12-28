@@ -16,6 +16,8 @@ import type { ColliderDefinition, DoorDefinition, InteractableDefinition, Locati
 import { NpcBarkSystem } from '../systems/NpcBarkSystem';
 import { NpcBehaviorSystem, type SpawnedNpc } from '../systems/NpcBehaviorSystem';
 import { ParallaxSystem } from '../systems/ParallaxSystem';
+import { getThemeParallaxLayers, resolveThemedPropAsset } from '../themes/themeAssets';
+import type { ParallaxAssetLayer, ThemedPropAsset } from '../themes/themeAssets';
 
 export type WorldSceneInitData = {
     charId?: string;
@@ -74,6 +76,9 @@ export class WorldScene extends Phaser.Scene {
     private npcBehavior = new NpcBehaviorSystem();
     private npcBarks = new NpcBarkSystem();
 
+    private themedParallaxLayers: ParallaxAssetLayer[] | null = null;
+    private themedPropAssets = new Map<string, ThemedPropAsset>();
+
     private player!: Phaser.Physics.Arcade.Sprite;
     private npcs: SpawnedNpc[] = [];
     private interactables: SpawnedInteractable[] = [];
@@ -128,6 +133,8 @@ export class WorldScene extends Phaser.Scene {
         if (!resolved) throw new Error(`[WorldScene] Unknown location: ${this.locationId}`);
         this.location = resolved;
         this.groundY = DEFAULT_GROUND_Y;
+
+        this.resolveThemeAssets();
     }
 
     preload(): void {
@@ -146,6 +153,17 @@ export class WorldScene extends Phaser.Scene {
                 this.load.image(key, this.getCharacterTexturePath(npc.characterId));
             }
         }
+
+        const parallax = this.themedParallaxLayers ?? [];
+        for (const layer of parallax) {
+            if (this.textures.exists(layer.textureKey)) continue;
+            this.load.image(layer.textureKey, layer.path);
+        }
+
+        for (const asset of this.themedPropAssets.values()) {
+            if (this.textures.exists(asset.textureKey)) continue;
+            this.load.image(asset.textureKey, asset.path);
+        }
     }
 
     create(): void {
@@ -156,7 +174,7 @@ export class WorldScene extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, this.location.worldWidth, GAME_HEIGHT);
         this.cameras.main.setBounds(0, 0, this.location.worldWidth, GAME_HEIGHT);
 
-        this.parallax.create(this.locationId, this.location.parallax, this.location.worldWidth);
+        this.parallax.create(this.locationId, this.location.parallax, this.location.worldWidth, this.themedParallaxLayers);
 
         this.colliders = this.physics.add.staticGroup();
 
@@ -429,23 +447,36 @@ export class WorldScene extends Phaser.Scene {
 
     private createProps(props: PropDefinition[]): void {
         for (const def of props) {
-            const texture = this.getPropTexture(def.type);
+            const themed = this.themedPropAssets.get(def.propId) ?? null;
+            const canUseThemed = Boolean(themed && this.textures.exists(themed.textureKey));
+            const texture = canUseThemed ? themed!.textureKey : this.getPropTexture(def.type);
             const sprite = this.add.sprite(def.x, def.y, texture).setOrigin(0.5, 1).setDepth(20);
+
             if (typeof def.width === 'number' && Number.isFinite(def.width) && typeof def.height === 'number' && Number.isFinite(def.height)) {
                 sprite.setDisplaySize(def.width, def.height);
+            } else if (canUseThemed) {
+                const fallbackHeight = this.getDefaultPropHeight(def.type, def.propId);
+                const height = typeof themed?.defaultHeight === 'number' ? themed.defaultHeight : fallbackHeight;
+                this.setSpriteDisplayHeight(sprite, height);
             }
-            const label = this.add
-                .text(sprite.x, sprite.y - sprite.displayHeight - 10, def.label ?? '', {
-                    fontFamily: 'Segoe UI, system-ui, sans-serif',
-                    fontSize: '16px',
-                    fontStyle: '800',
-                    color: '#ffffff',
-                    stroke: '#000000',
-                    strokeThickness: 6
-                })
-                .setOrigin(0.5, 1)
-                .setDepth(2000)
-                .setVisible(Boolean(def.label));
+
+            const labelText = typeof def.label === 'string' ? def.label.trim() : '';
+            const messageText = typeof def.message === 'string' ? def.message.trim() : '';
+            const needsLabel = Boolean(labelText || messageText);
+            const label = needsLabel
+                ? this.add
+                      .text(sprite.x, sprite.y - sprite.displayHeight - 10, labelText, {
+                          fontFamily: 'Segoe UI, system-ui, sans-serif',
+                          fontSize: '16px',
+                          fontStyle: '800',
+                          color: '#ffffff',
+                          stroke: '#000000',
+                          strokeThickness: 6
+                      })
+                      .setOrigin(0.5, 1)
+                      .setDepth(2000)
+                      .setVisible(Boolean(labelText))
+                : null;
 
             if (def.collides) {
                 const w = def.width ?? sprite.displayWidth;
@@ -456,20 +487,78 @@ export class WorldScene extends Phaser.Scene {
                 (collider.body as Phaser.Physics.Arcade.StaticBody).updateFromGameObject();
             }
 
-            if (def.message && def.message.trim().length > 0) {
+            if (messageText) {
+                const safeLabel =
+                    label ??
+                    this.add
+                        .text(sprite.x, sprite.y - sprite.displayHeight - 10, '', {
+                            fontFamily: 'Segoe UI, system-ui, sans-serif',
+                            fontSize: '16px',
+                            fontStyle: '800',
+                            color: '#ffffff',
+                            stroke: '#000000',
+                            strokeThickness: 6
+                        })
+                        .setOrigin(0.5, 1)
+                        .setDepth(2000)
+                        .setVisible(false);
+
                 this.interactables.push({
                     id: def.propId,
                     kind: 'prop',
                     interactableType: 'prop',
                     sprite,
-                    label,
+                    label: safeLabel,
                     requiredAbility: undefined,
                     targetLocationId: undefined,
                     targetSpawnPoint: undefined,
-                    message: def.message,
+                    message: messageText,
                     state: 'idle'
                 });
             }
+        }
+    }
+
+    private resolveThemeAssets(): void {
+        const theme = this.location.theme;
+        this.themedParallaxLayers = getThemeParallaxLayers(theme);
+        this.themedPropAssets.clear();
+
+        for (const prop of this.location.props ?? []) {
+            const asset = resolveThemedPropAsset(theme, prop.type, prop.propId);
+            if (asset) {
+                this.themedPropAssets.set(prop.propId, asset);
+            }
+        }
+    }
+
+    private getDefaultPropHeight(type: PropDefinition['type'], propId: string): number {
+        const id = propId.toLowerCase();
+        if (type === 'decor') {
+            if (id.includes('traffic')) return 330;
+            if (id.includes('stop')) return 250;
+            if (id.includes('mail')) return 200;
+            if (id.includes('trash') || id.includes('bin')) return 140;
+            if (id.includes('bus')) return 240;
+            if (id.includes('car') || id.includes('taxi')) return 190;
+            if (id.includes('tree')) return 320;
+        }
+
+        switch (type) {
+            case 'lamp':
+                return 280;
+            case 'bench':
+                return 160;
+            case 'fence':
+                return 120;
+            case 'sign':
+                return 140;
+            case 'crate':
+                return 120;
+            case 'building':
+                return 560;
+            default:
+                return 180;
         }
     }
 
