@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 
 import { audioManager } from '../../../shared/audio/audioManager';
 import { GAME_HEIGHT, GAME_WIDTH } from '../../../shared/constants';
+import { eventBus } from '../../../shared/eventBus';
+import { EVENTS } from '../../../shared/eventNames';
 import { gameCommandTarget } from '../../../shared/gameCommands';
 import { GAME_CONFIG, type CharacterId } from '../../../shared/gameConfig';
 import { emitFlightComplete } from '../../../shared/flightEvents';
@@ -131,6 +133,7 @@ export class FlightScene extends Phaser.Scene {
     }
 
     create() {
+        eventBus.emit(EVENTS.MISSION_PHASE_CHANGED, { phaseId: 'flight', missionId: this.missionId, actorId: this.charId });
         this.ensureTextures();
         this.physics.world.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
 

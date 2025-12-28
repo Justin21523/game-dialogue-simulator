@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 
 import { audioManager } from '../../../shared/audio/audioManager';
 import { GAME_HEIGHT, GAME_WIDTH } from '../../../shared/constants';
+import { eventBus } from '../../../shared/eventBus';
+import { EVENTS } from '../../../shared/eventNames';
 import { GAME_CONFIG, type CharacterId } from '../../../shared/gameConfig';
 
 type LaunchInitData = {
@@ -93,6 +95,7 @@ export class LaunchScene extends Phaser.Scene {
     }
 
     create() {
+        eventBus.emit(EVENTS.MISSION_PHASE_CHANGED, { phaseId: 'launch', missionId: this.missionId, actorId: this.charId });
         this.ensureTextures();
 
         this.bgFar = this.add
