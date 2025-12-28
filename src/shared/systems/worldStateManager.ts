@@ -1,7 +1,19 @@
 import { getQuestTemplate } from '../data/gameData.js';
 import { eventBus } from '../eventBus.js';
 import { EVENTS } from '../eventNames.js';
-import type { PlayerSaveState, WorldState, WorldStateV1, WorldStateV2, WorldStateV3 } from '../types/World.js';
+import type { FlightResult } from '../flightEvents.js';
+import type { Mission } from '../types/Game.js';
+import type {
+    ActiveMissionSession,
+    MissionLogEntry,
+    MissionLogKind,
+    MissionSessionPhaseId,
+    PlayerSaveState,
+    WorldState,
+    WorldStateV1,
+    WorldStateV2,
+    WorldStateV3
+} from '../types/World.js';
 
 const STORAGE_KEY = 'sws:world:v3';
 
@@ -14,7 +26,8 @@ const DEFAULT_STATE: WorldStateV3 = {
     inventory: {},
     unlockedCompanions: [],
     unlockedSkills: [],
-    lastPlayerState: null
+    lastPlayerState: null,
+    activeMissionSession: null
 };
 
 function uniq(values: string[]): string[] {
@@ -23,6 +36,152 @@ function uniq(values: string[]): string[] {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return Boolean(value) && typeof value === 'object';
+}
+
+function coerceString(value: unknown): string | null {
+    return typeof value === 'string' && value.trim().length > 0 ? value : null;
+}
+
+function coerceNumber(value: unknown): number | null {
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function coerceMissionPhaseId(value: unknown): MissionSessionPhaseId | null {
+    const phase = coerceString(value);
+    if (!phase) return null;
+    const lowered = phase.toLowerCase();
+    const allowed: MissionSessionPhaseId[] = [
+        'dispatch',
+        'launch',
+        'flight',
+        'arrival',
+        'transform',
+        'landing',
+        'solve',
+        'return',
+        'debrief'
+    ];
+    return (allowed as string[]).includes(lowered) ? (lowered as MissionSessionPhaseId) : null;
+}
+
+function coerceMission(value: unknown): Mission | null {
+    if (!isRecord(value)) return null;
+    const id = coerceString(value.id);
+    const title = coerceString(value.title);
+    const type = coerceString(value.type);
+    const description = coerceString(value.description);
+    const location = coerceString(value.location);
+    const fuelCost = coerceNumber(value.fuelCost);
+    const rewardMoney = coerceNumber(value.rewardMoney);
+    const rewardExp = coerceNumber(value.rewardExp);
+    if (!id || !title || !type || !description || !location) return null;
+    if (fuelCost === null || rewardMoney === null || rewardExp === null) return null;
+
+    return {
+        id,
+        title,
+        type,
+        description,
+        location,
+        fuelCost,
+        rewardMoney,
+        rewardExp,
+        campaignId: coerceString(value.campaignId) ?? null,
+        campaignTheme: coerceString(value.campaignTheme) ?? null,
+        missionScriptId: coerceString(value.missionScriptId) ?? null,
+        questTemplateId: coerceString(value.questTemplateId) ?? null,
+        explorationStartLocationId: coerceString(value.explorationStartLocationId) ?? null,
+        explorationSpawnPoint: coerceString(value.explorationSpawnPoint) ?? null
+    };
+}
+
+function coerceFlightResult(value: unknown): FlightResult | null {
+    if (!isRecord(value)) return null;
+    const missionId = coerceString(value.missionId);
+    const missionType = coerceString(value.missionType);
+    const charId = coerceString(value.charId);
+    const score = coerceNumber(value.score);
+    const success = typeof value.success === 'boolean' ? value.success : null;
+    if (!missionId || !missionType || !charId || score === null || success === null) return null;
+
+    const flightStats = isRecord(value.flightStats)
+        ? {
+              coinsCollected: Math.max(0, Math.floor(coerceNumber(value.flightStats.coinsCollected) ?? 0)),
+              obstaclesHit: Math.max(0, Math.floor(coerceNumber(value.flightStats.obstaclesHit) ?? 0)),
+              flightTime: Math.max(0, coerceNumber(value.flightStats.flightTime) ?? 0),
+              boostsUsed: Math.max(0, Math.floor(coerceNumber(value.flightStats.boostsUsed) ?? 0)),
+              distance: Math.max(0, coerceNumber(value.flightStats.distance) ?? 0)
+          }
+        : undefined;
+
+    return { missionId, missionType, charId, score, success, flightStats };
+}
+
+function coerceMissionLogKind(value: unknown): MissionLogKind | null {
+    const kind = coerceString(value);
+    if (!kind) return null;
+    const lowered = kind.toLowerCase();
+    const allowed: MissionLogKind[] = ['system', 'dialogue', 'narration', 'event'];
+    return (allowed as string[]).includes(lowered) ? (lowered as MissionLogKind) : null;
+}
+
+function coerceMissionLogEntry(value: unknown): MissionLogEntry | null {
+    if (!isRecord(value)) return null;
+    const id = coerceString(value.id);
+    const timestamp = coerceNumber(value.timestamp);
+    const phaseId = coerceMissionPhaseId(value.phaseId);
+    const kind = coerceMissionLogKind(value.kind);
+    const text = typeof value.text === 'string' ? value.text : null;
+    if (!id || timestamp === null || !phaseId || !kind || !text) return null;
+
+    const title = typeof value.title === 'string' && value.title ? value.title : undefined;
+    const eventId = typeof value.eventId === 'string' && value.eventId ? value.eventId : undefined;
+    const choices = Array.isArray(value.choices)
+        ? value.choices
+              .map((c): { id: string; text: string; resolved?: boolean } | null => {
+                  if (!isRecord(c)) return null;
+                  const choiceId = coerceString(c.id);
+                  const choiceText = typeof c.text === 'string' ? c.text : null;
+                  if (!choiceId || !choiceText) return null;
+                  const resolved = typeof c.resolved === 'boolean' ? c.resolved : undefined;
+                  return { id: choiceId, text: choiceText, resolved };
+              })
+              .filter((c): c is { id: string; text: string; resolved?: boolean } => Boolean(c))
+        : undefined;
+
+    return { id, timestamp, phaseId, kind, title, text, eventId, choices };
+}
+
+function coerceActiveMissionSession(value: unknown): ActiveMissionSession | null {
+    if (!isRecord(value)) return null;
+
+    const actorId = coerceString(value.actorId);
+    const phaseId = coerceMissionPhaseId(value.phaseId);
+    const mission = coerceMission(value.mission);
+    if (!actorId || !phaseId || !mission) return null;
+
+    const sessionId = typeof value.sessionId === 'string' && value.sessionId ? value.sessionId : null;
+    const locationId = typeof value.locationId === 'string' && value.locationId ? value.locationId : null;
+    const startedAt = coerceNumber(value.startedAt);
+    const updatedAt = coerceNumber(value.updatedAt);
+    if (startedAt === null || updatedAt === null) return null;
+
+    const inboundFlight = value.inboundFlight ? coerceFlightResult(value.inboundFlight) : null;
+    const log = Array.isArray(value.log)
+        ? value.log.map(coerceMissionLogEntry).filter((e): e is MissionLogEntry => Boolean(e)).slice(-200)
+        : [];
+
+    return {
+        sessionId,
+        actorId,
+        phaseId,
+        locationId,
+        mission,
+        inboundFlight,
+        startedAt,
+        updatedAt,
+        log
+    };
 }
 
 export class WorldStateManager {
@@ -179,6 +338,63 @@ export class WorldStateManager {
         eventBus.emit(EVENTS.WORLD_STATE_CHANGED, { state: this.state });
     }
 
+    getActiveMissionSession(): ActiveMissionSession | null {
+        this.initialize();
+        return this.state.activeMissionSession;
+    }
+
+    setActiveMissionSession(session: ActiveMissionSession | null): void {
+        this.initialize();
+        this.state = { ...this.state, activeMissionSession: session };
+        this.persist();
+        eventBus.emit(EVENTS.WORLD_STATE_CHANGED, { state: this.state });
+    }
+
+    clearActiveMissionSession(): void {
+        this.setActiveMissionSession(null);
+    }
+
+    updateActiveMissionSession(patch: Partial<ActiveMissionSession>): void {
+        this.initialize();
+        const current = this.state.activeMissionSession;
+        if (!current) return;
+        const updatedAt = Date.now();
+        this.state = { ...this.state, activeMissionSession: { ...current, ...patch, updatedAt } };
+        this.persist();
+        eventBus.emit(EVENTS.WORLD_STATE_CHANGED, { state: this.state });
+    }
+
+    appendMissionLog(entry: Omit<MissionLogEntry, 'id' | 'timestamp'> & { id?: string; timestamp?: number }): MissionLogEntry | null {
+        this.initialize();
+        const current = this.state.activeMissionSession;
+        if (!current) return null;
+
+        const timestamp = typeof entry.timestamp === 'number' && Number.isFinite(entry.timestamp) ? entry.timestamp : Date.now();
+        const id = entry.id && entry.id.trim().length > 0 ? entry.id : `ml_${timestamp}_${Math.random().toString(16).slice(2)}`;
+
+        const phaseId = entry.phaseId;
+        const kind = entry.kind;
+        const text = entry.text;
+        if (!phaseId || !kind || !text) return null;
+
+        const item: MissionLogEntry = {
+            id,
+            timestamp,
+            phaseId,
+            kind,
+            title: entry.title,
+            text,
+            eventId: entry.eventId,
+            choices: entry.choices
+        };
+
+        const nextLog = [...current.log, item].slice(-200);
+        this.state = { ...this.state, activeMissionSession: { ...current, log: nextLog, updatedAt: Date.now() } };
+        this.persist();
+        eventBus.emit(EVENTS.WORLD_STATE_CHANGED, { state: this.state });
+        return item;
+    }
+
     private load(): void {
         try {
             const raw =
@@ -236,6 +452,8 @@ export class WorldStateManager {
                       }
                     : null;
 
+                const activeMissionSession = coerceActiveMissionSession((parsed as { activeMissionSession?: unknown }).activeMissionSession);
+
                 this.state = {
                     version: 3,
                     unlockedLocations: uniq([...DEFAULT_STATE.unlockedLocations, ...unlocked]),
@@ -248,7 +466,8 @@ export class WorldStateManager {
                     lastPlayerState:
                         lastPlayerState && lastPlayerState.locationId && Number.isFinite(lastPlayerState.x) && Number.isFinite(lastPlayerState.y)
                             ? lastPlayerState
-                            : null
+                            : null,
+                    activeMissionSession
                 };
                 this.applyCompletedQuestUnlocks();
                 return;
@@ -297,7 +516,8 @@ export class WorldStateManager {
                     lastPlayerState:
                         lastPlayerState && lastPlayerState.locationId && Number.isFinite(lastPlayerState.x) && Number.isFinite(lastPlayerState.y)
                             ? lastPlayerState
-                            : null
+                            : null,
+                    activeMissionSession: null
                 };
                 this.applyCompletedQuestUnlocks();
                 return;
