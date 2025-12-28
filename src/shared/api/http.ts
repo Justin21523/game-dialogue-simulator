@@ -17,9 +17,25 @@ export function getBackendAvailability(): BackendAvailability {
 }
 
 export function isOfflineBackendError(err: unknown): boolean {
-    if (!err || typeof err !== 'object') return false;
-    const maybe = err as Partial<HttpError>;
-    return maybe.status === 0;
+    if (!err) return false;
+
+    if (typeof err === 'object') {
+        const maybe = err as Partial<HttpError> & { name?: unknown; message?: unknown };
+        if (maybe.status === 0) return true;
+
+        const name = typeof maybe.name === 'string' ? maybe.name : '';
+        if (name === 'AbortError') return true;
+
+        const message = typeof maybe.message === 'string' ? maybe.message : '';
+        if (!message) return false;
+
+        const lowered = message.toLowerCase();
+        if (lowered.includes('failed to fetch')) return true;
+        if (lowered.includes('networkerror')) return true;
+        if (lowered.includes('err_connection_refused')) return true;
+    }
+
+    return false;
 }
 
 function getApiBase(): string {
