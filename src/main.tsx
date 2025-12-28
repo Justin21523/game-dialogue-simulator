@@ -18,6 +18,7 @@ import '../css/screens/exploration.css';
 import '../css/screens/exploration-hud.css';
 import '../css/screens/exploration-mvp.css';
 import '../css/screens/quest-journal.css';
+import '../css/screens/mission-timeline.css';
 import '../css/screens/map-panel.css';
 import '../css/screens/skills.css';
 import '../css/screens/results.css';
