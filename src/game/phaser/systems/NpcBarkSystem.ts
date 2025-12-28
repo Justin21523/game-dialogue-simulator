@@ -8,6 +8,7 @@ type BarkState = {
     wasNear: boolean;
     nextAtMs: number;
     text: Phaser.GameObjects.Text | null;
+    rng: number;
 };
 
 function getLineText(line: DialogueLine): string {
@@ -30,10 +31,11 @@ export class NpcBarkSystem {
         isUiLocked: boolean
     ): void {
         for (const npc of npcs) {
-            const lines = npc.def.barks ?? [];
+            const barkConfig = npc.def.barks;
+            const lines = barkConfig?.lines ?? [];
             if (lines.length === 0) continue;
 
-            const state = this.ensureState(npc.sprite, timeMs);
+            const state = this.ensureState(npc.sprite, npc.npcId, timeMs);
             if (state.text) {
                 state.text.setX(npc.sprite.x);
                 if (!state.text.active) {
@@ -59,16 +61,24 @@ export class NpcBarkSystem {
 
             if (!state.wasNear) {
                 state.wasNear = true;
-                state.nextAtMs = timeMs + randBetween(1800, 4600);
+                const minDelay = barkConfig?.initialDelayMsMin ?? 1800;
+                const maxDelay = barkConfig?.initialDelayMsMax ?? 4600;
+                state.nextAtMs = timeMs + randBetween(state, minDelay, maxDelay);
                 continue;
             }
 
             if (state.text) continue;
             if (timeMs < state.nextAtMs) continue;
 
+            const chance = typeof barkConfig?.chance === 'number' ? Math.min(1, Math.max(0, barkConfig.chance)) : 0.62;
+            if (chance < 1 && randFloat(state) > chance) {
+                state.nextAtMs = timeMs + randBetween(state, 1200, 2400);
+                continue;
+            }
+
             const visible = lines.filter(isLineVisible);
             if (visible.length === 0) continue;
-            const picked = visible[randBetween(0, visible.length - 1)];
+            const picked = visible[randBetween(state, 0, visible.length - 1)];
             const text = getLineText(picked).trim();
             if (!text) continue;
 
@@ -110,26 +120,64 @@ export class NpcBarkSystem {
                 }
             });
 
-            state.nextAtMs = timeMs + randBetween(9000, 16000);
+            const minCooldown = barkConfig?.cooldownMsMin ?? 9000;
+            const maxCooldown = barkConfig?.cooldownMsMax ?? 16000;
+            state.nextAtMs = timeMs + randBetween(state, minCooldown, maxCooldown);
         }
     }
 
-    private ensureState(sprite: Phaser.GameObjects.Sprite, timeMs: number): BarkState {
+    private ensureState(sprite: Phaser.GameObjects.Sprite, npcId: string, timeMs: number): BarkState {
         const existing = this.states.get(sprite);
         if (existing) return existing;
+        const seed = hashString32(`npc-bark:${npcId}`);
         const state: BarkState = {
             wasNear: false,
-            nextAtMs: timeMs + randBetween(4000, 9000),
-            text: null
+            nextAtMs: timeMs + randBetweenSeed(seed, 4000, 9000),
+            text: null,
+            rng: seed || 0x9e3779b9
         };
         this.states.set(sprite, state);
         return state;
     }
 }
 
-function randBetween(min: number, max: number): number {
-    const a = Math.ceil(min);
-    const b = Math.floor(max);
-    return Math.floor(Math.random() * (b - a + 1)) + a;
+function hashString32(input: string): number {
+    // FNV-1a 32-bit
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < input.length; i += 1) {
+        hash ^= input.charCodeAt(i);
+        hash = Math.imul(hash, 0x01000193);
+        hash >>>= 0;
+    }
+    return hash >>> 0;
 }
 
+function nextRng(state: BarkState): number {
+    let x = state.rng >>> 0;
+    if (x === 0) x = 0x9e3779b9;
+    x ^= x << 13;
+    x ^= x >>> 17;
+    x ^= x << 5;
+    x >>>= 0;
+    state.rng = x;
+    return x;
+}
+
+function randFloat(state: BarkState): number {
+    return nextRng(state) / 4294967296;
+}
+
+function randBetween(state: BarkState, min: number, max: number): number {
+    const a = Math.ceil(min);
+    const b = Math.floor(max);
+    if (b <= a) return a;
+    return Math.floor(randFloat(state) * (b - a + 1)) + a;
+}
+
+function randBetweenSeed(seed: number, min: number, max: number): number {
+    const x = seed >>> 0;
+    const a = Math.ceil(min);
+    const b = Math.floor(max);
+    if (b <= a) return a;
+    return a + (x % (b - a + 1));
+}

@@ -12,7 +12,15 @@ import { companionManager } from '../../../shared/systems/companionManager';
 import { worldStateManager } from '../../../shared/systems/worldStateManager';
 import { missionManager } from '../../../shared/quests/missionManager';
 import type { CompanionAbility } from '../../../shared/types/Companion';
-import type { ColliderDefinition, DoorDefinition, InteractableDefinition, LocationDefinition, PropDefinition, SecretDefinition } from '../../../shared/types/World';
+import type {
+    ColliderDefinition,
+    DoorDefinition,
+    InteractableDefinition,
+    LocationDefinition,
+    NpcDefinition,
+    PropDefinition,
+    SecretDefinition
+} from '../../../shared/types/World';
 import { NpcBarkSystem } from '../systems/NpcBarkSystem';
 import { NpcBehaviorSystem, type SpawnedNpc } from '../systems/NpcBehaviorSystem';
 import { ParallaxSystem } from '../systems/ParallaxSystem';
@@ -59,6 +67,23 @@ const TILE_SIZE = 64;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return Boolean(value) && typeof value === 'object';
+}
+
+function hashString32(input: string): number {
+    // FNV-1a 32-bit
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < input.length; i += 1) {
+        hash ^= input.charCodeAt(i);
+        hash = Math.imul(hash, 0x01000193);
+        hash >>>= 0;
+    }
+    return hash >>> 0;
+}
+
+function pickIdleAnimation(def: NpcDefinition, seed: number): NpcDefinition['idleAnimation'] {
+    const variants =
+        def.idleVariants && def.idleVariants.length > 0 ? def.idleVariants : def.idleAnimation ? [def.idleAnimation] : ['none'];
+    return variants[seed % variants.length] ?? 'none';
 }
 
 export class WorldScene extends Phaser.Scene {
@@ -477,6 +502,8 @@ export class WorldScene extends Phaser.Scene {
                 .setOrigin(0.5, 1)
                 .setDepth(2000);
 
+            const seed = hashString32(`${def.npcId}:${Math.floor(spawn.x)}:${Math.floor(spawn.y)}`);
+
             this.npcs.push({
                 npcId: def.npcId,
                 def,
@@ -485,7 +512,9 @@ export class WorldScene extends Phaser.Scene {
                 baseY: sprite.y,
                 dir: 1,
                 pathIndex: 0,
-                waitUntilMs: 0
+                waitUntilMs: 0,
+                rng: seed || 0x9e3779b9,
+                idleAnimation: pickIdleAnimation(def, seed)
             });
         }
     }

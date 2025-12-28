@@ -9,14 +9,28 @@ export type NpcPatrol = {
     speed: number;
 };
 
+export type NpcIdleAnimation = 'none' | 'bob' | 'bob_slow' | 'bob_fast';
+
 export type NpcPatrolPoint = {
     x: number;
+    y?: number;
     waitMs?: number;
+    waitMsMin?: number;
+    waitMsMax?: number;
 };
 
 export type NpcPatrolPath = {
     speed: number;
     points: NpcPatrolPoint[];
+};
+
+export type NpcBarks = {
+    lines: DialogueLine[];
+    chance?: number;
+    cooldownMsMin?: number;
+    cooldownMsMax?: number;
+    initialDelayMsMin?: number;
+    initialDelayMsMax?: number;
 };
 
 export type NpcDefinition = {
@@ -30,8 +44,9 @@ export type NpcDefinition = {
     patrol?: NpcPatrol;
     patrolPath?: NpcPatrolPath;
     interactionRadius?: number;
-    idleAnimation?: 'none' | 'bob' | 'bob_slow' | 'bob_fast';
-    barks?: DialogueLine[];
+    idleAnimation?: NpcIdleAnimation;
+    idleVariants?: NpcIdleAnimation[];
+    barks?: NpcBarks;
 };
 
 export type NpcSpawn = {
