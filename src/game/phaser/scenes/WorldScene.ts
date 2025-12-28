@@ -197,6 +197,7 @@ export class WorldScene extends Phaser.Scene {
         eventBus.emit(EVENTS.LOCATION_ENTERED, { locationId: this.locationId, actorId: this.charId });
 
         this.registerUiLocks();
+        this.registerTravelRequests();
         this.persistPlayerState(this.time.now);
 
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -1332,6 +1333,39 @@ export class WorldScene extends Phaser.Scene {
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             eventBus.off(EVENTS.DIALOGUE_UI_OPENED, onOpened);
             eventBus.off(EVENTS.DIALOGUE_UI_CLOSED, onClosed);
+        });
+    }
+
+    private registerTravelRequests(): void {
+        const onRequested = (payload: unknown) => {
+            if (!isRecord(payload)) return;
+
+            const actorId = payload.actorId;
+            if (typeof actorId === 'string' && actorId && actorId !== this.charId) return;
+
+            const locationId = payload.locationId;
+            const spawnPoint = payload.spawnPoint;
+            if (typeof locationId !== 'string' || !locationId) return;
+            if (typeof spawnPoint !== 'string' || !spawnPoint) return;
+
+            if (!worldStateManager.isLocationUnlocked(locationId)) {
+                audioManager.playSound('error');
+                this.flashPrompt('This destination is locked.');
+                return;
+            }
+
+            const via = payload.via;
+            const doorId = payload.doorId;
+            const safeVia = via === 'door' || via === 'exit' || via === 'interactable' ? via : 'unknown';
+            const safeDoorId = typeof doorId === 'string' ? doorId : undefined;
+
+            audioManager.playSound('button');
+            this.transitionToLocation(locationId, spawnPoint, { via: safeVia, doorId: safeDoorId });
+        };
+
+        eventBus.on(EVENTS.UI_TRAVEL_REQUESTED, onRequested);
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            eventBus.off(EVENTS.UI_TRAVEL_REQUESTED, onRequested);
         });
     }
 
