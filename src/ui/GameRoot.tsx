@@ -66,6 +66,7 @@ type GameState = {
     flightParams: FlightParams | null;
     activeMission: Mission | null;
     activeSessionId: string | null;
+    flightPhaseOverride: MissionSessionPhaseId | null;
     lastResult: MissionResult | null;
     explorationDebrief: MissionResult | null;
     inboundFlight: FlightResult | null;
@@ -84,6 +85,7 @@ type GameAction =
     | { type: 'START_FLIGHT'; mission: Mission; charId: string; fuelCost: number }
     | { type: 'SET_ACTIVE_SESSION'; missionId: string; sessionId: string }
     | { type: 'CLEAR_ACTIVE_SESSION' }
+    | { type: 'SET_FLIGHT_PHASE_OVERRIDE'; phaseId: MissionSessionPhaseId }
     | { type: 'CANCEL_MISSION'; screen: ScreenId }
     | { type: 'ABORT_FLIGHT'; screen: ScreenId }
     | { type: 'ABORT_ACTIVE_MISSION'; screen: ScreenId; reason?: 'abort' | 'timeout' }
@@ -112,10 +114,44 @@ type LoadedSnapshot = {
 
 function deriveMissionPhaseId(screen: ScreenId, fallbackPhaseId: MissionSessionPhaseId = 'dispatch'): MissionSessionPhaseId {
     if (screen === 'briefing') return 'dispatch';
-    if (screen === 'flight') return 'flight';
     if (screen === 'exploration') return 'solve';
     if (screen === 'story' || screen === 'results') return 'debrief';
     return fallbackPhaseId;
+}
+
+const MISSION_PHASE_IDS: MissionSessionPhaseId[] = [
+    'dispatch',
+    'launch',
+    'flight',
+    'arrival',
+    'transform',
+    'landing',
+    'solve',
+    'return',
+    'debrief'
+];
+
+const FLIGHT_PHASE_IDS = new Set<MissionSessionPhaseId>(['launch', 'flight', 'arrival', 'transform', 'landing']);
+
+function coerceMissionPhaseId(value: unknown): MissionSessionPhaseId | null {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    return (MISSION_PHASE_IDS as string[]).includes(trimmed) ? (trimmed as MissionSessionPhaseId) : null;
+}
+
+function resolveMissionPhaseId(params: {
+    screen: ScreenId;
+    flightPhaseOverride: MissionSessionPhaseId | null;
+    fallbackPhaseId: MissionSessionPhaseId;
+}): MissionSessionPhaseId {
+    if (params.screen === 'flight') {
+        if (params.flightPhaseOverride && FLIGHT_PHASE_IDS.has(params.flightPhaseOverride)) {
+            return params.flightPhaseOverride;
+        }
+        return params.fallbackPhaseId;
+    }
+    return deriveMissionPhaseId(params.screen, params.fallbackPhaseId);
 }
 
 function GameRootInner() {
@@ -132,6 +168,27 @@ function GameRootInner() {
     React.useEffect(() => {
         stateRef.current = state;
     }, [state]);
+
+    React.useEffect(() => {
+        const onPhaseChanged = (payload: unknown) => {
+            if (!payload || typeof payload !== 'object') return;
+            const data = payload as Partial<{ phaseId: unknown; missionId: unknown }>;
+            const phaseId = coerceMissionPhaseId(data.phaseId);
+            if (!phaseId) return;
+
+            const current = stateRef.current;
+            if (!current.activeMission) return;
+            if (current.screen !== 'flight') return;
+            if (typeof data.missionId === 'string' && data.missionId && current.activeMission.id !== data.missionId) return;
+
+            dispatch({ type: 'SET_FLIGHT_PHASE_OVERRIDE', phaseId });
+        };
+
+        eventBus.on(EVENTS.MISSION_PHASE_CHANGED, onPhaseChanged);
+        return () => {
+            eventBus.off(EVENTS.MISSION_PHASE_CHANGED, onPhaseChanged);
+        };
+    }, [dispatch]);
 
     const missionSessionSyncKeyRef = React.useRef<string | null>(null);
     React.useEffect(() => {
@@ -150,7 +207,11 @@ function GameRootInner() {
         const lastPlayer = worldStateManager.getLastPlayerState();
         const locationId = lastPlayer?.locationId ?? null;
         const prev = worldStateManager.getActiveMissionSession();
-        const phaseId = deriveMissionPhaseId(state.screen, prev?.phaseId ?? 'dispatch');
+        const phaseId = resolveMissionPhaseId({
+            screen: state.screen,
+            flightPhaseOverride: state.flightPhaseOverride,
+            fallbackPhaseId: prev?.phaseId ?? 'dispatch'
+        });
         const inboundFlight = state.inboundFlight;
         const sessionId = state.activeSessionId;
 
@@ -174,7 +235,15 @@ function GameRootInner() {
             updatedAt: now,
             log: prev?.log ?? []
         });
-    }, [state.activeMission, state.activeSessionId, state.flightParams?.charId, state.inboundFlight, state.screen, state.selectedCharacterId]);
+    }, [
+        state.activeMission,
+        state.activeSessionId,
+        state.flightParams?.charId,
+        state.flightPhaseOverride,
+        state.inboundFlight,
+        state.screen,
+        state.selectedCharacterId
+    ]);
 
     const missionTimelineKeyRef = React.useRef<string | null>(null);
     React.useEffect(() => {
@@ -189,7 +258,11 @@ function GameRootInner() {
         if (!session) return;
 
         const actorId = state.flightParams?.charId ?? state.selectedCharacterId;
-        const phaseId = deriveMissionPhaseId(state.screen, session.phaseId);
+        const phaseId = resolveMissionPhaseId({
+            screen: state.screen,
+            flightPhaseOverride: state.flightPhaseOverride,
+            fallbackPhaseId: session.phaseId
+        });
         const key = `${mission.id}:${phaseId}`;
         if (missionTimelineKeyRef.current === key) return;
         missionTimelineKeyRef.current = key;
@@ -231,6 +304,18 @@ function GameRootInner() {
             return;
         }
 
+        if (phaseId === 'launch') {
+            if (!hasLogKind('system')) {
+                worldStateManager.appendMissionLog({
+                    phaseId,
+                    kind: 'system',
+                    title: 'Launch',
+                    text: 'Engines armed. Hold SPACE to build thrust and take off.'
+                });
+            }
+            return;
+        }
+
         if (phaseId === 'flight') {
             if (!hasLogKind('narration')) {
                 void generateNarration({
@@ -251,6 +336,42 @@ function GameRootInner() {
                     .catch(() => {
                         // Ignore narration failures (offline backend).
                     });
+            }
+            return;
+        }
+
+        if (phaseId === 'arrival') {
+            if (!hasLogKind('system')) {
+                worldStateManager.appendMissionLog({
+                    phaseId,
+                    kind: 'system',
+                    title: 'Arrival',
+                    text: `Arrival confirmed near ${mission.location}. Preparing for the next sequence.`
+                });
+            }
+            return;
+        }
+
+        if (phaseId === 'transform') {
+            if (!hasLogKind('system')) {
+                worldStateManager.appendMissionLog({
+                    phaseId,
+                    kind: 'system',
+                    title: 'Transformation',
+                    text: 'Transformation initiated. Stay sharp.'
+                });
+            }
+            return;
+        }
+
+        if (phaseId === 'landing') {
+            if (!hasLogKind('system')) {
+                worldStateManager.appendMissionLog({
+                    phaseId,
+                    kind: 'system',
+                    title: 'Landing',
+                    text: 'Landing sequence engaged. Maintain altitude control and follow the guidance.'
+                });
             }
             return;
         }
@@ -302,7 +423,30 @@ function GameRootInner() {
                     });
             }
         }
-    }, [state.activeMission, state.flightParams?.charId, state.screen, state.selectedCharacterId]);
+
+        if (phaseId === 'return') {
+            if (!hasLogKind('system')) {
+                worldStateManager.appendMissionLog({
+                    phaseId,
+                    kind: 'system',
+                    title: 'Return',
+                    text: 'Objective complete. Returning to base.'
+                });
+            }
+            return;
+        }
+
+        if (phaseId === 'debrief') {
+            if (!hasLogKind('system')) {
+                worldStateManager.appendMissionLog({
+                    phaseId,
+                    kind: 'system',
+                    title: 'Debrief',
+                    text: 'Debrief in progress.'
+                });
+            }
+        }
+    }, [state.activeMission, state.flightParams?.charId, state.flightPhaseOverride, state.screen, state.selectedCharacterId]);
 
     React.useEffect(() => {
         const unlock = () => {
@@ -572,7 +716,11 @@ function GameRootInner() {
             } else if (current.activeMission.missionScriptId) {
                 const script = getMissionScript(current.activeMission.missionScriptId);
                 const session = worldStateManager.getActiveMissionSession();
-                const phaseId = deriveMissionPhaseId(current.screen, session?.phaseId ?? 'dispatch');
+                const phaseId = resolveMissionPhaseId({
+                    screen: current.screen,
+                    flightPhaseOverride: current.flightPhaseOverride,
+                    fallbackPhaseId: session?.phaseId ?? 'dispatch'
+                });
                 const limitMs = script?.phases.find((p) => p.phaseId === phaseId)?.timeLimitMs;
                 const phaseStartedAt = session?.phaseStartedAt ?? session?.startedAt;
 
@@ -901,8 +1049,11 @@ function GameRootInner() {
 
 function gameReducer(state: GameState, action: GameAction): GameState {
     switch (action.type) {
-        case 'NAVIGATE':
-            return { ...state, screen: action.screen };
+        case 'NAVIGATE': {
+            if (state.screen === action.screen) return state;
+            const flightPhaseOverride = action.screen === 'flight' ? null : null;
+            return { ...state, screen: action.screen, flightPhaseOverride };
+        }
 
         case 'SELECT_CHARACTER':
             return { ...state, selectedCharacterId: action.characterId };
@@ -934,6 +1085,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 characters: nextCharacters,
                 activeMission: action.mission,
                 activeSessionId: null,
+                flightPhaseOverride: null,
                 lastResult: null,
                 explorationDebrief: null,
                 inboundFlight: null,
@@ -952,6 +1104,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             if (!state.activeSessionId) return state;
             return { ...state, activeSessionId: null };
 
+        case 'SET_FLIGHT_PHASE_OVERRIDE':
+            if (state.screen !== 'flight') return state;
+            if (state.flightPhaseOverride === action.phaseId) return state;
+            return { ...state, flightPhaseOverride: action.phaseId };
+
         case 'CANCEL_MISSION': {
             const mission = state.activeMission;
             const flightParams = state.flightParams;
@@ -964,7 +1121,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                     inboundFlight: null,
                     pendingExplorationQuestTemplateId: null,
                     explorationStartLocationId: null,
-                    explorationSpawnPoint: null
+                    explorationSpawnPoint: null,
+                    flightPhaseOverride: null
                 };
             }
 
@@ -985,7 +1143,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 inboundFlight: null,
                 pendingExplorationQuestTemplateId: null,
                 explorationStartLocationId: null,
-                explorationSpawnPoint: null
+                explorationSpawnPoint: null,
+                flightPhaseOverride: null
             };
         }
 
@@ -1006,7 +1165,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 explorationDebrief: null,
                 pendingExplorationQuestTemplateId: null,
                 explorationStartLocationId: null,
-                explorationSpawnPoint: null
+                explorationSpawnPoint: null,
+                flightPhaseOverride: null
             };
         }
 
@@ -1028,19 +1188,20 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 explorationDebrief: null,
                 pendingExplorationQuestTemplateId: null,
                 explorationStartLocationId: null,
-                explorationSpawnPoint: null
+                explorationSpawnPoint: null,
+                flightPhaseOverride: null
             };
         }
 
         case 'FLIGHT_COMPLETE': {
             const mission = state.activeMission;
             if (!mission) {
-                return { ...state, screen: 'hangar', activeMission: null, flightParams: null };
+                return { ...state, screen: 'hangar', activeMission: null, flightParams: null, flightPhaseOverride: null };
             }
 
             const char = state.characters.find((c) => c.id === action.result.charId);
             if (!char) {
-                return { ...state, screen: 'hangar', activeMission: null, flightParams: null };
+                return { ...state, screen: 'hangar', activeMission: null, flightParams: null, flightPhaseOverride: null };
             }
 
             if (action.result.success) {
@@ -1048,6 +1209,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                     ...state,
                     screen: 'exploration',
                     flightParams: null,
+                    flightPhaseOverride: null,
                     lastResult: null,
                     explorationDebrief: null,
                     inboundFlight: action.result,
@@ -1083,6 +1245,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 statistics: nextStatistics,
                 activeMission: null,
                 flightParams: null,
+                flightPhaseOverride: null,
                 inboundFlight: null,
                 pendingExplorationQuestTemplateId: null,
                 explorationStartLocationId: null,
@@ -1367,6 +1530,7 @@ function createDefaultState(): GameState {
         flightParams: null,
         activeMission: null,
         activeSessionId: null,
+        flightPhaseOverride: null,
         lastResult: null,
         explorationDebrief: null,
         inboundFlight: null,
