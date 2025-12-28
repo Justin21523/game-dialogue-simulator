@@ -131,6 +131,7 @@ export class WorldScene extends Phaser.Scene {
     private inputLocked = false;
     private locationTransitioning = false;
     private lastPersistAtMs = 0;
+    private lastFootstepAtMs = 0;
 
     private flightTransition: 'none' | 'takeoff' | 'landing' = 'none';
     private flightEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
@@ -850,6 +851,12 @@ export class WorldScene extends Phaser.Scene {
         body.setVelocity(velocity, vy);
         if (velocity !== 0) {
             this.player.setFlipX(velocity < 0);
+        }
+
+        const now = this.time.now;
+        if ((velocity !== 0 || vy !== 0) && now - this.lastFootstepAtMs > 320) {
+            audioManager.playSound('footstep');
+            this.lastFootstepAtMs = now;
         }
 
         const minY = this.groundY - 140;
