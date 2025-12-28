@@ -1,5 +1,7 @@
 import type { CompanionAbility } from './Companion.js';
 import type { DialogueLine } from './Dialogue.js';
+import type { Mission } from './Game.js';
+import type { FlightResult } from '../flightEvents.js';
 
 export type NpcPatrol = {
     minX: number;
@@ -188,6 +190,43 @@ export type WorldStateV3 = {
     unlockedCompanions: string[];
     unlockedSkills: string[];
     lastPlayerState: PlayerSaveState | null;
+    activeMissionSession: ActiveMissionSession | null;
 };
 
 export type WorldState = WorldStateV1 | WorldStateV2 | WorldStateV3;
+
+export type MissionSessionPhaseId =
+    | 'dispatch'
+    | 'launch'
+    | 'flight'
+    | 'arrival'
+    | 'transform'
+    | 'landing'
+    | 'solve'
+    | 'return'
+    | 'debrief';
+
+export type MissionLogKind = 'system' | 'dialogue' | 'narration' | 'event';
+
+export type MissionLogEntry = {
+    id: string;
+    timestamp: number;
+    phaseId: MissionSessionPhaseId;
+    kind: MissionLogKind;
+    title?: string;
+    text: string;
+    eventId?: string;
+    choices?: Array<{ id: string; text: string; resolved?: boolean }>;
+};
+
+export type ActiveMissionSession = {
+    sessionId: string | null;
+    actorId: string;
+    phaseId: MissionSessionPhaseId;
+    locationId: string | null;
+    mission: Mission;
+    inboundFlight: FlightResult | null;
+    startedAt: number;
+    updatedAt: number;
+    log: MissionLogEntry[];
+};

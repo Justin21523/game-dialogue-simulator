@@ -30,6 +30,7 @@ import {
 import type { CharacterState, FlightParams, Mission, MissionResult, Resources, ScreenId } from '../shared/types/Game';
 import type { AchievementState, StatisticsState } from '../shared/types/Progress';
 import type { SaveSnapshot } from '../shared/types/Save';
+import type { MissionSessionPhaseId } from '../shared/types/World';
 import type { Quest } from '../shared/quests/quest';
 import { startQuestFromTemplate } from '../shared/quests/questRuntime';
 import { HangarScreen } from './screens/HangarScreen';
@@ -105,6 +106,14 @@ type LoadedSnapshot = {
     achievements: AchievementState;
 };
 
+function deriveMissionPhaseId(screen: ScreenId): MissionSessionPhaseId {
+    if (screen === 'briefing') return 'dispatch';
+    if (screen === 'flight') return 'flight';
+    if (screen === 'exploration') return 'solve';
+    if (screen === 'story' || screen === 'results') return 'debrief';
+    return 'dispatch';
+}
+
 function GameRootInner() {
     const phaserParentRef = React.useRef<HTMLDivElement | null>(null);
     const toast = useToast();
@@ -118,6 +127,44 @@ function GameRootInner() {
     React.useEffect(() => {
         stateRef.current = state;
     }, [state]);
+
+    const missionSessionSyncKeyRef = React.useRef<string | null>(null);
+    React.useEffect(() => {
+        worldStateManager.initialize();
+
+        const mission = state.activeMission;
+        if (!mission) {
+            if (worldStateManager.getActiveMissionSession()) {
+                worldStateManager.clearActiveMissionSession();
+            }
+            missionSessionSyncKeyRef.current = null;
+            return;
+        }
+
+        const actorId = state.flightParams?.charId ?? state.selectedCharacterId;
+        const phaseId = deriveMissionPhaseId(state.screen);
+        const lastPlayer = worldStateManager.getLastPlayerState();
+        const locationId = lastPlayer?.locationId ?? null;
+        const prev = worldStateManager.getActiveMissionSession();
+        const inboundFlight = state.inboundFlight;
+        const sessionId = state.activeSessionId;
+
+        const syncKey = [sessionId ?? '', actorId, phaseId, locationId ?? '', mission.id, inboundFlight?.score ?? 0].join('|');
+        if (missionSessionSyncKeyRef.current === syncKey) return;
+        missionSessionSyncKeyRef.current = syncKey;
+
+        worldStateManager.setActiveMissionSession({
+            sessionId,
+            actorId,
+            phaseId,
+            locationId,
+            mission,
+            inboundFlight,
+            startedAt: prev?.startedAt ?? Date.now(),
+            updatedAt: Date.now(),
+            log: prev?.log ?? []
+        });
+    }, [state.activeMission, state.activeSessionId, state.flightParams?.charId, state.inboundFlight, state.screen, state.selectedCharacterId]);
 
     React.useEffect(() => {
         const unlock = () => {
@@ -1236,6 +1283,56 @@ function initGameState(): GameState {
     const snapshot = loadSnapshot();
     const nowIso = new Date().toISOString();
     const nowMs = Date.now();
+
+    worldStateManager.initialize();
+    const activeSession = worldStateManager.getActiveMissionSession();
+    if (activeSession) {
+        const mission = coerceMission(activeSession.mission);
+        const actorId = activeSession.actorId;
+
+        if (mission && actorId) {
+            const resources = snapshot?.resources ?? base.resources;
+            const missions = snapshot && snapshot.missions.length > 0 ? snapshot.missions : base.missions;
+            const achievements = snapshot?.achievements ?? base.achievements;
+            const statistics = startSession(snapshot?.statistics ?? base.statistics, nowIso, nowMs);
+            const restoreCharacters = snapshot?.characters ?? base.characters;
+
+            const snapshotSelected = snapshot?.selectedCharacterId ?? base.selectedCharacterId;
+            const selectedCharacterId = restoreCharacters.some((c) => c.id === actorId)
+                ? actorId
+                : restoreCharacters.some((c) => c.id === snapshotSelected)
+                  ? snapshotSelected
+                  : base.selectedCharacterId;
+
+            const characters = restoreCharacters.map((c): CharacterState =>
+                c.id === selectedCharacterId ? { ...c, status: 'MISSION' } : c
+            );
+
+            const lastPlayerState = worldStateManager.getLastPlayerState();
+            const explorationStartLocationId = lastPlayerState?.locationId ? null : mission.explorationStartLocationId ?? null;
+            const explorationSpawnPoint = lastPlayerState?.locationId ? null : mission.explorationSpawnPoint ?? null;
+
+            return {
+                ...base,
+                screen: 'exploration',
+                resources,
+                characters,
+                selectedCharacterId,
+                missions,
+                activeMission: mission,
+                activeSessionId: activeSession.sessionId,
+                inboundFlight: activeSession.inboundFlight,
+                pendingExplorationQuestTemplateId: mission.questTemplateId ?? null,
+                explorationStartLocationId,
+                explorationSpawnPoint,
+                statistics: recordMoneyBalance(statistics, resources.money),
+                achievements
+            };
+        }
+
+        worldStateManager.clearActiveMissionSession();
+    }
+
     if (!snapshot) {
         const started = startSession(base.statistics, nowIso, nowMs);
         return { ...base, statistics: recordMoneyBalance(started, base.resources.money) };
