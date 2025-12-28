@@ -18,6 +18,7 @@ import type {
     InteractableDefinition,
     LocationDefinition,
     NpcDefinition,
+    NpcIdleAnimation,
     PropDefinition,
     SecretDefinition
 } from '../../../shared/types/World';
@@ -80,10 +81,11 @@ function hashString32(input: string): number {
     return hash >>> 0;
 }
 
-function pickIdleAnimation(def: NpcDefinition, seed: number): NpcDefinition['idleAnimation'] {
-    const variants =
-        def.idleVariants && def.idleVariants.length > 0 ? def.idleVariants : def.idleAnimation ? [def.idleAnimation] : ['none'];
-    return variants[seed % variants.length] ?? 'none';
+function pickIdleAnimation(def: NpcDefinition, seed: number): NpcIdleAnimation {
+    const fallback: NpcIdleAnimation = 'none';
+    const variants: NpcIdleAnimation[] =
+        def.idleVariants && def.idleVariants.length > 0 ? def.idleVariants : def.idleAnimation ? [def.idleAnimation] : [fallback];
+    return variants[seed % variants.length] ?? fallback;
 }
 
 export class WorldScene extends Phaser.Scene {
