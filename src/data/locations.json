@@ -14,7 +14,13 @@
             ],
             "props": [
                 { "prop_id": "base_sign", "type": "sign", "x": 520, "y": 760, "label": "Airport Base", "message": "Airport Base: missions depart from here." },
-                { "prop_id": "base_bench", "type": "bench", "x": 760, "y": 760, "label": "", "collides": true, "width": 220, "height": 90 }
+                { "prop_id": "base_bench", "type": "bench", "x": 760, "y": 760, "label": "", "collides": true, "width": 220, "height": 90 },
+                { "prop_id": "base_lamp_1", "type": "lamp", "x": 420, "y": 760, "label": "", "collides": false },
+                { "prop_id": "base_lamp_2", "type": "lamp", "x": 980, "y": 760, "label": "", "collides": false },
+                { "prop_id": "base_decor_mailbox_1", "type": "decor", "x": 640, "y": 760, "label": "", "collides": false },
+                { "prop_id": "base_decor_trash_1", "type": "decor", "x": 860, "y": 760, "label": "", "collides": false },
+                { "prop_id": "base_decor_stop_1", "type": "decor", "x": 1180, "y": 760, "label": "", "collides": false },
+                { "prop_id": "base_decor_car_1", "type": "decor", "x": 1400, "y": 760, "label": "", "collides": false }
             ],
             "doors": [
                 {
@@ -73,7 +79,13 @@
             ],
             "props": [
                 { "prop_id": "warehouse_lamp", "type": "lamp", "x": 420, "y": 760, "label": "", "collides": false },
-                { "prop_id": "warehouse_crate_stack", "type": "crate", "x": 820, "y": 760, "label": "", "collides": true, "width": 160, "height": 120 }
+                { "prop_id": "warehouse_crate_stack", "type": "crate", "x": 820, "y": 760, "label": "", "collides": true, "width": 160, "height": 120 },
+                { "prop_id": "warehouse_lamp_2", "type": "lamp", "x": 1240, "y": 760, "label": "", "collides": false },
+                { "prop_id": "warehouse_lamp_3", "type": "lamp", "x": 1960, "y": 760, "label": "", "collides": false },
+                { "prop_id": "warehouse_decor_trash_1", "type": "decor", "x": 520, "y": 760, "label": "", "collides": false },
+                { "prop_id": "warehouse_decor_mailbox_1", "type": "decor", "x": 1020, "y": 760, "label": "", "collides": false },
+                { "prop_id": "warehouse_decor_bus_1", "type": "decor", "x": 1820, "y": 760, "label": "", "collides": false },
+                { "prop_id": "warehouse_decor_car_1", "type": "decor", "x": 2260, "y": 760, "label": "", "collides": false }
             ],
             "interactables": [
                 {
@@ -141,7 +153,20 @@
                 { "prop_id": "town_building_house", "type": "building", "x": 2060, "y": 760, "label": "House", "collides": false, "width": 520, "height": 560 },
                 { "prop_id": "town_building_garage", "type": "building", "x": 2740, "y": 760, "label": "Garage", "collides": false, "width": 520, "height": 560 },
                 { "prop_id": "town_building_secret", "type": "building", "x": 3460, "y": 760, "label": "Storage", "collides": false, "width": 520, "height": 560 },
-                { "prop_id": "town_fence_1", "type": "fence", "x": 3360, "y": 760, "label": "", "collides": true, "width": 280, "height": 110 }
+                { "prop_id": "town_fence_1", "type": "fence", "x": 3360, "y": 760, "label": "", "collides": true, "width": 280, "height": 110 },
+                { "prop_id": "town_decor_trash_1", "type": "decor", "x": 740, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_decor_mailbox_1", "type": "decor", "x": 900, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_decor_stop_1", "type": "decor", "x": 1080, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_decor_traffic_1", "type": "decor", "x": 1500, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_decor_trash_2", "type": "decor", "x": 1720, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_decor_mailbox_2", "type": "decor", "x": 2140, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_decor_car_1", "type": "decor", "x": 2400, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_decor_stop_2", "type": "decor", "x": 2620, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_decor_traffic_2", "type": "decor", "x": 2880, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_decor_trash_3", "type": "decor", "x": 3120, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_decor_tree_1", "type": "decor", "x": 3200, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_decor_car_2", "type": "decor", "x": 3520, "y": 760, "label": "", "collides": false },
+                { "prop_id": "town_decor_tree_2", "type": "decor", "x": 3640, "y": 760, "label": "", "collides": false }
             ],
             "doors": [
                 {
@@ -251,7 +276,9 @@
             ],
             "colliders": [
                 { "collider_id": "town_wall_left", "x": 60, "y": 620, "width": 120, "height": 520 },
-                { "collider_id": "town_wall_right", "x": 3740, "y": 620, "width": 120, "height": 520 }
+                { "collider_id": "town_wall_right", "x": 3740, "y": 620, "width": 120, "height": 520 },
+                { "collider_id": "town_car_block_1", "x": 2400, "y": 700, "width": 260, "height": 120 },
+                { "collider_id": "town_car_block_2", "x": 3520, "y": 700, "width": 260, "height": 120 }
             ],
             "exits": [
                 {
@@ -321,7 +348,20 @@
                 { "prop_id": "park_decor_cafe", "type": "building", "x": 1480, "y": 760, "label": "Cafe", "collides": false, "width": 520, "height": 560 },
                 { "prop_id": "park_decor_cabin", "type": "building", "x": 2560, "y": 760, "label": "Cabin", "collides": false, "width": 520, "height": 560 },
                 { "prop_id": "park_decor_shed", "type": "building", "x": 3400, "y": 760, "label": "Shed", "collides": false, "width": 460, "height": 420 },
-                { "prop_id": "park_crate_stack", "type": "crate", "x": 3660, "y": 760, "label": "", "collides": true, "width": 160, "height": 120 }
+                { "prop_id": "park_crate_stack", "type": "crate", "x": 3660, "y": 760, "label": "", "collides": true, "width": 160, "height": 120 },
+                { "prop_id": "park_lamp_2", "type": "lamp", "x": 1320, "y": 760, "label": "", "collides": false },
+                { "prop_id": "park_bench_2", "type": "bench", "x": 1760, "y": 760, "label": "", "collides": true, "width": 220, "height": 90 },
+                { "prop_id": "park_fence_2", "type": "fence", "x": 3040, "y": 760, "label": "", "collides": true, "width": 280, "height": 110 },
+                { "prop_id": "park_decor_tree_1", "type": "decor", "x": 620, "y": 760, "label": "", "collides": false },
+                { "prop_id": "park_decor_tree_2", "type": "decor", "x": 1180, "y": 760, "label": "", "collides": false },
+                { "prop_id": "park_decor_trash_1", "type": "decor", "x": 860, "y": 760, "label": "", "collides": false },
+                { "prop_id": "park_decor_mailbox_1", "type": "decor", "x": 1100, "y": 760, "label": "", "collides": false },
+                { "prop_id": "park_decor_stop_1", "type": "decor", "x": 2080, "y": 760, "label": "", "collides": false },
+                { "prop_id": "park_decor_traffic_1", "type": "decor", "x": 2320, "y": 760, "label": "", "collides": false },
+                { "prop_id": "park_decor_tree_3", "type": "decor", "x": 2940, "y": 760, "label": "", "collides": false },
+                { "prop_id": "park_decor_trash_2", "type": "decor", "x": 3120, "y": 760, "label": "", "collides": false },
+                { "prop_id": "park_decor_bus_1", "type": "decor", "x": 3720, "y": 760, "label": "", "collides": false },
+                { "prop_id": "park_decor_tree_4", "type": "decor", "x": 3920, "y": 760, "label": "", "collides": false }
             ],
             "doors": [
                 {
@@ -404,7 +444,8 @@
             ],
             "colliders": [
                 { "collider_id": "park_wall_left", "x": 60, "y": 620, "width": 120, "height": 520 },
-                { "collider_id": "park_wall_right", "x": 4140, "y": 620, "width": 120, "height": 520 }
+                { "collider_id": "park_wall_right", "x": 4140, "y": 620, "width": 120, "height": 520 },
+                { "collider_id": "park_bus_block_1", "x": 3720, "y": 700, "width": 320, "height": 120 }
             ],
             "exits": [
                 {
