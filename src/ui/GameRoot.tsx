@@ -406,6 +406,7 @@ function GameRootInner() {
     React.useEffect(() => {
         const onFlightComplete = (event: Event) => {
             const detail = (event as CustomEvent<FlightResult>).detail;
+            const mission = stateRef.current.activeMission;
             if (detail?.success) {
                 const bridge = resolveMissionQuestBridge(stateRef.current.activeMission);
                 const location = getLocation(bridge.startLocationId);
@@ -420,7 +421,20 @@ function GameRootInner() {
                 dispatch({ type: 'FLIGHT_COMPLETE', result: detail, bridge });
                 return;
             }
+
             dispatch({ type: 'FLIGHT_COMPLETE', result: detail });
+
+            if (mission && detail) {
+                const bonus = Math.max(0, Math.floor(detail.score));
+                const money = Math.max(0, Math.floor(mission.rewardMoney + bonus));
+                const exp = Math.max(0, Math.floor(mission.rewardExp));
+                eventBus.emit(EVENTS.REWARD_GRANTED, {
+                    actorId: detail.charId,
+                    money,
+                    exp,
+                    source: 'mission_reward'
+                });
+            }
         };
 
         flightEventTarget.addEventListener('flight:complete', onFlightComplete);
@@ -453,10 +467,19 @@ function GameRootInner() {
             const leader = quest.participants?.find((p) => p.role === 'leader')?.characterId;
             const actorId = leader || current.selectedCharacterId;
 
-            if (current.activeMission && current.inboundFlight && quest.type === 'main') {
+            if (current.activeMission && quest.type === 'main') {
+                const inbound = current.inboundFlight;
+                const bonus = inbound ? Math.max(0, Math.floor(inbound.score)) : 0;
+                const money = Math.max(0, Math.floor(current.activeMission.rewardMoney + bonus));
+                const exp = Math.max(0, Math.floor(current.activeMission.rewardExp));
+
                 dispatch({ type: 'MISSION_COMPLETE_FROM_EXPLORATION', mission: current.activeMission, actorId });
+                eventBus.emit(EVENTS.REWARD_GRANTED, { actorId, money, exp, source: 'mission_reward' });
                 return;
             }
+
+            const money = Math.max(0, Math.floor(rewards.money));
+            const exp = Math.max(0, Math.floor(rewards.exp));
 
             dispatch({
                 type: 'QUEST_COMPLETE',
@@ -465,8 +488,9 @@ function GameRootInner() {
                 description,
                 location,
                 actorId,
-                rewards: { money: Math.max(0, Math.floor(rewards.money)), exp: Math.max(0, Math.floor(rewards.exp)) }
+                rewards: { money, exp }
             });
+            eventBus.emit(EVENTS.REWARD_GRANTED, { actorId, money, exp, source: 'quest_reward' });
         };
 
         eventBus.on(EVENTS.QUEST_COMPLETED, onQuestCompleted);
@@ -1037,96 +1061,32 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             const expGain = Math.max(0, Math.floor(mission.rewardExp));
             const totalMoney = Math.max(0, Math.floor(mission.rewardMoney + bonus));
 
-            let nextResources: Resources = { ...state.resources, money: state.resources.money + totalMoney };
-
-            let nextStatistics = state.statistics;
-            const missionTypeKey = mission.type.toLowerCase();
-
-            if (action.result.success) {
-                nextStatistics = recordMissionCompleted(nextStatistics, {
-                    missionType: missionTypeKey,
-                    characterId: action.result.charId,
-                    location: mission.location,
-                    rewardsMoney: totalMoney,
-                    flightStats: action.result.flightStats
-                });
-            } else {
-                nextStatistics = recordMissionFailed(nextStatistics);
-            }
-
-            nextStatistics = recordMoneyBalance(nextStatistics, nextResources.money);
+            const nextStatistics = recordMissionFailed(state.statistics);
 
             const baseChar: CharacterState = { ...char, status: 'IDLE' };
-            let nextChar = applyExp(baseChar, expGain);
-
-            const missionLevelUps = Math.max(0, nextChar.level - baseChar.level);
-            for (let i = 0; i < missionLevelUps; i += 1) {
-                nextStatistics = recordLevelUp(nextStatistics, nextChar.level);
-            }
-
-            let nextCharacters = state.characters.map((c) => (c.id === nextChar.id ? nextChar : c));
-
-            let nextAchievements: AchievementState = state.achievements;
-            if (action.result.success) {
-                const progressKey = `${action.result.charId}_${missionTypeKey}`;
-                const current = nextAchievements.progress[progressKey] ?? 0;
-                nextAchievements = { ...nextAchievements, progress: { ...nextAchievements.progress, [progressKey]: current + 1 } };
-            }
-
-            for (let guard = 0; guard < 6; guard += 1) {
-                const { next, unlocked } = checkForNewUnlocks(nextAchievements, nextStatistics);
-                nextAchievements = next;
-                if (unlocked.length === 0) break;
-
-                let bonusMoney = 0;
-                let bonusExp = 0;
-                for (const item of unlocked) {
-                    bonusMoney += Math.max(0, item.definition.reward?.money ?? 0);
-                    bonusExp += Math.max(0, item.definition.reward?.experience ?? 0);
-                }
-
-                if (bonusMoney > 0) {
-                    nextResources = { ...nextResources, money: nextResources.money + bonusMoney };
-                    nextStatistics = recordMoneyBalance(nextStatistics, nextResources.money);
-                }
-
-                if (bonusExp > 0) {
-                    const before = nextChar;
-                    nextChar = applyExp(nextChar, bonusExp);
-                    const levelUps = Math.max(0, nextChar.level - before.level);
-                    for (let i = 0; i < levelUps; i += 1) {
-                        nextStatistics = recordLevelUp(nextStatistics, nextChar.level);
-                    }
-                    nextCharacters = nextCharacters.map((c) => (c.id === nextChar.id ? nextChar : c));
-                }
-            }
-
-            nextStatistics = {
-                ...nextStatistics,
-                achievementsUnlocked: nextAchievements.unlocked.length,
-                achievementPoints: nextAchievements.totalPoints
-            };
-
-            const rewards = { money: totalMoney, exp: expGain, bonus };
+            const previewChar = applyExp(baseChar, expGain);
+            const nextCharacters = state.characters.map((c) => (c.id === baseChar.id ? baseChar : c));
 
             const nextResult: MissionResult = {
                 mission,
-                character: nextChar,
-                success: action.result.success,
+                character: previewChar,
+                success: false,
                 score: bonus,
-                rewards
+                rewards: { money: totalMoney, exp: expGain, bonus }
             };
 
             return {
                 ...state,
                 screen: 'results',
-                resources: nextResources,
                 characters: nextCharacters,
                 lastResult: nextResult,
                 statistics: nextStatistics,
-                achievements: nextAchievements,
                 activeMission: null,
-                flightParams: null
+                flightParams: null,
+                inboundFlight: null,
+                pendingExplorationQuestTemplateId: null,
+                explorationStartLocationId: null,
+                explorationSpawnPoint: null
             };
         }
 
@@ -1139,72 +1099,30 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             const bonus = inbound ? Math.max(0, Math.floor(inbound.score)) : 0;
             const expGain = Math.max(0, Math.floor(mission.rewardExp));
             const totalMoney = Math.max(0, Math.floor(mission.rewardMoney + bonus));
-
-            let nextResources: Resources = { ...state.resources, money: state.resources.money + totalMoney };
-
-            let nextStatistics = recordMissionCompleted(state.statistics, {
+            const nextStatistics = recordMissionCompleted(state.statistics, {
                 missionType: mission.type.toLowerCase(),
                 characterId: char.id,
                 location: mission.location,
                 rewardsMoney: totalMoney,
                 flightStats: inbound?.flightStats
             });
-            nextStatistics = recordMoneyBalance(nextStatistics, nextResources.money);
-
-            const baseChar: CharacterState = { ...char, status: 'IDLE' };
-            let nextChar = applyExp(baseChar, expGain);
-
-            const missionLevelUps = Math.max(0, nextChar.level - baseChar.level);
-            for (let i = 0; i < missionLevelUps; i += 1) {
-                nextStatistics = recordLevelUp(nextStatistics, nextChar.level);
-            }
-
-            let nextCharacters = state.characters.map((c) => (c.id === nextChar.id ? nextChar : c));
-
-            let nextAchievements: AchievementState = state.achievements;
-            const progressKey = `${nextChar.id}_${mission.type.toLowerCase()}`;
-            const currentCount = nextAchievements.progress[progressKey] ?? 0;
-            nextAchievements = { ...nextAchievements, progress: { ...nextAchievements.progress, [progressKey]: currentCount + 1 } };
-
-            for (let guard = 0; guard < 6; guard += 1) {
-                const { next, unlocked } = checkForNewUnlocks(nextAchievements, nextStatistics);
-                nextAchievements = next;
-                if (unlocked.length === 0) break;
-
-                let bonusMoney = 0;
-                let bonusExp = 0;
-                for (const item of unlocked) {
-                    bonusMoney += Math.max(0, item.definition.reward?.money ?? 0);
-                    bonusExp += Math.max(0, item.definition.reward?.experience ?? 0);
-                }
-
-                if (bonusMoney > 0) {
-                    nextResources = { ...nextResources, money: nextResources.money + bonusMoney };
-                    nextStatistics = recordMoneyBalance(nextStatistics, nextResources.money);
-                }
-
-                if (bonusExp > 0) {
-                    const before = nextChar;
-                    nextChar = applyExp(nextChar, bonusExp);
-                    const levelUps = Math.max(0, nextChar.level - before.level);
-                    for (let i = 0; i < levelUps; i += 1) {
-                        nextStatistics = recordLevelUp(nextStatistics, nextChar.level);
-                    }
-                    nextCharacters = nextCharacters.map((c) => (c.id === nextChar.id ? nextChar : c));
-                }
-            }
-
-            nextStatistics = {
-                ...nextStatistics,
-                achievementsUnlocked: nextAchievements.unlocked.length,
-                achievementPoints: nextAchievements.totalPoints
-            };
 
             const rewards = { money: totalMoney, exp: expGain, bonus };
 
+            const baseChar: CharacterState = { ...char, status: 'IDLE' };
+            const previewChar = applyExp(baseChar, expGain);
+            const nextCharacters = state.characters.map((c) => (c.id === baseChar.id ? baseChar : c));
+
+            const progressKey = `${char.id}_${mission.type.toLowerCase()}`;
+            const currentCount = state.achievements.progress[progressKey] ?? 0;
+            const nextAchievements: AchievementState = {
+                ...state.achievements,
+                progress: { ...state.achievements.progress, [progressKey]: currentCount + 1 }
+            };
+
             const nextResult: MissionResult = {
                 mission,
-                character: nextChar,
+                character: previewChar,
                 success: true,
                 score: bonus,
                 rewards
@@ -1214,7 +1132,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 return {
                     ...state,
                     explorationDebrief: nextResult,
-                    resources: nextResources,
                     characters: nextCharacters,
                     statistics: nextStatistics,
                     achievements: nextAchievements,
@@ -1228,7 +1145,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             return {
                 ...state,
                 screen: 'results',
-                resources: nextResources,
                 characters: nextCharacters,
                 lastResult: nextResult,
                 statistics: nextStatistics,
@@ -1257,67 +1173,26 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 campaignTheme: null
             };
 
-            let nextResources: Resources = { ...state.resources, money: state.resources.money + action.rewards.money };
-            let nextStatistics = recordMissionCompleted(state.statistics, {
+            const nextStatistics = recordMissionCompleted(state.statistics, {
                 missionType: mission.type.toLowerCase(),
                 characterId: char.id,
                 location: mission.location,
                 rewardsMoney: action.rewards.money
             });
-            nextStatistics = recordMoneyBalance(nextStatistics, nextResources.money);
-
             const baseChar: CharacterState = { ...char, status: 'IDLE' };
-            let nextChar = applyExp(baseChar, action.rewards.exp);
+            const previewChar = applyExp(baseChar, action.rewards.exp);
+            const nextCharacters = state.characters.map((c) => (c.id === baseChar.id ? baseChar : c));
 
-            const missionLevelUps = Math.max(0, nextChar.level - baseChar.level);
-            for (let i = 0; i < missionLevelUps; i += 1) {
-                nextStatistics = recordLevelUp(nextStatistics, nextChar.level);
-            }
-
-            let nextCharacters = state.characters.map((c) => (c.id === nextChar.id ? nextChar : c));
-
-            let nextAchievements: AchievementState = state.achievements;
-            const progressKey = `${nextChar.id}_${mission.type.toLowerCase()}`;
-            const currentCount = nextAchievements.progress[progressKey] ?? 0;
-            nextAchievements = { ...nextAchievements, progress: { ...nextAchievements.progress, [progressKey]: currentCount + 1 } };
-
-            for (let guard = 0; guard < 6; guard += 1) {
-                const { next, unlocked } = checkForNewUnlocks(nextAchievements, nextStatistics);
-                nextAchievements = next;
-                if (unlocked.length === 0) break;
-
-                let bonusMoney = 0;
-                let bonusExp = 0;
-                for (const item of unlocked) {
-                    bonusMoney += Math.max(0, item.definition.reward?.money ?? 0);
-                    bonusExp += Math.max(0, item.definition.reward?.experience ?? 0);
-                }
-
-                if (bonusMoney > 0) {
-                    nextResources = { ...nextResources, money: nextResources.money + bonusMoney };
-                    nextStatistics = recordMoneyBalance(nextStatistics, nextResources.money);
-                }
-
-                if (bonusExp > 0) {
-                    const before = nextChar;
-                    nextChar = applyExp(nextChar, bonusExp);
-                    const levelUps = Math.max(0, nextChar.level - before.level);
-                    for (let i = 0; i < levelUps; i += 1) {
-                        nextStatistics = recordLevelUp(nextStatistics, nextChar.level);
-                    }
-                    nextCharacters = nextCharacters.map((c) => (c.id === nextChar.id ? nextChar : c));
-                }
-            }
-
-            nextStatistics = {
-                ...nextStatistics,
-                achievementsUnlocked: nextAchievements.unlocked.length,
-                achievementPoints: nextAchievements.totalPoints
+            const progressKey = `${char.id}_${mission.type.toLowerCase()}`;
+            const currentCount = state.achievements.progress[progressKey] ?? 0;
+            const nextAchievements: AchievementState = {
+                ...state.achievements,
+                progress: { ...state.achievements.progress, [progressKey]: currentCount + 1 }
             };
 
             const nextResult: MissionResult = {
                 mission,
-                character: nextChar,
+                character: previewChar,
                 success: true,
                 score: 0,
                 rewards: { money: action.rewards.money, exp: action.rewards.exp, bonus: 0 }
@@ -1327,7 +1202,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 return {
                     ...state,
                     explorationDebrief: nextResult,
-                    resources: nextResources,
                     characters: nextCharacters,
                     statistics: nextStatistics,
                     achievements: nextAchievements
@@ -1337,7 +1211,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             return {
                 ...state,
                 screen: 'results',
-                resources: nextResources,
                 characters: nextCharacters,
                 lastResult: nextResult,
                 statistics: nextStatistics,
@@ -1373,7 +1246,45 @@ function gameReducer(state: GameState, action: GameAction): GameState {
                 }
             }
 
-            return { ...state, resources: nextResources, characters: nextCharacters, statistics: nextStatistics };
+            let nextAchievements: AchievementState = state.achievements;
+
+            for (let guard = 0; guard < 6; guard += 1) {
+                const { next, unlocked } = checkForNewUnlocks(nextAchievements, nextStatistics);
+                nextAchievements = next;
+                if (unlocked.length === 0) break;
+
+                let bonusMoney = 0;
+                let bonusExp = 0;
+                for (const item of unlocked) {
+                    bonusMoney += Math.max(0, item.definition.reward?.money ?? 0);
+                    bonusExp += Math.max(0, item.definition.reward?.experience ?? 0);
+                }
+
+                if (bonusMoney > 0) {
+                    nextResources = { ...nextResources, money: nextResources.money + bonusMoney };
+                    nextStatistics = recordMoneyBalance(nextStatistics, nextResources.money);
+                }
+
+                if (bonusExp > 0) {
+                    const before = nextCharacters.find((c) => c.id === action.actorId) ?? null;
+                    if (before) {
+                        const nextChar = applyExp({ ...before }, bonusExp);
+                        const levelUps = Math.max(0, nextChar.level - before.level);
+                        for (let i = 0; i < levelUps; i += 1) {
+                            nextStatistics = recordLevelUp(nextStatistics, nextChar.level);
+                        }
+                        nextCharacters = nextCharacters.map((c) => (c.id === nextChar.id ? nextChar : c));
+                    }
+                }
+            }
+
+            nextStatistics = {
+                ...nextStatistics,
+                achievementsUnlocked: nextAchievements.unlocked.length,
+                achievementPoints: nextAchievements.totalPoints
+            };
+
+            return { ...state, resources: nextResources, characters: nextCharacters, statistics: nextStatistics, achievements: nextAchievements };
         }
 
         case 'CLOSE_EXPLORATION_DEBRIEF':
