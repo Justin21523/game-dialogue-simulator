@@ -611,6 +611,8 @@ function GameRootInner() {
             const leader = quest.participants?.find((p) => p.role === 'leader')?.characterId;
             const actorId = leader || current.selectedCharacterId;
 
+            audioManager.playSound('mission_complete');
+
             if (current.activeMission && quest.type === 'main') {
                 const inbound = current.inboundFlight;
                 const bonus = inbound ? Math.max(0, Math.floor(inbound.score)) : 0;

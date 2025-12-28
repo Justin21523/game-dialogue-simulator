@@ -10,6 +10,7 @@ export type SoundType =
     | 'boost'
     | 'button'
     | 'door'
+    | 'footstep'
     | 'success'
     | 'error'
     | 'achievement'
@@ -246,6 +247,16 @@ export class AudioManager {
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
                 osc.start(now);
                 osc.stop(now + 0.2);
+                break;
+
+            case 'footstep':
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(120, now + 0.06);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                osc.start(now);
+                osc.stop(now + 0.12);
                 break;
 
             case 'error':
