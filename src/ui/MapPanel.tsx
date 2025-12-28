@@ -3,8 +3,8 @@ import React from 'react';
 import { getLocation, listLocations } from '../shared/data/gameData';
 import { eventBus } from '../shared/eventBus';
 import { EVENTS } from '../shared/eventNames';
-import { missionManager } from '../shared/quests/missionManager';
 import { getObjectiveTargetHint } from '../shared/quests/objectiveTargets';
+import { getPrimaryQuest } from '../shared/quests/primaryQuest';
 import { worldStateManager } from '../shared/systems/worldStateManager';
 import { Modal } from './components/Modal';
 
@@ -51,8 +51,8 @@ export function MapPanel(props: MapPanelProps) {
     const locations = React.useMemo(() => listLocations().slice().sort((a, b) => a.displayName.localeCompare(b.displayName)), []);
     const current = getLocation(currentLocationId);
 
-    const activeMain = missionManager.getActiveMainQuest();
-    const activeObjective = activeMain?.objectives?.find((o) => o.status === 'active') ?? null;
+    const activeQuest = getPrimaryQuest();
+    const activeObjective = activeQuest?.objectives?.find((o) => o.status === 'active') ?? null;
     const targetHint = activeObjective ? getObjectiveTargetHint(activeObjective) : null;
     const objectiveLocationId = targetHint?.locationId ?? null;
 
@@ -126,10 +126,10 @@ export function MapPanel(props: MapPanelProps) {
 
                 <section className="map-panel__section">
                     <h4>Active Objective</h4>
-                    {activeMain && activeObjective ? (
+                    {activeQuest && activeObjective ? (
                         <div className="map-panel__objective">
                             <div className="map-panel__objective-title">
-                                <strong>{activeObjective.title}</strong> <span className="muted">({activeMain.title})</span>
+                                <strong>{activeObjective.title}</strong> <span className="muted">({activeQuest.title})</span>
                             </div>
                             <div className="muted map-panel__objective-detail">
                                 {targetHint?.locationId ? (

@@ -237,6 +237,7 @@ export type MissionLogEntry = {
 export type ActiveMissionSession = {
     sessionId: string | null;
     actorId: string;
+    missionQuestId: string | null;
     phaseId: MissionSessionPhaseId;
     phaseStartedAt: number;
     locationId: string | null;

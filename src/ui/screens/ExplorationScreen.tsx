@@ -92,6 +92,8 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
         onAbortMission();
     }, [activeMission, onAbortMission]);
 
+    const missionDebriefActive = Boolean(activeMission && debriefResult && debriefResult.mission.id === activeMission.id);
+
     return (
         <div className="screen exploration-screen">
             <QuestTracker />
@@ -116,14 +118,16 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
                 <button className="btn btn-outline" type="button" onClick={() => setTimelineOpen(true)}>
                     🧾 Timeline (T)
                 </button>
-                {activeMission ? (
+                {activeMission && !missionDebriefActive ? (
                     <button className="btn btn-danger" type="button" onClick={handleAbortMission}>
                         ⛔ Abort Mission
                     </button>
                 ) : null}
-                <button className="btn btn-secondary" type="button" onClick={onBackToHangar}>
-                    ◀ Back to Hangar
-                </button>
+                {!activeMission || missionDebriefActive ? (
+                    <button className="btn btn-secondary" type="button" onClick={onBackToHangar}>
+                        ◀ Back to Hangar
+                    </button>
+                ) : null}
             </div>
 
             <CompanionPanel open={companionOpen} actorId={actorId} onClose={() => setCompanionOpen(false)} />
