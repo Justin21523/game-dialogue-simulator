@@ -462,9 +462,41 @@
                         {
                             "text": "Nice work finding the alley. If you're curious, there's a hidden door worth checking.",
                             "if": { "flags_all": ["secret_alley_found"], "missing_items": ["item_mysterious_key"] }
+                        },
+                        {
+                            "text": "That shed token looks valuable. If you want answers, bring it to me.",
+                            "if": { "flags_all": ["park_shed_secret_found"], "has_items": ["item_shed_badge"] }
                         }
                     ],
                     "choices": [
+                        {
+                            "choice_id": "start_shed_evidence",
+                            "text": "I found evidence in the sealed shed.",
+                            "if": {
+                                "quest_completed": "qt_main_town_relay",
+                                "flags_all": ["park_shed_secret_found"],
+                                "has_items": ["item_shed_badge"],
+                                "quest_not_active": "qt_side_park_shed_evidence",
+                                "quest_not_completed": "qt_side_park_shed_evidence"
+                            },
+                            "actions": [
+                                { "type": "quest_start", "quest_template_id": "qt_side_park_shed_evidence" },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
+                        {
+                            "choice_id": "deliver_shed_badge",
+                            "text": "Deliver shed evidence token",
+                            "if": { "quest_active": "qt_side_park_shed_evidence", "has_items": ["item_shed_badge"] },
+                            "actions": [
+                                {
+                                    "type": "emit_event",
+                                    "event": "DELIVER_ITEM",
+                                    "payload": { "itemId": "item_shed_badge", "npcId": "npc_informant", "quantity": 1 }
+                                },
+                                { "type": "close_dialogue" }
+                            ]
+                        },
                         {
                             "choice_id": "start_secret_stash",
                             "text": "I'll investigate the hidden room.",

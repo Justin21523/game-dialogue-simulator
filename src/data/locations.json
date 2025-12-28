@@ -605,6 +605,20 @@
                     "message": "Hidden logs extracted."
                 }
             ],
+            "secrets": [
+                {
+                    "secret_id": "secret_shed_stash",
+                    "x": 1480,
+                    "y": 740,
+                    "width": 220,
+                    "height": 320,
+                    "world_flag": "park_shed_secret_found",
+                    "reward_currency": 180,
+                    "reward_exp": 90,
+                    "reward_item_id": "item_shed_badge",
+                    "message": "Secret found: Evidence token recovered from the shed."
+                }
+            ],
             "colliders": [
                 { "collider_id": "park_shed_wall_left", "x": 60, "y": 620, "width": 120, "height": 520 },
                 { "collider_id": "park_shed_wall_right", "x": 1540, "y": 620, "width": 120, "height": 520 }
