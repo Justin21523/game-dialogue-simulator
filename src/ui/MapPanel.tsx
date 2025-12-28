@@ -54,6 +54,7 @@ export function MapPanel(props: MapPanelProps) {
     const activeMain = missionManager.getActiveMainQuest();
     const activeObjective = activeMain?.objectives?.find((o) => o.status === 'active') ?? null;
     const targetHint = activeObjective ? getObjectiveTargetHint(activeObjective) : null;
+    const objectiveLocationId = targetHint?.locationId ?? null;
 
     const travelOptions = React.useMemo(() => {
         if (!current) return { exits: [], doors: [] };
@@ -64,7 +65,9 @@ export function MapPanel(props: MapPanelProps) {
                 id: ex.exitId,
                 type: 'exit' as const,
                 label: `Exit: ${target?.displayName ?? ex.targetLocationId}`,
-                lockedReason: isUnlocked ? null : 'Location locked'
+                lockedReason: isUnlocked ? null : 'Location locked',
+                targetLocationId: ex.targetLocationId,
+                targetSpawnPoint: ex.targetSpawnPoint
             };
         });
 
@@ -82,12 +85,28 @@ export function MapPanel(props: MapPanelProps) {
                 id: door.doorId,
                 type: 'door' as const,
                 label: `Door: ${door.label} → ${target?.displayName ?? door.targetLocationId}`,
-                lockedReason
+                lockedReason,
+                targetLocationId: door.targetLocationId,
+                targetSpawnPoint: door.targetSpawnPoint
             };
         });
 
         return { exits, doors };
     }, [current, unlocked]);
+
+    const handleTravel = React.useCallback(
+        (params: { locationId: string; spawnPoint: string; via: 'door' | 'exit'; doorId?: string }) => {
+            eventBus.emit(EVENTS.UI_TRAVEL_REQUESTED, {
+                actorId: null,
+                locationId: params.locationId,
+                spawnPoint: params.spawnPoint,
+                via: params.via,
+                doorId: params.doorId
+            });
+            onClose();
+        },
+        [onClose]
+    );
 
     const footer = (
         <button className="btn btn-primary" type="button" onClick={onClose}>
@@ -140,14 +159,53 @@ export function MapPanel(props: MapPanelProps) {
                         <ul className="map-panel__list">
                             {travelOptions.doors.map((opt) => (
                                 <li key={opt.id} className={opt.lockedReason ? 'muted' : ''}>
-                                    {opt.label}
-                                    {opt.lockedReason ? <span className="map-panel__locked"> — {opt.lockedReason}</span> : null}
+                                    <div className="map-panel__row">
+                                        <span>
+                                            {opt.label}
+                                            {opt.lockedReason ? <span className="map-panel__locked"> — {opt.lockedReason}</span> : null}
+                                        </span>
+                                        {!opt.lockedReason ? (
+                                            <button
+                                                className="btn btn-outline btn-sm"
+                                                type="button"
+                                                onClick={() =>
+                                                    handleTravel({
+                                                        locationId: opt.targetLocationId,
+                                                        spawnPoint: opt.targetSpawnPoint,
+                                                        via: 'door',
+                                                        doorId: opt.id
+                                                    })
+                                                }
+                                            >
+                                                Enter
+                                            </button>
+                                        ) : null}
+                                    </div>
                                 </li>
                             ))}
                             {travelOptions.exits.map((opt) => (
                                 <li key={opt.id} className={opt.lockedReason ? 'muted' : ''}>
-                                    {opt.label}
-                                    {opt.lockedReason ? <span className="map-panel__locked"> — {opt.lockedReason}</span> : null}
+                                    <div className="map-panel__row">
+                                        <span>
+                                            {opt.label}
+                                            {opt.lockedReason ? <span className="map-panel__locked"> — {opt.lockedReason}</span> : null}
+                                        </span>
+                                        {!opt.lockedReason ? (
+                                            <button
+                                                className="btn btn-outline btn-sm"
+                                                type="button"
+                                                onClick={() =>
+                                                    handleTravel({
+                                                        locationId: opt.targetLocationId,
+                                                        spawnPoint: opt.targetSpawnPoint,
+                                                        via: 'exit'
+                                                    })
+                                                }
+                                            >
+                                                Travel
+                                            </button>
+                                        ) : null}
+                                    </div>
                                 </li>
                             ))}
                             {travelOptions.doors.length === 0 && travelOptions.exits.length === 0 ? <li className="muted">No exits here.</li> : null}
@@ -164,17 +222,35 @@ export function MapPanel(props: MapPanelProps) {
                             const isUnlocked = unlocked.has(loc.locationId);
                             const isDiscovered = discovered.has(loc.locationId);
                             const isHere = loc.locationId === currentLocationId;
+                            const isObjective = Boolean(objectiveLocationId && loc.locationId === objectiveLocationId);
 
                             const status = isHere ? 'HERE' : isUnlocked ? (isDiscovered ? 'DISCOVERED' : 'UNSEEN') : 'LOCKED';
                             const className = isHere ? 'map-panel__loc map-panel__loc--here' : isUnlocked ? 'map-panel__loc' : 'map-panel__loc map-panel__loc--locked';
 
+                            const canFastTravel = isUnlocked && isDiscovered && !isHere;
+                            const spawnPoint = loc.spawnPoints.default ? 'default' : Object.keys(loc.spawnPoints)[0] ?? 'default';
+
                             return (
                                 <li key={loc.locationId} className={className}>
-                                    <div className="map-panel__loc-name">{loc.displayName}</div>
+                                    <div className="map-panel__loc-name">
+                                        {loc.displayName}
+                                        {isObjective ? <span className="badge tag">OBJECTIVE</span> : null}
+                                    </div>
                                     <div className="map-panel__loc-meta">
                                         <span className="tag badge">{status}</span>
                                         <span className="muted">{loc.locationId}</span>
                                     </div>
+                                    {canFastTravel ? (
+                                        <div className="map-panel__loc-actions">
+                                            <button
+                                                className="btn btn-outline btn-sm"
+                                                type="button"
+                                                onClick={() => handleTravel({ locationId: loc.locationId, spawnPoint, via: 'exit' })}
+                                            >
+                                                Fast Travel
+                                            </button>
+                                        </div>
+                                    ) : null}
                                 </li>
                             );
                         })}
@@ -184,4 +260,3 @@ export function MapPanel(props: MapPanelProps) {
         </Modal>
     );
 }
-
