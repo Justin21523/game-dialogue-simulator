@@ -31,6 +31,8 @@ import '../css/screens/landing.css';
 import { ErrorBoundary } from './ui/components/ErrorBoundary';
 import { GameRoot } from './ui/GameRoot';
 
+document.getElementById('run-hint')?.remove();
+
 const rootElement = document.getElementById('root');
 if (!rootElement) {
     throw new Error('Missing #root element');
