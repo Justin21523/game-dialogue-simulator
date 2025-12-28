@@ -16,8 +16,8 @@ import type { ColliderDefinition, DoorDefinition, InteractableDefinition, Locati
 import { NpcBarkSystem } from '../systems/NpcBarkSystem';
 import { NpcBehaviorSystem, type SpawnedNpc } from '../systems/NpcBehaviorSystem';
 import { ParallaxSystem } from '../systems/ParallaxSystem';
-import { getThemeParallaxLayers, resolveThemedPropAsset } from '../themes/themeAssets';
-import type { ParallaxAssetLayer, ThemedPropAsset } from '../themes/themeAssets';
+import { getThemeInteriorBackdrop, getThemeParallaxLayers, resolveThemedPropAsset } from '../themes/themeAssets';
+import type { ParallaxAssetLayer, ThemedBackdropAsset, ThemedPropAsset } from '../themes/themeAssets';
 
 export type WorldSceneInitData = {
     charId?: string;
@@ -77,6 +77,7 @@ export class WorldScene extends Phaser.Scene {
     private npcBarks = new NpcBarkSystem();
 
     private themedParallaxLayers: ParallaxAssetLayer[] | null = null;
+    private themedInteriorBackdrop: ThemedBackdropAsset | null = null;
     private themedPropAssets = new Map<string, ThemedPropAsset>();
 
     private player!: Phaser.Physics.Arcade.Sprite;
@@ -101,6 +102,7 @@ export class WorldScene extends Phaser.Scene {
     private promptText?: Phaser.GameObjects.Text;
     private highlight?: Phaser.GameObjects.Graphics;
     private inputLocked = false;
+    private locationTransitioning = false;
     private lastPersistAtMs = 0;
 
     private flightTransition: 'none' | 'takeoff' | 'landing' = 'none';
@@ -160,6 +162,11 @@ export class WorldScene extends Phaser.Scene {
             this.load.image(layer.textureKey, layer.path);
         }
 
+        const backdrop = this.themedInteriorBackdrop;
+        if (backdrop && !this.textures.exists(backdrop.textureKey)) {
+            this.load.image(backdrop.textureKey, backdrop.path);
+        }
+
         for (const asset of this.themedPropAssets.values()) {
             if (this.textures.exists(asset.textureKey)) continue;
             this.load.image(asset.textureKey, asset.path);
@@ -192,6 +199,7 @@ export class WorldScene extends Phaser.Scene {
         this.setupInput();
 
         this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+        this.cameras.main.fadeIn(240, 0, 0, 0);
 
         eventBus.emit(EVENTS.LOCATION_CHANGED, { locationId: this.locationId });
         eventBus.emit(EVENTS.LOCATION_ENTERED, { locationId: this.locationId, actorId: this.charId });
@@ -273,6 +281,9 @@ export class WorldScene extends Phaser.Scene {
         const TILE_SIDEWALK = 2;
         const TILE_FLOOR = 3;
         const TILE_WALL = 4;
+        const TILE_WINDOW = 5;
+        const TILE_ROOF = 6;
+        const TILE_DECAL = 7;
 
         const data: number[][] = [];
         for (let y = 0; y < rows; y += 1) {
@@ -280,10 +291,22 @@ export class WorldScene extends Phaser.Scene {
             for (let x = 0; x < cols; x += 1) {
                 let t = EMPTY;
                 if (theme.startsWith('interior_')) {
-                    const isBottomBand = y >= rows - 5;
-                    const isWall = x === 0 || x === cols - 1 || y === rows - 5;
-                    if (isBottomBand) {
-                        t = isWall ? TILE_WALL : TILE_FLOOR;
+                    const floorTop = rows - 6;
+                    const isFloorBand = y >= floorTop;
+                    const isWallEdge = x === 0 || x === cols - 1;
+                    const isBackWall = y === floorTop;
+
+                    if (isFloorBand) {
+                        t = TILE_FLOOR;
+                        if (isWallEdge || isBackWall) {
+                            t = TILE_WALL;
+                        }
+                    } else if (y === floorTop - 1 && x % 7 === 0) {
+                        t = TILE_ROOF;
+                    } else if (y === floorTop - 2 && x % 9 === 4) {
+                        t = TILE_WINDOW;
+                    } else if (y === floorTop - 1 && x % 11 === 5) {
+                        t = TILE_DECAL;
                     }
                 } else {
                     const isGround = y >= rows - 4;
@@ -302,12 +325,33 @@ export class WorldScene extends Phaser.Scene {
             data.push(row);
         }
 
+        if (theme.startsWith('interior_')) {
+            this.createInteriorBackdrop(theme);
+        }
+
         this.tilemap = this.make.tilemap({ data, tileWidth: TILE_SIZE, tileHeight: TILE_SIZE });
         const tileset = this.tilemap.addTilesetImage('world-tileset', tilesetKey, TILE_SIZE, TILE_SIZE, 0, 0);
         if (!tileset) return;
 
         this.tileLayer = this.tilemap.createLayer(0, tileset, 0, 0);
         this.tileLayer?.setDepth(8);
+    }
+
+    private createInteriorBackdrop(theme: string): void {
+        const backdrop = this.themedInteriorBackdrop;
+        if (!backdrop || !this.textures.exists(backdrop.textureKey)) return;
+
+        const bg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, backdrop.textureKey).setScrollFactor(0).setDepth(7);
+        bg.setDisplaySize(GAME_WIDTH, GAME_HEIGHT);
+        bg.setAlpha(0.95);
+
+        const overlayAlpha = theme === 'interior_secret' ? 0.42 : theme === 'interior_garage' ? 0.32 : 0.26;
+        const overlay = this.add
+            .rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, overlayAlpha)
+            .setScrollFactor(0)
+            .setDepth(2100);
+
+        overlay.setBlendMode(Phaser.BlendModes.MULTIPLY);
     }
 
     private ensureTilesetTexture(): string {
@@ -523,6 +567,7 @@ export class WorldScene extends Phaser.Scene {
     private resolveThemeAssets(): void {
         const theme = this.location.theme;
         this.themedParallaxLayers = getThemeParallaxLayers(theme);
+        this.themedInteriorBackdrop = getThemeInteriorBackdrop(theme);
         this.themedPropAssets.clear();
 
         for (const prop of this.location.props ?? []) {
@@ -1030,7 +1075,7 @@ export class WorldScene extends Phaser.Scene {
                 return;
             }
             if (obj.targetLocationId) {
-                audioManager.playSound('button');
+                audioManager.playSound('door');
                 this.transitionToLocation(obj.targetLocationId, obj.targetSpawnPoint ?? 'default', { via: 'door', doorId: obj.id });
             }
             return;
@@ -1097,6 +1142,13 @@ export class WorldScene extends Phaser.Scene {
         spawnPoint: string,
         meta?: { via: 'door' | 'exit' | 'interactable' | 'unknown'; doorId?: string; interactableId?: string }
     ): void {
+        if (this.locationTransitioning) return;
+        this.locationTransitioning = true;
+        this.inputLocked = true;
+
+        const body = this.player.body as Phaser.Physics.Arcade.Body | undefined;
+        body?.setVelocity(0, 0);
+
         const transitionMeta = meta ?? { via: 'unknown' };
         const fromLocation = this.locationId;
         const fromTheme = this.location.theme ?? null;
@@ -1359,7 +1411,7 @@ export class WorldScene extends Phaser.Scene {
             const safeVia = via === 'door' || via === 'exit' || via === 'interactable' ? via : 'unknown';
             const safeDoorId = typeof doorId === 'string' ? doorId : undefined;
 
-            audioManager.playSound('button');
+            audioManager.playSound(safeVia === 'door' ? 'door' : 'button');
             this.transitionToLocation(locationId, spawnPoint, { via: safeVia, doorId: safeDoorId });
         };
 

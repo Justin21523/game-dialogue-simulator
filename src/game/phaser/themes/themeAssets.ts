@@ -14,6 +14,11 @@ export type ThemedPropAsset = {
     defaultHeight?: number;
 };
 
+export type ThemedBackdropAsset = {
+    textureKey: string;
+    path: string;
+};
+
 function hashString32(input: string): number {
     // FNV-1a 32-bit
     let hash = 0x811c9dc5;
@@ -93,6 +98,24 @@ export function getThemeParallaxLayers(theme: LocationTheme | undefined): Parall
         default:
             return null;
     }
+}
+
+export function getThemeInteriorBackdrop(theme: LocationTheme | undefined): ThemedBackdropAsset | null {
+    if (!theme || !theme.startsWith('interior_')) return null;
+
+    const path =
+        theme === 'interior_shop'
+            ? 'assets/images/interiors/shop/bookstore_bg.png'
+            : theme === 'interior_house'
+              ? 'assets/images/interiors/public_building/library_bg.png'
+              : theme === 'interior_garage'
+                ? 'assets/images/interiors/special/control_room_bg.png'
+                : theme === 'interior_secret'
+                  ? 'assets/images/interiors/special/cave_bg.png'
+                  : null;
+
+    if (!path) return null;
+    return { textureKey: textureKeyForPath(path), path };
 }
 
 type DecorKeywordRule = {
@@ -222,4 +245,3 @@ export function resolveThemedPropAsset(theme: LocationTheme | undefined, type: P
             return null;
     }
 }
-
