@@ -62,6 +62,16 @@ function serveDevStaticDirs(): Plugin {
                         const stat = fs.statSync(filePath);
                         if (!stat.isFile()) return next();
 
+                        // If a JSON file is being requested as a module script, let Vite's JSON plugin serve it as JS.
+                        // Otherwise browsers will reject `application/json` responses for <script type="module">.
+                        if (path.extname(filePath).toLowerCase() === '.json') {
+                            const dest = String(req.headers['sec-fetch-dest'] ?? '').toLowerCase();
+                            const accept = String(req.headers.accept ?? '').toLowerCase();
+                            const isModuleScript =
+                                dest === 'script' || accept.includes('application/javascript') || accept.includes('text/javascript');
+                            if (isModuleScript) return next();
+                        }
+
                         res.statusCode = 200;
                         res.setHeader('Content-Type', getContentType(filePath));
                         res.setHeader('Cache-Control', 'no-cache');
