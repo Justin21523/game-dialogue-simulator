@@ -674,6 +674,32 @@
                 "required_world_flags": [],
                 "completed_quest_templates": ["qt_main_town_relay"]
             }
+        },
+        {
+            "template_id": "qt_side_park_shed_evidence",
+            "title": "Shed Evidence Drop",
+            "description": "You recovered an evidence token inside the sealed shed. Deliver it to the informant for analysis.",
+            "type": "side",
+            "destination_location_id": "town_district",
+            "repeatable": false,
+            "steps": [
+                {
+                    "id": "deliver_badge",
+                    "type": "deliver",
+                    "title": "Deliver the evidence token to the Informant",
+                    "required_count": 1,
+                    "conditions": [{ "location_id": "town_district", "item_id": "item_shed_badge", "npc_id": "npc_informant" }]
+                }
+            ],
+            "rewards": {
+                "currency": 220,
+                "exp": 110,
+                "unlock_locations": []
+            },
+            "prerequisites": {
+                "required_world_flags": ["park_shed_secret_found"],
+                "completed_quest_templates": ["qt_main_town_relay"]
+            }
         }
     ]
 }
