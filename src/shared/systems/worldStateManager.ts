@@ -166,6 +166,7 @@ function coerceActiveMissionSession(value: unknown): ActiveMissionSession | null
     const updatedAt = coerceNumber(value.updatedAt);
     if (startedAt === null || updatedAt === null) return null;
 
+    const phaseStartedAt = coerceNumber(value.phaseStartedAt) ?? startedAt;
     const inboundFlight = value.inboundFlight ? coerceFlightResult(value.inboundFlight) : null;
     const log = Array.isArray(value.log)
         ? value.log.map(coerceMissionLogEntry).filter((e): e is MissionLogEntry => Boolean(e)).slice(-200)
@@ -175,6 +176,7 @@ function coerceActiveMissionSession(value: unknown): ActiveMissionSession | null
         sessionId,
         actorId,
         phaseId,
+        phaseStartedAt,
         locationId,
         mission,
         inboundFlight,

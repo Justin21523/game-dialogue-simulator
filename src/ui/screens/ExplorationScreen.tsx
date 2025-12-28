@@ -10,18 +10,20 @@ import { getLocation } from '../../shared/data/gameData';
 import { eventBus } from '../../shared/eventBus';
 import { EVENTS } from '../../shared/eventNames';
 import { missionManager } from '../../shared/quests/missionManager';
-import type { MissionResult } from '../../shared/types/Game';
+import type { Mission, MissionResult } from '../../shared/types/Game';
 import { Modal } from '../components/Modal';
 
 export type ExplorationScreenProps = {
     actorId: string;
+    activeMission: Mission | null;
     debriefResult: MissionResult | null;
     onCloseDebrief: () => void;
     onBackToHangar: () => void;
+    onAbortMission: () => void;
 };
 
 export function ExplorationScreen(props: ExplorationScreenProps) {
-    const { actorId, debriefResult, onCloseDebrief, onBackToHangar } = props;
+    const { actorId, activeMission, debriefResult, onCloseDebrief, onBackToHangar, onAbortMission } = props;
 
     const [locationId, setLocationId] = React.useState<string>('base_airport');
     const [companionOpen, setCompanionOpen] = React.useState(false);
@@ -77,6 +79,13 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
 
     const locationName = getLocation(locationId)?.displayName ?? locationId;
 
+    const handleAbortMission = React.useCallback(() => {
+        if (!activeMission) return;
+        const ok = window.confirm('Abort the current mission? Progress will be lost and no mission rewards will be granted.');
+        if (!ok) return;
+        onAbortMission();
+    }, [activeMission, onAbortMission]);
+
     return (
         <div className="screen exploration-screen">
             <QuestTracker />
@@ -98,6 +107,11 @@ export function ExplorationScreen(props: ExplorationScreenProps) {
                 <button className="btn btn-outline" type="button" onClick={() => setMapOpen(true)}>
                     🗺️ Map (M)
                 </button>
+                {activeMission ? (
+                    <button className="btn btn-danger" type="button" onClick={handleAbortMission}>
+                        ⛔ Abort Mission
+                    </button>
+                ) : null}
                 <button className="btn btn-secondary" type="button" onClick={onBackToHangar}>
                     ◀ Back to Hangar
                 </button>
